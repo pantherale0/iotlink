@@ -293,7 +293,9 @@ namespace WinIOTLink.Engine
             if (addon == null)
                 return string.Empty;
 
-            return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addon.GetAppInfo().AddonId, topic));
+            topic = StringHelper.PascalToKebabCase(topic);
+            string addonId = StringHelper.PascalToKebabCase(addon.GetAppInfo().AddonId);
+            return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addonId, topic));
         }
 
         internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)

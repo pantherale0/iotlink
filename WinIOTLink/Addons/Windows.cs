@@ -1,4 +1,6 @@
-﻿using WinIOTLink.API;
+﻿using Newtonsoft.Json;
+using System;
+using WinIOTLink.API;
 using WinIOTLink.Engine.MQTT;
 using WinIOTLink.Helpers;
 
@@ -16,6 +18,7 @@ namespace WinIOTLink.Addons
             _manager.SubscribeTopic(this, "lock", OnLockMessage);
             _manager.SubscribeTopic(this, "hibernate", OnHibernateMessage);
             _manager.SubscribeTopic(this, "suspend", OnSuspendMessage);
+            _manager.SubscribeTopic(this, "run", OnCommandRun);
         }
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
@@ -52,6 +55,28 @@ namespace WinIOTLink.Addons
         {
             LoggerHelper.Info("Windows", "OnSuspendMessage message received");
             WindowsHelper.Suspend();
+        }
+
+        private void OnCommandRun(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Info("Windows", "OnCommandRun message received");
+            string value = e.Message.GetPayload();
+            if (value == null)
+                return;
+
+            try
+            {
+                dynamic json = JsonConvert.DeserializeObject(value);
+                var command = json.command;
+                var args = json.args;
+                var path = json.path;
+
+                LoggerHelper.Info("Windows", String.Format("Command: {0} Args: {1} Path: {2}", command, args, path));
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Info("Windows", "OnCommandRun failure: " + ex.Message);
+            }
         }
     }
 }

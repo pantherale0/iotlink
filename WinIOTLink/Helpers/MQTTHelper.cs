@@ -11,12 +11,10 @@ namespace WinIOTLink.Helpers
             if (string.IsNullOrWhiteSpace(name))
                 return string.Empty;
 
-            return StringHelper.PascalToKebabCase(
-                StringHelper.RemoveDiacritics(name)
+            return StringHelper.RemoveDiacritics(name)
                 .Replace(" ", "_")
                 .Replace("\\", "")
-                .Trim()
-            );
+                .Trim();
         }
 
         public static string SanitizeTopic(string topic)
