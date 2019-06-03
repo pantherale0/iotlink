@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using WinIOTLink.Helpers.WinAPI;
 
 namespace WinIOTLink.Helpers
 {
@@ -14,6 +14,11 @@ namespace WinIOTLink.Helpers
                 return computerName;
 
             return string.Format("{0}\\{1}", domainName, computerName);
+        }
+
+        public static string GetUsername(int sessionId, bool prependDomain = false)
+        {
+            return WindowsAPI.GetUsername(sessionId, prependDomain);
         }
 
         public static void Shutdown(bool force = false)
@@ -32,89 +37,36 @@ namespace WinIOTLink.Helpers
                 Process.Start("shutdown", "/r /t 0");
         }
 
-        public static void Logoff()
-        {
-            ExitWindowsEx(0, 0);
-        }
-
-        public static void Lock()
-        {
-            LockWorkStation();
-        }
-
         public static void Hibernate()
         {
-            SetSuspendState(true, true, true);
+            WindowsAPI.SetSuspendState(true, true, true);
         }
 
         public static void Suspend()
         {
-            SetSuspendState(false, true, true);
+            WindowsAPI.SetSuspendState(false, true, true);
         }
 
-        public static string GetUsername(int sessionId, bool prependDomain = false)
+        public static void Logoff(string username)
         {
-            IntPtr buffer;
-            int strLen;
-            string username = "SYSTEM";
-            if (WTSQuerySessionInformation(IntPtr.Zero, sessionId, WtsInfoClass.WTSUserName, out buffer, out strLen) && strLen > 1)
-            {
-                username = Marshal.PtrToStringAnsi(buffer);
-                WTSFreeMemory(buffer);
-                if (prependDomain)
-                {
-                    if (WTSQuerySessionInformation(IntPtr.Zero, sessionId, WtsInfoClass.WTSDomainName, out buffer, out strLen) && strLen > 1)
-                    {
-                        username = Marshal.PtrToStringAnsi(buffer) + "\\" + username;
-                        WTSFreeMemory(buffer);
-                    }
-                }
-            }
-            return username;
+            if (string.IsNullOrWhiteSpace(username))
+                return;
+
+            if (username.Trim().ToUpperInvariant().CompareTo("ALL") == 0)
+                WindowsAPI.LogoffAll();
+            else
+                WindowsAPI.LogOffUser(username);
         }
 
-        private enum WtsInfoClass
+        public static void Lock(string username)
         {
-            WTSInitialProgram,
-            WTSApplicationName,
-            WTSWorkingDirectory,
-            WTSOEMId,
-            WTSSessionId,
-            WTSUserName,
-            WTSWinStationName,
-            WTSDomainName,
-            WTSConnectState,
-            WTSClientBuildNumber,
-            WTSClientName,
-            WTSClientDirectory,
-            WTSClientProductId,
-            WTSClientHardwareId,
-            WTSClientAddress,
-            WTSClientDisplay,
-            WTSClientProtocolType,
-            WTSIdleTime,
-            WTSLogonTime,
-            WTSIncomingBytes,
-            WTSOutgoingBytes,
-            WTSIncomingFrames,
-            WTSOutgoingFrames,
-            WTSClientInfo,
-            WTSSessionInfo,
+            if (string.IsNullOrWhiteSpace(username))
+                return;
+
+            if (username.Trim().ToUpperInvariant().CompareTo("ALL") == 0)
+                WindowsAPI.LockAll();
+            else
+                WindowsAPI.LockUser(username);
         }
-
-        [DllImport("Wtsapi32.dll")]
-        private static extern bool WTSQuerySessionInformation(IntPtr hServer, int sessionId, WtsInfoClass wtsInfoClass, out System.IntPtr ppBuffer, out int pBytesReturned);
-
-        [DllImport("Wtsapi32.dll")]
-        private static extern void WTSFreeMemory(IntPtr pointer);
-
-        [DllImport("PowrProf.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        private static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
-
-        [DllImport("user32")]
-        private static extern void LockWorkStation();
-
-        [DllImport("user32")]
-        private static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
     }
 }

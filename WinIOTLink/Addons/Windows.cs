@@ -33,13 +33,13 @@ namespace WinIOTLink.Addons
         private void OnLogoffMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("Windows", "OnLogoffMessage message received");
-            WindowsHelper.Logoff();
+            WindowsHelper.Logoff(e.Message.GetPayload());
         }
 
         private void OnLockMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("Windows", "OnLockMessage message received");
-            WindowsHelper.Lock();
+            WindowsHelper.Lock(e.Message.GetPayload());
         }
 
         private void OnHibernateMessage(object sender, MQTTMessageEventEventArgs e)

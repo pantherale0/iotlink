@@ -132,6 +132,7 @@
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\ConfigHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
+    <Compile Include="Helpers\WinAPI\WindowsAPI.cs" />
     <Compile Include="Loaders\AssemblyLoader.cs" />
     <Compile Include="Helpers\LoggerHelper.cs" />
     <Compile Include="Engine\MQTT\MQTTClient.cs" />
