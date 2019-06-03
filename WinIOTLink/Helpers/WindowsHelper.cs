@@ -8,15 +8,15 @@ namespace WinIOTLink.Helpers
     {
         public static string GetFullMachineName()
         {
-            String domainName = Environment.UserDomainName;
-            String computerName = Environment.MachineName;
+            string domainName = Environment.UserDomainName;
+            string computerName = Environment.MachineName;
             if (domainName.Equals(computerName))
                 return computerName;
 
-            return String.Format("{0}\\{1}", domainName, computerName);
+            return string.Format("{0}\\{1}", domainName, computerName);
         }
 
-        public static void Shutdown(bool force)
+        public static void Shutdown(bool force = false)
         {
             if (force)
                 Process.Start("shutdown", "/s /f /t 0");
@@ -24,7 +24,7 @@ namespace WinIOTLink.Helpers
                 Process.Start("shutdown", "/s /t 0");
         }
 
-        public static void Reboot(bool force)
+        public static void Reboot(bool force = false)
         {
             if (force)
                 Process.Start("shutdown", "/r /f /t 0");

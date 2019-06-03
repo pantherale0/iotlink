@@ -115,6 +115,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Addons\Windows.cs" />
     <Compile Include="API\AddonBase.cs" />
     <Compile Include="API\AddonInfo.cs" />
     <Compile Include="API\AddonScript.cs" />
@@ -123,8 +124,10 @@
     <Compile Include="Engine\MainEngine.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Engine\MQTT\MQTTEventEventArgs.cs" />
+    <Compile Include="Engine\MQTT\MQTTHandlers.cs" />
     <Compile Include="Engine\MQTT\MQTTMessageEventEventArgs.cs" />
     <Compile Include="Engine\MQTT\MQTTMessage.cs" />
+    <Compile Include="Helpers\MQTTHelper.cs" />
     <Compile Include="Helpers\PathHelper.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\ConfigHelper.cs" />
@@ -146,7 +149,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SystemMonitor.cs" />
+    <Compile Include="Addons\WindowsMonitor.cs" />
     <Compile Include="Helpers\WindowsHelper.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -64,11 +64,11 @@ namespace WinIOTLink.Engine
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }
 
-        private void OnSessionChange(string username, SessionChangeReason reason)
+        internal void OnSessionChange(string username, SessionChangeReason reason)
         {
-            LoggerHelper.WriteToFile("OnSessionChange", String.Format("{0}: {1}", username, reason.ToString()), LogLevel.INFO);
+            LoggerHelper.Info("OnSessionChange", string.Format("{0}: {1}", username, reason.ToString()));
 
-            MQTTClient.GetInstance().PublishMessage(String.Format("{0}/{1}", "SessionMonitor", reason.ToString()), username);
+            MQTTClient.GetInstance().PublishMessage(string.Format("{0}/{1}", "SessionMonitor", reason.ToString()), username);
         }
     }
 }

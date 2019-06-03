@@ -7,7 +7,7 @@ using System;
 using System.Threading.Tasks;
 using WinIOTLink.Helpers;
 using static WinIOTLink.Configs.ApplicationConfig;
-using static WinIOTLink.Helpers.LoggerHelper;
+using static WinIOTLink.Engine.MQTT.MQTTHandlers;
 
 namespace WinIOTLink.Engine.MQTT
 {
@@ -23,9 +23,6 @@ namespace WinIOTLink.Engine.MQTT
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
         public event MQTTMessageEventHandler OnMQTTMessageReceived;
-
-        public delegate void MQTTEventHandler(Object sender, MQTTEventEventArgs e);
-        public delegate void MQTTMessageEventHandler(Object sender, MQTTMessageEventEventArgs e);
 
         public static MQTTClient GetInstance()
         {
@@ -79,9 +76,9 @@ namespace WinIOTLink.Engine.MQTT
             if (!_client.IsConnected)
                 return;
 
-            String fullTopic = GetFullTopicName(topic);
+            string fullTopic = GetFullTopicName(topic);
 
-            LoggerHelper.WriteToFile("MQTTClient", String.Format("Publishing to {0}: {1}", fullTopic, message), LogLevel.INFO);
+            LoggerHelper.Info("MQTTClient", string.Format("Publishing to {0}: {1}", fullTopic, message));
             var msg = new MqttApplicationMessageBuilder()
             .WithTopic(fullTopic)
             .WithPayload(message)
@@ -104,20 +101,20 @@ namespace WinIOTLink.Engine.MQTT
             int tries = 0;
             do
             {
-                LoggerHelper.WriteToFile("MQTTClient", String.Format("Trying to connect to broker: {0} (Try: {1})", GetBrokerInfo(), (tries + 1)), LogLevel.INFO);
+                LoggerHelper.Info("MQTTClient", string.Format("Trying to connect to broker: {0} (Try: {1})", GetBrokerInfo(), (tries + 1)));
                 try
                 {
                     await _client.ConnectAsync(_options);
-                    LoggerHelper.WriteToFile("MQTTClient", "Reconnection successful", LogLevel.INFO);
+                    LoggerHelper.Info("MQTTClient", "Connection successful");
                 }
                 catch
                 {
-                    LoggerHelper.WriteToFile("MQTTClient", "Reconnection failed", LogLevel.INFO);
+                    LoggerHelper.Info("MQTTClient", "Connection failed");
                     tries++;
 
                     double waitTime = Math.Min(10 * tries, 300);
 
-                    LoggerHelper.WriteToFile("MQTTClient", String.Format("Waiting {0} seconds before trying again...", waitTime), LogLevel.INFO);
+                    LoggerHelper.Info("MQTTClient", string.Format("Waiting {0} seconds before trying again...", waitTime));
                     await Task.Delay(TimeSpan.FromSeconds(waitTime));
                 }
             } while (!_client.IsConnected);
@@ -126,8 +123,12 @@ namespace WinIOTLink.Engine.MQTT
 
         private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
-            LoggerHelper.WriteToFile("MQTTClient", "MQTT Connected", LogLevel.INFO);
+            LoggerHelper.Info("MQTTClient", "MQTT Connected");
+
+            // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
+            if (OnMQTTConnected != null)
+                OnMQTTConnected(this, mqttEvent);
 
             // Subscribe to ALL Messages
             SubscribeTopic(GetFullTopicName("#"));
@@ -135,22 +136,30 @@ namespace WinIOTLink.Engine.MQTT
 
         private async Task OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
-            LoggerHelper.WriteToFile("MQTTClient", "MQTT Disconnected", LogLevel.INFO);
+            LoggerHelper.Info("MQTTClient", "MQTT Disconnected");
+
+            // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
+            if (OnMQTTDisconnected != null)
+                OnMQTTDisconnected(this, mqttEvent);
+
             Connect();
         }
 
         private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
         {
-            LoggerHelper.WriteToFile("MQTTClient", String.Format("MQTT Message Received - Topic: {0}, Message: {1}", arg.ApplicationMessage.Topic, arg.ApplicationMessage.Payload), LogLevel.INFO);
+            LoggerHelper.Info("MQTTClient", string.Format("MQTT Message Received - Topic: {0}, Message: {1}", arg.ApplicationMessage.Topic, arg.ApplicationMessage.Payload));
 
+            // Fire event
             MQTTMessage message = GetMQTTMessage(arg);
             MQTTMessageEventEventArgs mqttEvent = new MQTTMessageEventEventArgs(MQTTEventEventArgs.MQTTEventType.MessageReceived, message, arg);
+            if (OnMQTTMessageReceived != null)
+                OnMQTTMessageReceived(this, mqttEvent);
         }
 
         private async void SubscribeTopic(string topic)
         {
-            LoggerHelper.WriteToFile("MQTTClient", String.Format("Subscribing to {0}", topic), LogLevel.INFO);
+            LoggerHelper.Info("MQTTClient", string.Format("Subscribing to {0}", topic));
 
             await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
         }
@@ -179,20 +188,20 @@ namespace WinIOTLink.Engine.MQTT
         /// <returns>String containing the broker information</returns>
         private string GetBrokerInfo()
         {
-            if (_config.WebSocket && !String.IsNullOrEmpty(_config.WebSocketUrl))
+            if (_config.WebSocket && !string.IsNullOrEmpty(_config.WebSocketUrl))
             {
                 if (_config.TLSEnabled)
-                    return String.Format("wss://{0}", _config.WebSocketUrl);
+                    return string.Format("wss://{0}", _config.WebSocketUrl);
                 else
-                    return String.Format("ws://{0}", _config.WebSocketUrl);
+                    return string.Format("ws://{0}", _config.WebSocketUrl);
             }
 
-            if (!_config.WebSocket && !String.IsNullOrEmpty(_config.Hostname))
+            if (!_config.WebSocket && !string.IsNullOrEmpty(_config.Hostname))
             {
                 if (_config.TLSEnabled)
-                    return String.Format("tls://{0}:{1}", _config.Hostname, _config.Port);
+                    return string.Format("tls://{0}:{1}", _config.Hostname, _config.Port);
                 else
-                    return String.Format("tcp://{0}:{1}", _config.Hostname, _config.Port);
+                    return string.Format("tcp://{0}:{1}", _config.Hostname, _config.Port);
             }
 
             return "unknown";
@@ -206,9 +215,9 @@ namespace WinIOTLink.Engine.MQTT
         private string GetMessageTopic(string topic)
         {
             if (topic == null)
-                return String.Empty;
+                return string.Empty;
 
-            return topic.Replace("\\\\", "\\").Replace(GetFullTopicName(), "");
+            return MQTTHelper.SanitizeTopic(topic).Replace(GetFullTopicName(), "");
         }
 
         /// <summary>
@@ -219,28 +228,11 @@ namespace WinIOTLink.Engine.MQTT
         private string GetFullTopicName(string name = "")
         {
             if (name == null)
-                name = "";
+                name = string.Empty;
 
-            if (name[0] == '/')
-                name = name.Remove(0, 1);
-
-            string machineTopic = SanitizeForMqtt(WindowsHelper.GetFullMachineName());
-            return String.Format("{0}/{1}/{2}", SanitizeForMqtt(_config.Prefix), machineTopic, SanitizeForMqtt(name));
-        }
-
-        /// <summary>
-        /// Sanitize the string to be used in mqtt topics
-        /// </summary>
-        /// <param name="str">Input string</param>
-        /// <returns>String correctly cleaned</returns>
-        private string SanitizeForMqtt(string str)
-        {
-            if (str == null)
-                return String.Empty;
-
-            return StringHelper.RemoveDiacritics(str)
-                .Replace(' ', '_')
-                .Replace('\\', '/');
+            string machineName = WindowsHelper.GetFullMachineName().Replace("\\", "/");
+            string topic = string.Format("{0}/{1}/{2}", _config.Prefix, machineName, name);
+            return MQTTHelper.SanitizeTopic(topic);
         }
     }
 }

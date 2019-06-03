@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using WinIOTLink.Addons;
 using WinIOTLink.API;
 using WinIOTLink.Configs;
 using WinIOTLink.Engine.MQTT;
 using WinIOTLink.Helpers;
 using WinIOTLink.Loaders;
+using static WinIOTLink.Engine.MQTT.MQTTHandlers;
 
 namespace WinIOTLink.Engine
 {
@@ -14,6 +16,7 @@ namespace WinIOTLink.Engine
     {
         private static AddonManager _instance;
         private Dictionary<string, AddonInfo> _addons = new Dictionary<string, AddonInfo>();
+        private Dictionary<string, MQTTMessageEventHandler> _topics = new Dictionary<string, MQTTMessageEventHandler>();
 
         public static AddonManager GetInstance()
         {
@@ -28,19 +31,35 @@ namespace WinIOTLink.Engine
 
         }
 
-        /// <summary>
-		/// Add an <see cref="AddonInfo"/> to the current loaded list.
-		/// </summary>
-		/// <param name="id">String containing the application ID.</param>
-		/// <param name="AddonInfo"><see cref="AddonInfo"/> structure.</param>
-		public void AddAddon(string id, AddonInfo addonInfo)
+        public void SubscribeTopic(AddonScript sender, string topic, MQTTMessageEventHandler msgHandler)
         {
-            if (id == null)
+            if (sender == null || HasSubscription(sender, topic))
                 return;
 
-            id = id.Trim().ToLowerInvariant();
-            LoggerHelper.Info("AddonManager", "Loading addon: " + id);
-            _addons.Add(id, addonInfo);
+            string addonTopic = GetAddonTopic(sender, topic);
+            _topics.Add(addonTopic, msgHandler);
+
+            LoggerHelper.Info("AddonManager", string.Format("Addon {0} has subscribed to topic {1}", sender.GetAppInfo().AddonId, addonTopic));
+        }
+
+        public bool HasSubscription(AddonScript sender, string topic)
+        {
+            if (sender == null)
+                return false;
+
+            string addonTopic = GetAddonTopic(sender, topic);
+            return _topics.ContainsKey(addonTopic);
+        }
+
+        public void RemoveSubscription(AddonScript sender, string topic)
+        {
+            if (sender == null || !HasSubscription(sender, topic))
+                return;
+
+            string addonTopic = GetAddonTopic(sender, topic);
+            _topics.Remove(addonTopic);
+
+            LoggerHelper.Info("AddonManager", string.Format("Addon {0} has removed subscription to topic {1}", sender.GetAppInfo().AddonId, addonTopic));
         }
 
         /// <summary>
@@ -89,21 +108,86 @@ namespace WinIOTLink.Engine
         }
 
         /// <summary>
+		/// Add an <see cref="AddonInfo"/> to the current loaded list.
+		/// </summary>
+		/// <param name="id">String containing the application ID.</param>
+		/// <param name="AddonInfo"><see cref="AddonInfo"/> structure.</param>
+		internal void AddAddon(string id, AddonInfo addonInfo)
+        {
+            if (id == null)
+                return;
+
+            id = id.Trim().ToLowerInvariant();
+            LoggerHelper.Info("AddonManager", "Loading addon: " + id);
+            _addons.Add(id, addonInfo);
+        }
+
+        /// <summary>
 		/// Search into app directory and load all enabled and valid applications.
 		/// </summary>
-		public void LoadAddons()
+		internal void LoadAddons()
         {
-            List<string> dirs = new List<string>(Directory.EnumerateDirectories(PathHelper.AddonsPath()));
-
             this._addons.Clear();
+            this.LoadInternalAddons();
+            this.LoadExternalAddons();
+        }
 
-            LoggerHelper.Error("AddonManager", String.Format("Loading {0} addons", dirs.Count));
+        /// <summary>
+		/// Search into app directory and load all enabled and valid applications.
+		/// </summary>
+		private void LoadInternalAddons()
+        {
+            AddonScript[] internalAddons = new AddonScript[]
+            {
+                new WindowsMonitor(),
+                new Windows()
+            };
+
+            LoggerHelper.Info("AddonManager", string.Format("Loading {0} internal addons", internalAddons.Length));
+            foreach (AddonScript addon in internalAddons)
+            {
+                AddonInfo addonInfo = new AddonInfo();
+                addonInfo.AddonName = addon.GetType().Name;
+                addonInfo.AddonPath = PathHelper.BasePath();
+                addonInfo.AddonFile = String.Empty;
+                addonInfo.Internal = true;
+                addonInfo.AddonId = addon.GetType().Name;
+                addonInfo.ScriptClass = addon;
+
+                if (addonInfo.ScriptClass != null)
+                {
+                    addonInfo.ScriptClass.SetAddonInfo(addonInfo);
+                    addonInfo.ScriptClass.SetCurrentPath(addonInfo.AddonPath);
+                    addonInfo.ScriptClass.Init();
+                }
+
+                this.AddAddon(addonInfo.AddonId, addonInfo);
+            }
+        }
+
+        /// <summary>
+		/// Search into app directory and load all enabled and valid applications.
+		/// </summary>
+		private void LoadExternalAddons()
+        {
+            string addonsPath = PathHelper.AddonsPath();
+
+            // Create addons directory.
+            if (!Directory.Exists(addonsPath))
+            {
+                LoggerHelper.Warn("AddonManager", string.Format("Addons directory doesn't exists. Creating {0}", addonsPath));
+                Directory.CreateDirectory(addonsPath);
+                return;
+            }
+
+            List<string> dirs = new List<string>(Directory.EnumerateDirectories(addonsPath));
+            LoggerHelper.Info("AddonManager", string.Format("Loading {0} external addons", dirs.Count));
             foreach (var dir in dirs)
             {
                 string DirName = dir.Substring(dir.LastIndexOf("/") + 1);
                 AddonInfo addonInfo = new AddonInfo();
 
-                if (this.LoadAppSettings(DirName, ref addonInfo) == true && addonInfo.Enabled == true)
+                if (this.LoadSettingsFromDir(DirName, ref addonInfo) == true && addonInfo.Enabled == true)
                 {
                     if (!AssemblyLoader.LoadAppAssembly(ref addonInfo))
                         continue;
@@ -126,10 +210,18 @@ namespace WinIOTLink.Engine
         /// <param name="DirName">Directory name containing the configuration file.</param>
         /// <param name="addonInfo"><see cref="AppInfo"/> structure to be loaded.</param>
         /// <returns>True if valid configuration file found, false otherwise.</returns>
-        private bool LoadAppSettings(string DirName, ref AddonInfo addonInfo)
+        private bool LoadSettingsFromDir(string DirName, ref AddonInfo addonInfo)
         {
             AddonConfig config = AddonConfig.GetInstance(DirName);
             if (!config.Load())
+                return false;
+
+            return LoadAppSettings(config, ref addonInfo);
+        }
+
+        private bool LoadAppSettings(AddonConfig config, ref AddonInfo addonInfo)
+        {
+            if (config == null)
                 return false;
 
             addonInfo.Settings = config;
@@ -173,8 +265,16 @@ namespace WinIOTLink.Engine
                 addonInfo.Enabled = false;
             }
 
-            LoggerHelper.Error("AddonManager", "Addon loaded: " + addonInfo.AddonName);
+            LoggerHelper.Info("AddonManager", "Addon configuration loaded: " + addonInfo.AddonName);
             return true;
+        }
+
+        internal string GetAddonTopic(AddonScript addon, string topic)
+        {
+            if (addon == null)
+                return string.Empty;
+
+            return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addon.GetAppInfo().AddonId, topic));
         }
 
         internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
@@ -182,7 +282,8 @@ namespace WinIOTLink.Engine
             List<AddonInfo> addons = this.GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
-                addonInfo.ScriptClass?.Raise_OnMQTTConnected(sender, e);
+                if (addonInfo.ScriptClass != null)
+                    addonInfo.ScriptClass.Raise_OnMQTTConnected(sender, e);
             }
         }
 
@@ -191,17 +292,15 @@ namespace WinIOTLink.Engine
             List<AddonInfo> addons = this.GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
-                addonInfo.ScriptClass?.Raise_OnMQTTDisconnected(sender, e);
+                if (addonInfo.ScriptClass != null)
+                    addonInfo.ScriptClass.Raise_OnMQTTDisconnected(sender, e);
             }
         }
 
         internal void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
-            List<AddonInfo> addons = this.GetAppList();
-            foreach (AddonInfo addonInfo in addons)
-            {
-                addonInfo.ScriptClass?.Raise_OnMQTTMessageReceived(sender, e);
-            }
+            if (_topics.ContainsKey(e.Message.Topic))
+                _topics[e.Message.Topic](sender, e);
         }
     }
 }

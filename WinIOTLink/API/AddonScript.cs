@@ -1,5 +1,5 @@
-﻿using System;
-using WinIOTLink.Engine.MQTT;
+﻿using WinIOTLink.Engine.MQTT;
+using static WinIOTLink.Engine.MQTT.MQTTHandlers;
 
 namespace WinIOTLink.API
 {
@@ -9,63 +9,28 @@ namespace WinIOTLink.API
 	/// This class is a simplified version of Script class of SHDN (As SHDN do not allow us to register new scripts on runtime).
 	/// </summary>
 	/// <seealso cref="AddonBase"/>
-    public abstract class AddonScript : AddonBase, IDisposable
+    public abstract class AddonScript : AddonBase
     {
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
         public event MQTTMessageEventHandler OnMQTTMessageReceived;
 
-        public delegate void MQTTEventHandler(Object sender, MQTTEventEventArgs e);
-        public delegate void MQTTMessageEventHandler(Object sender, MQTTMessageEventEventArgs e);
-
         internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
-            OnMQTTConnected?.Invoke(sender, e);
+            if (OnMQTTConnected != null)
+                OnMQTTConnected(sender, e);
         }
 
         internal void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
-            OnMQTTDisconnected?.Invoke(sender, e);
+            if (OnMQTTDisconnected != null)
+                OnMQTTDisconnected(sender, e);
         }
 
         internal void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
-            OnMQTTMessageReceived?.Invoke(sender, e);
+            if (OnMQTTMessageReceived != null)
+                OnMQTTMessageReceived(sender, e);
         }
-
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
-                disposedValue = true;
-            }
-        }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~AddonScript() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
-        }
-        #endregion
     }
 }

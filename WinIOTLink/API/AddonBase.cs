@@ -1,4 +1,6 @@
-﻿namespace WinIOTLink.API
+﻿using WinIOTLink.Engine;
+
+namespace WinIOTLink.API
 {
     /// <summary>
 	/// Base application class used by both application interface and scripts.
@@ -14,6 +16,12 @@
         /// Current set of informations about this application.
         /// </summary>
         protected AddonInfo _addonInfo;
+
+        /// <summary>
+        /// AddonManager instance
+        /// </summary>
+        protected AddonManager _manager = AddonManager.GetInstance();
+
         /// <summary>
 		/// Application constructor
 		/// </summary>

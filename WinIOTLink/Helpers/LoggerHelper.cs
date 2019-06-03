@@ -47,9 +47,9 @@ namespace WinIOTLink.Helpers
             WriteToFile(messageTag, message, LogLevel.TRACE);
         }
 
-        public static void WriteToFile(string messageTag, string message, LogLevel logLevel)
+        private static void WriteToFile(string messageTag, string message, LogLevel logLevel)
         {
-            string finalMessage = String.Format("[{0}][{1}][{2}][{3}]: {4}", WindowsHelper.GetFullMachineName(), DateTime.Now, logLevel.ToString(), messageTag, message);
+            string finalMessage = string.Format("[{0}][{1}][{2}][{3}]: {4}", WindowsHelper.GetFullMachineName(), DateTime.Now, logLevel.ToString(), messageTag, message);
 
             string logsPath = PathHelper.LogsPath();
             if (!Directory.Exists(logsPath))
