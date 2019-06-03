@@ -67,11 +67,12 @@ namespace WinIOTLink.Addons
             try
             {
                 dynamic json = JsonConvert.DeserializeObject(value);
-                var command = json.command;
-                var args = json.args;
-                var path = json.path;
+                string command = json.command;
+                string args = json.args;
+                string path = json.path;
+                string user = json.user;
 
-                LoggerHelper.Info("Windows", String.Format("Command: {0} Args: {1} Path: {2}", command, args, path));
+                WindowsHelper.Run(command, args, path, user);
             }
             catch (Exception ex)
             {

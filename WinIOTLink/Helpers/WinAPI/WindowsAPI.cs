@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace WinIOTLink.Helpers.WinAPI
@@ -47,6 +48,20 @@ namespace WinIOTLink.Helpers.WinAPI
             WTSReset,
             WTSDown,
             WTSInit
+        }
+
+        private enum SecurityImpersonationLevel
+        {
+            SecurityAnonymous = 0,
+            SecurityIdentification = 1,
+            SecurityImpersonation = 2,
+            SecurityDelegation = 3,
+        }
+
+        private enum TokenType
+        {
+            TokenPrimary = 1,
+            TokenImpersonation = 2
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -210,7 +225,82 @@ namespace WinIOTLink.Helpers.WinAPI
             }
         }
 
-        private static List<int> GetSessionIDs(IntPtr server)
+        public static bool Run(string command, string args, string workDir, string username)
+        {
+            if (string.IsNullOrWhiteSpace(command))
+                return false;
+            if (string.IsNullOrWhiteSpace(args))
+                args = null;
+            if (string.IsNullOrWhiteSpace(workDir))
+                workDir = null;
+
+            IntPtr server = GetServerPtr();
+            try
+            {
+
+                List<int> sessions = GetSessionIDs(server, true);
+                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
+                if (userSessionDictionary.Keys.Count == 0)
+                    return false;
+
+                int sessionId = userSessionDictionary.First().Value;
+                if (!string.IsNullOrWhiteSpace(username))
+                {
+                    username = username.Trim().ToUpper();
+                    if (!userSessionDictionary.ContainsKey(username))
+                        return false;
+
+                    sessionId = userSessionDictionary[username];
+                }
+
+                IntPtr hImpersonationToken = IntPtr.Zero;
+                IntPtr hUserToken = IntPtr.Zero;
+                if (WTSQueryUserToken(sessionId, out hImpersonationToken) &&
+                    DuplicateTokenEx(hImpersonationToken, 0, IntPtr.Zero, (int)SecurityImpersonationLevel.SecurityImpersonation, (int)TokenType.TokenPrimary, ref hUserToken))
+                {
+
+                    // Launch the child process interactively using the token of the logged user. 
+                    ProcessInformation tProcessInfo;
+                    StartupInfo tStartUpInfo = new StartupInfo();
+                    tStartUpInfo.cb = Marshal.SizeOf(typeof(StartupInfo));
+
+                    bool childProcStarted = CreateProcessAsUser(
+                                hUserToken,         // Token of the logged-on user. 
+                                command,            // Name of the process to be started. 
+                                args,               // Any command line arguments to be passed. 
+                                IntPtr.Zero,        // Default Process' attributes. 
+                                IntPtr.Zero,        // Default Thread's attributes. 
+                                false,              // Does NOT inherit parent's handles. 
+                                0,                  // No any specific creation flag. 
+                                IntPtr.Zero,        // Default environment path. 
+                                workDir,            // Default current directory. 
+                                ref tStartUpInfo,   // Process Startup Info.  
+                                out tProcessInfo    // Process information to be returned. 
+                                );
+
+                    if (childProcStarted)
+                    {
+                        // If the child process is created, it can be controlled via the out  
+                        // param "tProcessInfo". For now, as we don't want to do any thing  
+                        // with the child process, closing the child process' handles  
+                        // to prevent the handle leak. 
+                        CloseHandle(tProcessInfo.hThread);
+                        CloseHandle(tProcessInfo.hProcess);
+                    }
+                    CloseHandle(hImpersonationToken);
+                    CloseHandle(hUserToken);
+
+                    return childProcStarted;
+                }
+            }
+            finally
+            {
+                WTSCloseServer(server);
+            }
+            return false;
+        }
+
+        private static List<int> GetSessionIDs(IntPtr server, bool activeOnly = false)
         {
             List<int> sessionIds = new List<int>();
             IntPtr buffer = IntPtr.Zero;
@@ -225,7 +315,8 @@ namespace WinIOTLink.Helpers.WinAPI
                 {
                     WtsSessionInfo si = (WtsSessionInfo)Marshal.PtrToStructure((IntPtr)current, typeof(WtsSessionInfo));
                     current += dataSize;
-                    sessionIds.Add(si.SessionID);
+                    if (!activeOnly || si.State == WtsConnectStateClass.WTSActive)
+                        sessionIds.Add(si.SessionID);
                 }
                 WTSFreeMemory(buffer);
             }
@@ -272,10 +363,19 @@ namespace WinIOTLink.Helpers.WinAPI
         public static extern Int32 WTSEnumerateSessions(IntPtr hServer, [MarshalAs(UnmanagedType.U4)] Int32 Reserved, [MarshalAs(UnmanagedType.U4)] Int32 Version, ref IntPtr ppSessionInfo, [MarshalAs(UnmanagedType.U4)] ref Int32 pCount);
 
         [DllImport("wtsapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern bool WTSQueryUserToken(UInt32 sessionId, out IntPtr Token);
+        static extern bool WTSQueryUserToken(Int32 sessionId, out IntPtr Token);
 
         [DllImport("PowrProf.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         public static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
+
+        [DllImport("advapi32.dll", EntryPoint = "DuplicateTokenEx")]
+        private static extern bool DuplicateTokenEx(
+            IntPtr ExistingTokenHandle,
+            uint dwDesiredAccess,
+            IntPtr lpThreadAttributes,
+            int TokenType,
+            int ImpersonationLevel,
+            ref IntPtr DuplicateTokenHandle);
 
         [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern bool CreateProcessAsUser(
@@ -286,10 +386,13 @@ namespace WinIOTLink.Helpers.WinAPI
             IntPtr lpThreadAttributes,
             bool bInheritHandles,
             uint dwCreationFlags,
-            string lpEnvironment,
+            IntPtr lpEnvironment,
             string lpCurrentDirectory,
             ref StartupInfo lpStartupInfo,
             out ProcessInformation lpProcessInformation
             );
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool CloseHandle(IntPtr hHandle);
     }
 }

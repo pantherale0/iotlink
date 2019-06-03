@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using WinIOTLink.Helpers.WinAPI;
 
 namespace WinIOTLink.Helpers
@@ -73,6 +74,15 @@ namespace WinIOTLink.Helpers
                 LoggerHelper.Debug("WindowsHelper", string.Format("Locking {0} user session", username));
                 WindowsAPI.LockUser(username);
             }
+        }
+
+        public static void Run(string command, string args, string path, string username)
+        {
+            if (!string.IsNullOrWhiteSpace(args))
+                args = string.Format("{0} {1}", Path.GetFileName(command), args);
+
+            LoggerHelper.Info("WindowsHelper", String.Format("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username));
+            WindowsAPI.Run(command, args, path, username);
         }
     }
 }
