@@ -123,6 +123,7 @@
     <Compile Include="API\AddonInfo.cs" />
     <Compile Include="API\AddonScript.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
+    <Compile Include="Configs\MqttConfig.cs" />
     <Compile Include="Engine\AddonManager.cs" />
     <Compile Include="Engine\MainEngine.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />

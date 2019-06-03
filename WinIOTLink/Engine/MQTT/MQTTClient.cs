@@ -6,8 +6,8 @@ using MQTTnet.Client.Options;
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using WinIOTLink.Configs;
 using WinIOTLink.Helpers;
-using static WinIOTLink.Configs.ApplicationConfig;
 using static WinIOTLink.Engine.MQTT.MQTTHandlers;
 
 namespace WinIOTLink.Engine.MQTT
@@ -40,31 +40,80 @@ namespace WinIOTLink.Engine.MQTT
 
         public void Init(MqttConfig MQTT)
         {
+            // Configuration not found
+            if (MQTT == null)
+            {
+                LoggerHelper.Error("MQTTClient", "MQTT Configuration not found.");
+                return;
+            }
+
+            // No broker information
+            if ((MQTT.TCP == null || !MQTT.TCP.Enabled) && (MQTT.WebSocket == null || !MQTT.WebSocket.Enabled))
+            {
+                LoggerHelper.Error("MQTTClient", "You need to configure TCP or WebSocket connection");
+                return;
+            }
+
+            // Ambiguous broker information
+            if ((MQTT.TCP != null && MQTT.TCP.Enabled) && (MQTT.WebSocket != null && MQTT.WebSocket.Enabled))
+            {
+                LoggerHelper.Error("MQTTClient", "You need to disable TCP or WebSocket connection. Cannot use both together.");
+                return;
+            }
+
+
             _config = MQTT;
-            var MqttOptionBuilder = new MqttClientOptionsBuilder();
+            var mqttOptionBuilder = new MqttClientOptionsBuilder();
 
+            // Credentials
+            if (_config.Credentials != null && !string.IsNullOrWhiteSpace(_config.Credentials.Username))
+            {
+                mqttOptionBuilder = mqttOptionBuilder.WithCredentials(_config.Credentials.Username, _config.Credentials.Password);
+            }
+
+            // TCP Connection
+            if (_config.TCP != null && _config.TCP.Enabled)
+            {
+                mqttOptionBuilder = mqttOptionBuilder.WithTcpServer(_config.TCP.Hostname, _config.TCP.Port);
+                if (_config.TCP.Secure)
+                    mqttOptionBuilder = mqttOptionBuilder.WithTls();
+            }
+
+            // WebSocket Connection
+            if (_config.WebSocket != null && _config.WebSocket.Enabled)
+            {
+                mqttOptionBuilder = mqttOptionBuilder.WithWebSocketServer(_config.WebSocket.URI);
+                if (_config.TCP.Secure)
+                    mqttOptionBuilder = mqttOptionBuilder.WithTls();
+            }
+
+            // Client ID
             if (!String.IsNullOrEmpty(_config.ClientId))
-                MqttOptionBuilder = MqttOptionBuilder.WithClientId(_config.ClientId);
+                mqttOptionBuilder = mqttOptionBuilder.WithClientId(_config.ClientId);
             else
-                MqttOptionBuilder = MqttOptionBuilder.WithClientId(Environment.MachineName);
+                mqttOptionBuilder = mqttOptionBuilder.WithClientId(Environment.MachineName);
 
-            if (!String.IsNullOrEmpty(_config.Username))
-                MqttOptionBuilder = MqttOptionBuilder.WithCredentials(_config.Username, _config.Password);
-
-            if (_config.WebSocket && !String.IsNullOrEmpty(_config.WebSocketUrl))
-                MqttOptionBuilder = MqttOptionBuilder.WithWebSocketServer(_config.WebSocketUrl);
-
-            if (!_config.WebSocket && !String.IsNullOrEmpty(_config.Hostname))
-                MqttOptionBuilder = MqttOptionBuilder.WithTcpServer(_config.Hostname, _config.Port);
-
-            if (_config.TLSEnabled)
-                MqttOptionBuilder = MqttOptionBuilder.WithTls();
-
+            // Clean Session
             if (_config.CleanSession)
-                MqttOptionBuilder = MqttOptionBuilder.WithCleanSession();
+                mqttOptionBuilder = mqttOptionBuilder.WithCleanSession();
 
-            _options = MqttOptionBuilder.Build();
+            // LWT
+            if (_config.LWT != null && _config.LWT.Enabled)
+            {
+                if (!string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                {
+                    mqttOptionBuilder = mqttOptionBuilder.WithWillMessage(GetLWTMessage(_config.LWT.DisconnectMessage));
+                }
+                else
+                {
+                    LoggerHelper.Warn("MQTTClient", "LWT Disabled - LWT disconnected message is empty or null. Fix your configuration.yaml");
+                }
+            }
 
+            // Build all options
+            _options = mqttOptionBuilder.Build();
+
+            // Create client
             _client = new MqttFactory().CreateMqttClient();
             _client.UseConnectedHandler(OnConnectedHandler);
             _client.UseDisconnectedHandler(OnDisconnectedHandler);
@@ -77,15 +126,12 @@ namespace WinIOTLink.Engine.MQTT
             if (!_client.IsConnected)
                 return;
 
-            string fullTopic = GetFullTopicName(topic);
+            topic = GetFullTopicName(topic);
 
-            LoggerHelper.Info("MQTTClient", string.Format("Publishing to {0}: {1}", fullTopic, message));
-            var msg = new MqttApplicationMessageBuilder()
-            .WithTopic(fullTopic)
-            .WithPayload(message)
-            .Build();
+            LoggerHelper.Info("MQTTClient", string.Format("Publishing to {0}: {1}", topic, message));
 
-            await _client.PublishAsync(msg);
+            MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
+            await _client.PublishAsync(mqttMsg);
         }
 
         public async void PublishMessage(string topic, byte[] message)
@@ -93,15 +139,12 @@ namespace WinIOTLink.Engine.MQTT
             if (!_client.IsConnected)
                 return;
 
-            string fullTopic = GetFullTopicName(topic);
+            topic = GetFullTopicName(topic);
 
-            LoggerHelper.Info("MQTTClient", string.Format("Publishing to {0}: ({1} bytes)", fullTopic, message?.Length));
-            var msg = new MqttApplicationMessageBuilder()
-            .WithTopic(fullTopic)
-            .WithPayload(message)
-            .Build();
+            LoggerHelper.Info("MQTTClient", string.Format("Publishing to {0}: ({1} bytes)", topic, message?.Length));
 
-            await _client.PublishAsync(msg);
+            MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
+            await _client.PublishAsync(mqttMsg);
         }
 
         public bool isConnected()
@@ -141,6 +184,10 @@ namespace WinIOTLink.Engine.MQTT
         private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
             LoggerHelper.Info("MQTTClient", "MQTT Connected");
+
+            // Send LWT Connected
+            if (_config.LWT != null && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
+                await _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage));
 
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
@@ -200,25 +247,79 @@ namespace WinIOTLink.Engine.MQTT
         }
 
         /// <summary>
+        /// Create the LWT message
+        /// </summary>
+        /// <returns>LWT message</returns>
+        private MqttApplicationMessage GetLWTMessage(string message)
+        {
+            string topic = GetFullTopicName("LWT");
+            return BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.LWT);
+        }
+
+        /// <summary>
+        /// Build MQTT message ready to be published based on user configurations
+        /// </summary>
+        /// <param name="topic">Full topic name</param>
+        /// <param name="payload">Payload (bytes[])</param>
+        /// <param name="msgConfig">Configuration to be used (optional)</param>
+        /// <param name="builder">Builder instance to be used (optional)</param>
+        /// <returns>MqttApplicationMessage instance ready to be sent</returns>
+        private MqttApplicationMessage BuildMQTTMessage(string topic, byte[] payload, MqttConfig.MsgConfig msgConfig = null, MqttApplicationMessageBuilder builder = null)
+        {
+            if (builder == null)
+                builder = new MqttApplicationMessageBuilder();
+
+            // Topic and Payload
+            builder = builder.WithTopic(topic);
+            builder = builder.WithPayload(payload);
+
+            if (msgConfig != null)
+            {
+                // Retain
+                builder = builder.WithRetainFlag(msgConfig.Retain);
+
+                // QoS
+                switch (msgConfig.QoS)
+                {
+                    case 0:
+                        builder = builder.WithAtMostOnceQoS();
+                        break;
+                    case 1:
+                        builder = builder.WithAtLeastOnceQoS();
+                        break;
+                    case 2:
+                        builder = builder.WithExactlyOnceQoS();
+                        break;
+                    default:
+                        LoggerHelper.Warn("MQTTClient", "Wrong LWT QoS configuration. Defaulting to 0.");
+                        builder = builder.WithAtMostOnceQoS();
+                        break;
+                }
+            }
+
+            return builder.Build();
+        }
+
+        /// <summary>
         /// Return the broker information
         /// </summary>
         /// <returns>String containing the broker information</returns>
         private string GetBrokerInfo()
         {
-            if (_config.WebSocket && !string.IsNullOrEmpty(_config.WebSocketUrl))
+            if (_config.WebSocket != null && _config.WebSocket.Enabled)
             {
-                if (_config.TLSEnabled)
-                    return string.Format("wss://{0}", _config.WebSocketUrl);
+                if (_config.WebSocket.Secure)
+                    return string.Format("wss://{0}", _config.WebSocket.URI);
                 else
-                    return string.Format("ws://{0}", _config.WebSocketUrl);
+                    return string.Format("ws://{0}", _config.WebSocket.URI);
             }
 
-            if (!_config.WebSocket && !string.IsNullOrEmpty(_config.Hostname))
+            if (_config.TCP != null && _config.TCP.Enabled)
             {
-                if (_config.TLSEnabled)
-                    return string.Format("tls://{0}:{1}", _config.Hostname, _config.Port);
+                if (_config.TCP.Secure)
+                    return string.Format("tls://{0}:{1}", _config.TCP.Hostname, _config.TCP.Port);
                 else
-                    return string.Format("tcp://{0}:{1}", _config.Hostname, _config.Port);
+                    return string.Format("tcp://{0}:{1}", _config.TCP.Hostname, _config.TCP.Port);
             }
 
             return "unknown";
