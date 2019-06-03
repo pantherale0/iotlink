@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -225,7 +225,7 @@ namespace WinIOTLink.Helpers.WinAPI
             }
         }
 
-        public static bool Run(string command, string args, string workDir, string username)
+        public static bool Run(string command, string args = null, string workDir = null, string username = null)
         {
             if (string.IsNullOrWhiteSpace(command))
                 return false;
