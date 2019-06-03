@@ -1,4 +1,8 @@
-﻿using System.ServiceProcess;
+﻿using System;
+using System.Configuration.Install;
+using System.Reflection;
+using System.ServiceProcess;
+using WinIOTLink.Helpers;
 
 namespace WinIOTLink
 {
@@ -7,14 +11,34 @@ namespace WinIOTLink
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        static void Main()
+        static void Main(string[] args)
         {
-            ServiceBase[] ServicesToRun;
-            ServicesToRun = new ServiceBase[]
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
+
+            if (Environment.UserInteractive)
             {
-                new WinIOTLinkService()
-            };
-            ServiceBase.Run(ServicesToRun);
+                string parameter = string.Concat(args);
+                switch (parameter)
+                {
+                    case "--install":
+                        ManagedInstallerClass.InstallHelper(new string[] { Assembly.GetExecutingAssembly().Location });
+                        break;
+                    case "--uninstall":
+                        ManagedInstallerClass.InstallHelper(new string[] { "/u", Assembly.GetExecutingAssembly().Location });
+                        break;
+                    default: break;
+                }
+            }
+            else
+            {
+                ServiceBase service = new WinIOTLinkService();
+                ServiceBase.Run(service);
+            }
+        }
+
+        private static void CurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            LoggerHelper.Critical("WinIOTLink", "Critical Unhandled Exception: " + e.ToString());
         }
     }
 }
