@@ -122,7 +122,8 @@
     <Compile Include="Engine\AddonManager.cs" />
     <Compile Include="Engine\MainEngine.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
-    <Compile Include="Engine\MQTT\MQTTEvent.cs" />
+    <Compile Include="Engine\MQTT\MQTTEventEventArgs.cs" />
+    <Compile Include="Engine\MQTT\MQTTMessageEventEventArgs.cs" />
     <Compile Include="Engine\MQTT\MQTTMessage.cs" />
     <Compile Include="Helpers\PathHelper.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />

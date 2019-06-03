@@ -10,6 +10,7 @@ namespace WinIOTLink.Engine
     public class MainEngine
     {
         private static MainEngine _instance;
+        private bool _addonsLoaded;
 
         public static MainEngine GetInstance()
         {
@@ -32,10 +33,38 @@ namespace WinIOTLink.Engine
                 return;
             }
 
-            MQTTClient.GetInstance().Init(applicationConfig.MQTT);
+            MQTTClient client = MQTTClient.GetInstance();
+            client.Init(applicationConfig.MQTT);
+            client.OnMQTTConnected += OnMQTTConnected;
+            client.OnMQTTDisconnected += OnMQTTDisconnected;
+            client.OnMQTTMessageReceived += OnMQTTMessageReceived;
+
+        }
+        private void OnMQTTConnected(object sender, MQTTEventEventArgs e)
+        {
+            AddonManager addonsManager = AddonManager.GetInstance();
+            if (!_addonsLoaded)
+            {
+                addonsManager.LoadAddons();
+                _addonsLoaded = true;
+            }
+
+            addonsManager.Raise_OnMQTTConnected(sender, e);
         }
 
-        internal void OnSessionChange(string username, SessionChangeReason reason)
+        private void OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
+        {
+            AddonManager addonsManager = AddonManager.GetInstance();
+            addonsManager.Raise_OnMQTTDisconnected(sender, e);
+        }
+
+        private void OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
+        {
+            AddonManager addonsManager = AddonManager.GetInstance();
+            addonsManager.Raise_OnMQTTMessageReceived(sender, e);
+        }
+
+        private void OnSessionChange(string username, SessionChangeReason reason)
         {
             LoggerHelper.WriteToFile("OnSessionChange", String.Format("{0}: {1}", username, reason.ToString()), LogLevel.INFO);
 

@@ -11,7 +11,7 @@ using static WinIOTLink.Helpers.LoggerHelper;
 
 namespace WinIOTLink.Engine.MQTT
 {
-    class MQTTClient
+    internal class MQTTClient
     {
         private static MQTTClient _instance;
 
@@ -19,6 +19,13 @@ namespace WinIOTLink.Engine.MQTT
         private IMqttClient _client;
         private IMqttClientOptions _options;
         private bool _connecting;
+
+        public event MQTTEventHandler OnMQTTConnected;
+        public event MQTTEventHandler OnMQTTDisconnected;
+        public event MQTTMessageEventHandler OnMQTTMessageReceived;
+
+        public delegate void MQTTEventHandler(Object sender, MQTTEventEventArgs e);
+        public delegate void MQTTMessageEventHandler(Object sender, MQTTMessageEventEventArgs e);
 
         public static MQTTClient GetInstance()
         {
@@ -61,9 +68,9 @@ namespace WinIOTLink.Engine.MQTT
             _options = MqttOptionBuilder.Build();
 
             _client = new MqttFactory().CreateMqttClient();
-            _client.UseConnectedHandler(OnMQTTConnected);
-            _client.UseDisconnectedHandler(OnMQTTDisconnect);
-            _client.UseApplicationMessageReceivedHandler(OnMQTTMessageReceived);
+            _client.UseConnectedHandler(OnConnectedHandler);
+            _client.UseDisconnectedHandler(OnDisconnectedHandler);
+            _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
             Connect();
         }
 
@@ -117,13 +124,28 @@ namespace WinIOTLink.Engine.MQTT
             _connecting = false;
         }
 
-        private async Task OnMQTTConnected(MqttClientConnectedEventArgs arg)
+        private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
             LoggerHelper.WriteToFile("MQTTClient", "MQTT Connected", LogLevel.INFO);
-            MQTTEvent mqttEvent = new MQTTEvent(MQTTEvent.MQTTEventType.Connect, arg);
+            MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
 
             // Subscribe to ALL Messages
             SubscribeTopic(GetFullTopicName("#"));
+        }
+
+        private async Task OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
+        {
+            LoggerHelper.WriteToFile("MQTTClient", "MQTT Disconnected", LogLevel.INFO);
+            MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
+            Connect();
+        }
+
+        private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
+        {
+            LoggerHelper.WriteToFile("MQTTClient", String.Format("MQTT Message Received - Topic: {0}, Message: {1}", arg.ApplicationMessage.Topic, arg.ApplicationMessage.Payload), LogLevel.INFO);
+
+            MQTTMessage message = GetMQTTMessage(arg);
+            MQTTMessageEventEventArgs mqttEvent = new MQTTMessageEventEventArgs(MQTTEventEventArgs.MQTTEventType.MessageReceived, message, arg);
         }
 
         private async void SubscribeTopic(string topic)
@@ -131,21 +153,6 @@ namespace WinIOTLink.Engine.MQTT
             LoggerHelper.WriteToFile("MQTTClient", String.Format("Subscribing to {0}", topic), LogLevel.INFO);
 
             await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
-        }
-
-        private async Task OnMQTTDisconnect(MqttClientDisconnectedEventArgs arg)
-        {
-            LoggerHelper.WriteToFile("MQTTClient", "MQTT Disconnected", LogLevel.INFO);
-            MQTTEvent mqttEvent = new MQTTEvent(MQTTEvent.MQTTEventType.Disconnect, arg);
-            Connect();
-        }
-
-        private async Task OnMQTTMessageReceived(MqttApplicationMessageReceivedEventArgs arg)
-        {
-            LoggerHelper.WriteToFile("MQTTClient", String.Format("MQTT Message Received - Topic: {0}, Message: {1}", arg.ApplicationMessage.Topic, arg.ApplicationMessage.Payload), LogLevel.INFO);
-
-            MQTTMessage message = GetMQTTMessage(arg);
-            MQTTEvent mqttEvent = new MQTTEvent(MQTTEvent.MQTTEventType.MessageReceived, message, arg);
         }
 
         private MQTTMessage GetMQTTMessage(MqttApplicationMessageReceivedEventArgs arg)

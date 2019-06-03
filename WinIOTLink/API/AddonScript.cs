@@ -1,4 +1,5 @@
 ﻿using System;
+using WinIOTLink.Engine.MQTT;
 
 namespace WinIOTLink.API
 {
@@ -10,6 +11,27 @@ namespace WinIOTLink.API
 	/// <seealso cref="AddonBase"/>
     public abstract class AddonScript : AddonBase, IDisposable
     {
+        public event MQTTEventHandler OnMQTTConnected;
+        public event MQTTEventHandler OnMQTTDisconnected;
+        public event MQTTMessageEventHandler OnMQTTMessageReceived;
+
+        public delegate void MQTTEventHandler(Object sender, MQTTEventEventArgs e);
+        public delegate void MQTTMessageEventHandler(Object sender, MQTTMessageEventEventArgs e);
+
+        internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
+        {
+            OnMQTTConnected?.Invoke(sender, e);
+        }
+
+        internal void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
+        {
+            OnMQTTDisconnected?.Invoke(sender, e);
+        }
+
+        internal void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
+        {
+            OnMQTTMessageReceived?.Invoke(sender, e);
+        }
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
