@@ -6,6 +6,7 @@ using WinIOTLink.Addons;
 using WinIOTLink.API;
 using WinIOTLink.Configs;
 using WinIOTLink.Engine.MQTT;
+using WinIOTLink.Engine.System;
 using WinIOTLink.Helpers;
 using WinIOTLink.Loaders;
 using static WinIOTLink.Engine.MQTT.MQTTHandlers;
@@ -33,7 +34,7 @@ namespace WinIOTLink.Engine
 
         public void SubscribeTopic(AddonScript sender, string topic, MQTTMessageEventHandler msgHandler)
         {
-            if (sender == null || HasSubscription(sender, topic))
+            if (sender == null || string.IsNullOrWhiteSpace(topic) || HasSubscription(sender, topic))
                 return;
 
             string addonTopic = GetAddonTopic(sender, topic);
@@ -60,6 +61,24 @@ namespace WinIOTLink.Engine
             _topics.Remove(addonTopic);
 
             LoggerHelper.Info("AddonManager", string.Format("Addon {0} has removed subscription to topic {1}", sender.GetAppInfo().AddonId, addonTopic));
+        }
+
+        public void PublishMessage(AddonScript sender, string topic, string message)
+        {
+            if (sender == null || string.IsNullOrWhiteSpace(topic))
+                return;
+
+            string addonTopic = GetAddonTopic(sender, topic);
+            MQTTClient.GetInstance().PublishMessage(addonTopic, message);
+        }
+
+        public void PublishMessage(AddonScript sender, string topic, byte[] message)
+        {
+            if (sender == null || string.IsNullOrWhiteSpace(topic))
+                return;
+
+            string addonTopic = GetAddonTopic(sender, topic);
+            MQTTClient.GetInstance().PublishMessage(addonTopic, message);
         }
 
         /// <summary>
@@ -275,6 +294,16 @@ namespace WinIOTLink.Engine
                 return string.Empty;
 
             return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addon.GetAppInfo().AddonId, topic));
+        }
+
+        internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
+        {
+            List<AddonInfo> addons = this.GetAppList();
+            foreach (AddonInfo addonInfo in addons)
+            {
+                if (addonInfo.ScriptClass != null)
+                    addonInfo.ScriptClass.Raise_OnSessionChange(sender, e);
+            }
         }
 
         internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)

@@ -11,11 +11,12 @@ namespace WinIOTLink.Helpers
             if (string.IsNullOrWhiteSpace(name))
                 return string.Empty;
 
-            return StringHelper.RemoveDiacritics(name)
+            return StringHelper.PascalToKebabCase(
+                StringHelper.RemoveDiacritics(name)
                 .Replace(" ", "_")
                 .Replace("\\", "")
                 .Trim()
-                .ToLowerInvariant();
+            );
         }
 
         public static string SanitizeTopic(string topic)
@@ -23,7 +24,7 @@ namespace WinIOTLink.Helpers
             if (string.IsNullOrWhiteSpace(topic))
                 return string.Empty;
 
-            topic = topic.Replace("\\\\", "\\").Trim().ToLowerInvariant();
+            topic = topic.Replace("\\\\", "\\").Trim();
             string[] nodes = topic.Split('/');
 
             StringBuilder sb = new StringBuilder();
@@ -34,7 +35,7 @@ namespace WinIOTLink.Helpers
             }
 
             sb.Length--;
-            return sb.ToString();
+            return sb.ToString().ToLowerInvariant();
         }
     }
 }

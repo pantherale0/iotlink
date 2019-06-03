@@ -88,6 +88,22 @@ namespace WinIOTLink.Engine.MQTT
             await _client.PublishAsync(msg);
         }
 
+        public async void PublishMessage(string topic, byte[] message)
+        {
+            if (!_client.IsConnected)
+                return;
+
+            string fullTopic = GetFullTopicName(topic);
+
+            LoggerHelper.Info("MQTTClient", string.Format("Publishing to {0}: ({1} bytes)", fullTopic, message?.Length));
+            var msg = new MqttApplicationMessageBuilder()
+            .WithTopic(fullTopic)
+            .WithPayload(message)
+            .Build();
+
+            await _client.PublishAsync(msg);
+        }
+
         public bool isConnected()
         {
             return _client.IsConnected;

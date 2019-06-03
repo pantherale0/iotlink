@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Timers;
 using WinIOTLink.API;
+using WinIOTLink.Engine.System;
 using WinIOTLink.Helpers;
 
 namespace WinIOTLink.Addons
@@ -19,12 +20,21 @@ namespace WinIOTLink.Addons
             _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
             _monitorTimer.Enabled = true;
 
-            LoggerHelper.Info("SetupMonitor", string.Format("System monitor is set to an interval of {0} seconds.", seconds));
+            LoggerHelper.Info("WindowsMonitor", string.Format("System monitor is set to an interval of {0} seconds.", seconds));
+
+            OnSessionChangeHandler += OnSessionChange;
+        }
+
+        private void OnSessionChange(object sender, SessionChangeEventArgs e)
+        {
+            LoggerHelper.Info("WindowsMonitor", string.Format("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username));
+
+            _manager.PublishMessage(this, e.Reason.ToString(), e.Username);
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
-            LoggerHelper.Info("OnMonitorTimer", "System monitor running");
+            LoggerHelper.Info("WindowsMonitor", "System monitor running");
         }
     }
 }

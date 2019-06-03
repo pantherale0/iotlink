@@ -127,6 +127,7 @@
     <Compile Include="Engine\MQTT\MQTTHandlers.cs" />
     <Compile Include="Engine\MQTT\MQTTMessageEventEventArgs.cs" />
     <Compile Include="Engine\MQTT\MQTTMessage.cs" />
+    <Compile Include="Engine\System\SessionChangeEventArgs.cs" />
     <Compile Include="Helpers\MQTTHelper.cs" />
     <Compile Include="Helpers\PathHelper.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />

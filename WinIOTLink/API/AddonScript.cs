@@ -1,4 +1,6 @@
-﻿using WinIOTLink.Engine.MQTT;
+﻿using System;
+using WinIOTLink.Engine.MQTT;
+using WinIOTLink.Engine.System;
 using static WinIOTLink.Engine.MQTT.MQTTHandlers;
 
 namespace WinIOTLink.API
@@ -11,26 +13,35 @@ namespace WinIOTLink.API
 	/// <seealso cref="AddonBase"/>
     public abstract class AddonScript : AddonBase
     {
-        public event MQTTEventHandler OnMQTTConnected;
-        public event MQTTEventHandler OnMQTTDisconnected;
-        public event MQTTMessageEventHandler OnMQTTMessageReceived;
+        public event MQTTEventHandler OnMQTTConnectedHandler;
+        public event MQTTEventHandler OnMQTTDisconnectedHandler;
+        public event MQTTMessageEventHandler OnMQTTMessageReceivedHandler;
+        public event SessionChangeHandler OnSessionChangeHandler;
+
+        public delegate void SessionChangeHandler(Object sender, SessionChangeEventArgs e);
+
+        internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
+        {
+            if (OnSessionChangeHandler != null)
+                OnSessionChangeHandler(this, e);
+        }
 
         internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
-            if (OnMQTTConnected != null)
-                OnMQTTConnected(sender, e);
+            if (OnMQTTConnectedHandler != null)
+                OnMQTTConnectedHandler(sender, e);
         }
 
         internal void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
-            if (OnMQTTDisconnected != null)
-                OnMQTTDisconnected(sender, e);
+            if (OnMQTTDisconnectedHandler != null)
+                OnMQTTDisconnectedHandler(sender, e);
         }
 
         internal void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
-            if (OnMQTTMessageReceived != null)
-                OnMQTTMessageReceived(sender, e);
+            if (OnMQTTMessageReceivedHandler != null)
+                OnMQTTMessageReceivedHandler(sender, e);
         }
     }
 }

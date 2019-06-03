@@ -2,6 +2,7 @@
 using System.ServiceProcess;
 using WinIOTLink.Configs;
 using WinIOTLink.Engine.MQTT;
+using WinIOTLink.Engine.System;
 using WinIOTLink.Helpers;
 using static WinIOTLink.Helpers.LoggerHelper;
 
@@ -66,9 +67,14 @@ namespace WinIOTLink.Engine
 
         internal void OnSessionChange(string username, SessionChangeReason reason)
         {
-            LoggerHelper.Info("OnSessionChange", string.Format("{0}: {1}", username, reason.ToString()));
+            SessionChangeEventArgs args = new SessionChangeEventArgs
+            {
+                Username = username,
+                Reason = reason
+            };
 
-            MQTTClient.GetInstance().PublishMessage(string.Format("{0}/{1}", "SessionMonitor", reason.ToString()), username);
+            AddonManager addonsManager = AddonManager.GetInstance();
+            addonsManager.Raise_OnSessionChange(this, args);
         }
     }
 }

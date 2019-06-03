@@ -139,5 +139,24 @@ namespace WinIOTLink.Helpers
 
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
+
+        /// <summary>
+        /// Convert PascalCase to kebab-case
+        /// </summary>
+        /// <param name="value">String using PascalCase</param>
+        /// <returns>String using kebab-case</returns>
+        public static string PascalToKebabCase(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value;
+
+            return Regex.Replace(
+                value,
+                "(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])",
+                "-$1",
+                RegexOptions.Compiled)
+                .Trim()
+                .ToLower();
+        }
     }
 }
