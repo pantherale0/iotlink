@@ -42,6 +42,7 @@
             this.serviceInstaller1.DisplayName = "Win IOT Link";
             this.serviceInstaller1.ServiceName = "WinIOTLink";
             this.serviceInstaller1.Description = "Service to provide Internet Of Things (IOT) extensions";
+            this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             // 
             // ProjectInstaller
             // 
