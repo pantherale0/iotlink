@@ -12,12 +12,18 @@ namespace WinIOTLink.Engine.MQTT
 
         public string GetPayload()
         {
+            if (Payload == null || Payload.Length == 0)
+                return null;
+
             return Encoding.UTF8.GetString(Payload);
         }
 
         public void SetPayload(string message)
         {
-            Payload = Encoding.UTF8.GetBytes(message);
+            if (string.IsNullOrWhiteSpace(message))
+                Payload = null;
+            else
+                Payload = Encoding.UTF8.GetBytes(message);
         }
     }
 }

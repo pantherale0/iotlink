@@ -4,6 +4,7 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using WinIOTLink.Helpers;
 using static WinIOTLink.Configs.ApplicationConfig;
@@ -148,7 +149,7 @@ namespace WinIOTLink.Engine.MQTT
 
         private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
         {
-            LoggerHelper.Info("MQTTClient", string.Format("MQTT Message Received - Topic: {0}, Message: {1}", arg.ApplicationMessage.Topic, arg.ApplicationMessage.Payload));
+            LoggerHelper.Info("MQTTClient", string.Format("MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic));
 
             // Fire event
             MQTTMessage message = GetMQTTMessage(arg);

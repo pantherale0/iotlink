@@ -16,9 +16,9 @@ namespace WinIOTLink.Helpers
             return string.Format("{0}\\{1}", domainName, computerName);
         }
 
-        public static string GetUsername(int sessionId, bool prependDomain = false)
+        public static string GetUsername(int sessionId)
         {
-            return WindowsAPI.GetUsername(sessionId, prependDomain);
+            return WindowsAPI.GetUsername(sessionId);
         }
 
         public static void Shutdown(bool force = false)
@@ -50,23 +50,29 @@ namespace WinIOTLink.Helpers
         public static void Logoff(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
-                return;
-
-            if (username.Trim().ToUpperInvariant().CompareTo("ALL") == 0)
+            {
+                LoggerHelper.Debug("WindowsHelper", "Executing logoff on all users");
                 WindowsAPI.LogoffAll();
+            }
             else
+            {
+                LoggerHelper.Debug("WindowsHelper", string.Format("Executing Logoff on user {0}", username));
                 WindowsAPI.LogOffUser(username);
+            }
         }
 
         public static void Lock(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
-                return;
-
-            if (username.Trim().ToUpperInvariant().CompareTo("ALL") == 0)
+            {
+                LoggerHelper.Debug("WindowsHelper", "Locking all users sessions");
                 WindowsAPI.LockAll();
+            }
             else
+            {
+                LoggerHelper.Debug("WindowsHelper", string.Format("Locking {0} user session", username));
                 WindowsAPI.LockUser(username);
+            }
         }
     }
 }

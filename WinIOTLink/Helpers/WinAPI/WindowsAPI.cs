@@ -58,77 +58,132 @@ namespace WinIOTLink.Helpers.WinAPI
             public WtsConnectStateClass State;
         }
 
-        public static string GetUsername(int sessionId, bool prependDomain = false)
+        public static string GetUsername(int sessionId)
         {
-            IntPtr buffer;
-            int strLen;
-            string username = "SYSTEM";
-            if (WTSQuerySessionInformation(IntPtr.Zero, sessionId, WtsInfoClass.WTSUserName, out buffer, out strLen) && strLen > 1)
+            IntPtr server = GetServerPtr();
+            IntPtr buffer = IntPtr.Zero;
+            string username = string.Empty;
+            try
             {
-                username = Marshal.PtrToStringAnsi(buffer);
+                WTSQuerySessionInformation(server, sessionId, WtsInfoClass.WTSUserName, out buffer, out uint count);
+                username = Marshal.PtrToStringAnsi(buffer).ToUpper().Trim();
+            }
+            finally
+            {
                 WTSFreeMemory(buffer);
-                if (prependDomain)
-                {
-                    if (WTSQuerySessionInformation(IntPtr.Zero, sessionId, WtsInfoClass.WTSDomainName, out buffer, out strLen) && strLen > 1)
-                    {
-                        username = Marshal.PtrToStringAnsi(buffer) + "\\" + username;
-                        WTSFreeMemory(buffer);
-                    }
-                }
+                WTSCloseServer(server);
             }
             return username;
         }
 
+        public static string GetDomainName(int sessionId)
+        {
+            IntPtr server = GetServerPtr();
+            IntPtr buffer = IntPtr.Zero;
+            string domain = string.Empty;
+            try
+            {
+
+                WTSQuerySessionInformation(server, sessionId, WtsInfoClass.WTSDomainName, out buffer, out uint count);
+                domain = Marshal.PtrToStringAnsi(buffer).ToUpper().Trim();
+            }
+            finally
+            {
+                WTSFreeMemory(buffer);
+                WTSCloseServer(server);
+            }
+            return domain;
+        }
+
         public static void LockAll()
         {
-            List<int> sessions = GetSessionIDs();
-            Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions);
-            foreach (KeyValuePair<string, int> entry in userSessionDictionary)
+            IntPtr server = GetServerPtr();
+            try
             {
-                if (entry.Value != 0)
-                    WTSDisconnectSession(IntPtr.Zero, entry.Value, true);
+                List<int> sessions = GetSessionIDs(server);
+                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
+                foreach (KeyValuePair<string, int> entry in userSessionDictionary)
+                {
+                    if (entry.Value != 0)
+                    {
+                        WTSDisconnectSession(server, entry.Value, true);
+                    }
+                }
+            }
+            finally
+            {
+                WTSCloseServer(server);
             }
         }
 
         public static bool LockUser(string username)
         {
-            username = username.Trim().ToUpper();
-            List<int> sessions = GetSessionIDs();
-            Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions);
-            if (userSessionDictionary.ContainsKey(username))
-                return WTSDisconnectSession(IntPtr.Zero, userSessionDictionary[username], true);
-            else
-                return false;
+            IntPtr server = GetServerPtr();
+            try
+            {
+                username = username.Trim().ToUpper();
+
+                List<int> sessions = GetSessionIDs(server);
+                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
+
+                if (userSessionDictionary.ContainsKey(username))
+                    return WTSDisconnectSession(server, userSessionDictionary[username], true);
+                else
+                    return false;
+            }
+            finally
+            {
+                WTSCloseServer(server);
+            }
         }
 
         public static void LogoffAll()
         {
-            List<int> sessions = GetSessionIDs();
-            Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions);
-            foreach (KeyValuePair<string, int> entry in userSessionDictionary)
+            IntPtr server = GetServerPtr();
+            try
             {
-                if (entry.Value != 0)
-                    WTSLogoffSession(IntPtr.Zero, entry.Value, true);
+                List<int> sessions = GetSessionIDs(server);
+                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
+                foreach (KeyValuePair<string, int> entry in userSessionDictionary)
+                {
+                    if (entry.Value != 0)
+                    {
+                        WTSLogoffSession(server, entry.Value, true);
+                    }
+                }
+            }
+            finally
+            {
+                WTSCloseServer(server);
             }
         }
 
         public static bool LogOffUser(string username)
         {
-            username = username.Trim().ToUpper();
-            List<int> sessions = GetSessionIDs();
-            Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions);
-            if (userSessionDictionary.ContainsKey(username))
-                return WTSLogoffSession(IntPtr.Zero, userSessionDictionary[username], true);
-            else
-                return false;
+            IntPtr server = GetServerPtr();
+            try
+            {
+                username = username.Trim().ToUpper();
+
+                List<int> sessions = GetSessionIDs(server);
+                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
+                if (userSessionDictionary.ContainsKey(username))
+                    return WTSLogoffSession(server, userSessionDictionary[username], true);
+                else
+                    return false;
+            }
+            finally
+            {
+                WTSCloseServer(server);
+            }
         }
 
-        public static List<int> GetSessionIDs()
+        private static List<int> GetSessionIDs(IntPtr server)
         {
             List<int> sessionIds = new List<int>();
             IntPtr buffer = IntPtr.Zero;
             int count = 0;
-            int retval = WTSEnumerateSessions(IntPtr.Zero, 0, 1, ref buffer, ref count);
+            int retval = WTSEnumerateSessions(server, 0, 1, ref buffer, ref count);
             int dataSize = Marshal.SizeOf(typeof(WtsSessionInfo));
             Int64 current = (int)buffer;
 
@@ -145,7 +200,7 @@ namespace WinIOTLink.Helpers.WinAPI
             return sessionIds;
         }
 
-        public static Dictionary<string, int> GetUserSessionDictionary(List<int> sessions)
+        private static Dictionary<string, int> GetUserSessionDictionary(List<int> sessions, IntPtr server)
         {
             Dictionary<string, int> userSession = new Dictionary<string, int>();
 
@@ -158,8 +213,19 @@ namespace WinIOTLink.Helpers.WinAPI
             return userSession;
         }
 
+        private static IntPtr GetServerPtr()
+        {
+            return WTSOpenServer(Environment.MachineName);
+        }
+
+        [DllImport("wtsapi32.dll", SetLastError = true)]
+        static extern IntPtr WTSOpenServer([MarshalAs(UnmanagedType.LPStr)] String pServerName);
+
+        [DllImport("wtsapi32.dll")]
+        static extern void WTSCloseServer(IntPtr hServer);
+
         [DllImport("Wtsapi32.dll")]
-        public static extern bool WTSQuerySessionInformation(IntPtr hServer, int sessionId, WtsInfoClass wtsInfoClass, out IntPtr ppBuffer, out int pBytesReturned);
+        public static extern bool WTSQuerySessionInformation(IntPtr hServer, int sessionId, WtsInfoClass wtsInfoClass, out IntPtr ppBuffer, out uint pBytesReturned);
 
         [DllImport("Wtsapi32.dll")]
         public static extern void WTSFreeMemory(IntPtr pMemory);
