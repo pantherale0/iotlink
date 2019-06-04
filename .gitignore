@@ -351,3 +351,5 @@ MigrationBackup/
 
 config.yaml
 *.bat
+
+*.exe
