@@ -22,6 +22,7 @@ namespace WinIOTLink
         protected override void OnStop()
         {
             LoggerHelper.Info("WinIOTLink", "Service is stopped.");
+            MainEngine.GetInstance().StopApplication();
         }
 
         protected override void OnSessionChange(SessionChangeDescription changeDescription)

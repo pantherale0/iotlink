@@ -48,6 +48,11 @@ namespace WinIOTLink.Engine
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
         }
 
+        internal void StopApplication()
+        {
+            LoggerHelper.GetInstance().Flush();
+        }
+
         private void OnConfigChanged(object sender, FileSystemEventArgs e)
         {
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(5) <= DateTime.Now)
