@@ -34,10 +34,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Source: "WinIOTLink\bin\Release\WinIOTLink.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WinIOTLink\bin\Release\MQTTnet.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WinIOTLink\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "WinIOTLink\bin\Release\Newtonsoft.Json.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WinIOTLink\bin\Release\WinIOTLink.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WinIOTLink\bin\Release\YamlDotNet.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "WinIOTLink\bin\Release\YamlDotNet.xml"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: "Setup\config.yaml-sample"; DestDir: "{app}\Data"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs
 
