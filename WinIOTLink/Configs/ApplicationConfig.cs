@@ -13,6 +13,9 @@ namespace WinIOTLink.Configs
 
         public class MonitorConfig
         {
+            [YamlMember(Alias = "enabled")]
+            public bool Enabled { get; set; }
+
             [YamlMember(Alias = "interval")]
             public int Interval { get; set; }
         }

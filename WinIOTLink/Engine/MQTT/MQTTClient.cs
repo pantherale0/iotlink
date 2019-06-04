@@ -147,9 +147,12 @@ namespace WinIOTLink.Engine.MQTT
             await _client.PublishAsync(mqttMsg);
         }
 
-        public bool isConnected()
+        internal void Disconnect()
         {
-            return _client.IsConnected;
+            if (!_client.IsConnected)
+                return;
+
+            _client.DisconnectAsync();
         }
 
         private async void Connect()
@@ -186,7 +189,7 @@ namespace WinIOTLink.Engine.MQTT
             LoggerHelper.Info("MQTTClient", "MQTT Connected");
 
             // Send LWT Connected
-            if (_config.LWT != null && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
+            if (_config.LWT != null && _config.LWT.Enabled && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
                 await _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage));
 
             // Fire event

@@ -16,7 +16,7 @@ namespace WinIOTLink
         protected override void OnStart(string[] args)
         {
             LoggerHelper.Info("WinIOTLink", "Service is started.");
-            MainEngine.GetInstance().StartApplication(ConfigHelper.GetApplicationConfig());
+            MainEngine.GetInstance().StartApplication();
         }
 
         protected override void OnStop()

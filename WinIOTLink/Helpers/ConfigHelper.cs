@@ -9,9 +9,9 @@ namespace WinIOTLink.Helpers
     {
         private static ApplicationConfig _config;
 
-        internal static ApplicationConfig GetApplicationConfig()
+        internal static ApplicationConfig GetApplicationConfig(bool force = false)
         {
-            if (_config != null)
+            if (_config != null && !force)
                 return _config;
 
             LoggerHelper.Info("WinIOTLink", "Reading configuration.yaml");

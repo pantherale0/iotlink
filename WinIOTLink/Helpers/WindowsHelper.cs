@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using WinIOTLink.Helpers.WinAPI;
+using WinIOTLink.Platform.Windows;
 
 namespace WinIOTLink.Helpers
 {
@@ -40,12 +40,12 @@ namespace WinIOTLink.Helpers
 
         public static void Hibernate()
         {
-            WindowsAPI.SetSuspendState(true, true, true);
+            WindowsAPI.Hibernate();
         }
 
         public static void Suspend()
         {
-            WindowsAPI.SetSuspendState(false, true, true);
+            WindowsAPI.Suspend();
         }
 
         public static void Logoff(string username)
@@ -83,6 +83,11 @@ namespace WinIOTLink.Helpers
 
             LoggerHelper.Info("WindowsHelper", String.Format("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username));
             WindowsAPI.Run(command, args, path, username);
+        }
+
+        public static WindowsAPI.MemoryInfo GetMemoryInformation()
+        {
+            return WindowsAPI.GetMemoryInformation();
         }
     }
 }

@@ -137,7 +137,11 @@
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\ConfigHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
-    <Compile Include="Helpers\WinAPI\WindowsAPI.cs" />
+    <Compile Include="Platform\Windows\WindowsAPI.cs" />
+    <Compile Include="Platform\Windows\Native\WtsApi32.cs" />
+    <Compile Include="Platform\Windows\Native\AdvApi32.cs" />
+    <Compile Include="Platform\Windows\Native\Kernel32.cs" />
+    <Compile Include="Platform\Windows\Native\PowrProf.cs" />
     <Compile Include="Loaders\AssemblyLoader.cs" />
     <Compile Include="Helpers\LoggerHelper.cs" />
     <Compile Include="Engine\MQTT\MQTTClient.cs" />

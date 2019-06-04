@@ -1,10 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.ServiceProcess;
 using WinIOTLink.Configs;
 using WinIOTLink.Engine.MQTT;
 using WinIOTLink.Engine.System;
 using WinIOTLink.Helpers;
-using static WinIOTLink.Helpers.LoggerHelper;
 
 namespace WinIOTLink.Engine
 {
@@ -12,6 +12,9 @@ namespace WinIOTLink.Engine
     {
         private static MainEngine _instance;
         private bool _addonsLoaded;
+
+        private FileSystemWatcher _configWatcher;
+        private DateTime _lastConfigChange;
 
         public static MainEngine GetInstance()
         {
@@ -23,24 +26,41 @@ namespace WinIOTLink.Engine
 
         private MainEngine()
         {
-
+            _configWatcher = new FileSystemWatcher(PathHelper.DataPath(), "configuration.yaml");
+            _configWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            _configWatcher.Changed += OnConfigChanged;
+            _configWatcher.EnableRaisingEvents = true;
         }
 
-        public void StartApplication(ApplicationConfig applicationConfig)
+        public void StartApplication()
         {
-            if (applicationConfig.MQTT == null)
+            ApplicationConfig config = ConfigHelper.GetApplicationConfig(true);
+            if (config.MQTT == null)
             {
                 LoggerHelper.Error("MainEngine", "MQTT is disabled. Nothing to do.");
                 return;
             }
 
             MQTTClient client = MQTTClient.GetInstance();
-            client.Init(applicationConfig.MQTT);
+            client.Init(config.MQTT);
             client.OnMQTTConnected += OnMQTTConnected;
             client.OnMQTTDisconnected += OnMQTTDisconnected;
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
-
         }
+
+        private void OnConfigChanged(object sender, FileSystemEventArgs e)
+        {
+            if (_lastConfigChange == null || _lastConfigChange.AddSeconds(5) <= DateTime.Now)
+            {
+                LoggerHelper.Info("MainEngine", "Changes to configuration.yaml detected. Reloading.");
+                _lastConfigChange = DateTime.Now;
+
+                MQTTClient client = MQTTClient.GetInstance();
+                client.Disconnect();
+                StartApplication();
+            }
+        }
+
         private void OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
             AddonManager addonsManager = AddonManager.GetInstance();
