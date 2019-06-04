@@ -126,27 +126,27 @@ namespace WinIOTLink.Helpers
 
         public static void Error(Type origin, string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
+            GetInstance().WriteLog(LogLevel.ERROR, origin, message, args);
         }
 
         public static void Warn(Type origin, string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
+            GetInstance().WriteLog(LogLevel.WARNING, origin, message, args);
         }
 
         public static void Info(Type origin, string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
+            GetInstance().WriteLog(LogLevel.INFO, origin, message, args);
         }
 
         public static void Debug(Type origin, string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
+            GetInstance().WriteLog(LogLevel.DEBUG, origin, message, args);
         }
 
         public static void Trace(Type origin, string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
+            GetInstance().WriteLog(LogLevel.TRACE, origin, message, args);
         }
     }
 }
