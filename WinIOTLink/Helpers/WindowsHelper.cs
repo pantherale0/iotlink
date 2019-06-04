@@ -52,12 +52,12 @@ namespace WinIOTLink.Helpers
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                LoggerHelper.Debug("WindowsHelper", "Executing logoff on all users");
+                LoggerHelper.Debug(typeof(WindowsHelper), "Executing logoff on all users");
                 WindowsAPI.LogoffAll();
             }
             else
             {
-                LoggerHelper.Debug("WindowsHelper", string.Format("Executing Logoff on user {0}", username));
+                LoggerHelper.Debug(typeof(WindowsHelper), string.Format("Executing Logoff on user {0}", username));
                 WindowsAPI.LogOffUser(username);
             }
         }
@@ -66,12 +66,12 @@ namespace WinIOTLink.Helpers
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                LoggerHelper.Debug("WindowsHelper", "Locking all users sessions");
+                LoggerHelper.Debug(typeof(WindowsHelper), "Locking all users sessions");
                 WindowsAPI.LockAll();
             }
             else
             {
-                LoggerHelper.Debug("WindowsHelper", string.Format("Locking {0} user session", username));
+                LoggerHelper.Debug(typeof(WindowsHelper), string.Format("Locking {0} user session", username));
                 WindowsAPI.LockUser(username);
             }
         }
@@ -81,7 +81,7 @@ namespace WinIOTLink.Helpers
             if (!string.IsNullOrWhiteSpace(args))
                 args = string.Format("{0} {1}", Path.GetFileName(command), args);
 
-            LoggerHelper.Info("WindowsHelper", String.Format("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username));
+            LoggerHelper.Info(typeof(WindowsHelper), String.Format("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username));
             WindowsAPI.Run(command, args, path, username);
         }
 

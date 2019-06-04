@@ -14,10 +14,10 @@ namespace WinIOTLink.Helpers
             if (_config != null && !force)
                 return _config;
 
-            LoggerHelper.Info("WinIOTLink", "Reading configuration.yaml");
+            LoggerHelper.Info(typeof(ConfigHelper), "Reading configuration.yaml");
 
             string path = PathHelper.DataPath() + "\\configuration.yaml";
-            string ConfigText = File.ReadAllText(path);
+            string ConfigText = PathHelper.GetFileText(path);
             StringReader Reader = new StringReader(ConfigText);
             IDeserializer YAMLDeserializer = new DeserializerBuilder().Build();
 

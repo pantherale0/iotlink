@@ -46,7 +46,7 @@ namespace WinIOTLink.Helpers
                     _logWriter = File.AppendText(path);
 
                 _flushTimer = new Timer();
-                _flushTimer.Interval = 5 * 1000;
+                _flushTimer.Interval = 1500;
                 _flushTimer.Elapsed += OnFlushInterval;
                 _flushTimer.Enabled = true;
             }
@@ -103,12 +103,12 @@ namespace WinIOTLink.Helpers
             Flush();
         }
 
-        private void WriteLog(LogLevel logLevel, object origin, string message, params object[] args)
+        private void WriteLog(LogLevel logLevel, Type origin, string message, params object[] args)
         {
             if (origin == null || string.IsNullOrWhiteSpace(message))
                 return;
 
-            string messageTag = origin.GetType().Name;
+            string messageTag = origin.Name;
             string formatedMessage;
             if (args == null || args.Length == 0)
                 formatedMessage = message;
@@ -119,32 +119,32 @@ namespace WinIOTLink.Helpers
             WriteFile(finalMessage);
         }
 
-        public static void Critical(object origin, string message, params object[] args)
+        public static void Critical(Type origin, string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
         }
 
-        public static void Error(object origin, string message, params object[] args)
+        public static void Error(Type origin, string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
         }
 
-        public static void Warn(object origin, string message, params object[] args)
+        public static void Warn(Type origin, string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
         }
 
-        public static void Info(object origin, string message, params object[] args)
+        public static void Info(Type origin, string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
         }
 
-        public static void Debug(object origin, string message, params object[] args)
+        public static void Debug(Type origin, string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
         }
 
-        public static void Trace(object origin, string message, params object[] args)
+        public static void Trace(Type origin, string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
         }

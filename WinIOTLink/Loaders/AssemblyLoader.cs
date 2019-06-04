@@ -37,7 +37,7 @@ namespace WinIOTLink.Loaders
 
                     if (scriptType != null)
                     {
-                        LoggerHelper.Debug("AssemblyLoader", "Found AppScript!");
+                        LoggerHelper.Debug(typeof(AssemblyLoader), "Found AppScript!");
                         addonInfo.ScriptClass = (AddonScript)Activator.CreateInstance(scriptType);
                         return true;
                     }
@@ -47,7 +47,7 @@ namespace WinIOTLink.Loaders
             }
             catch (Exception e)
             {
-                LoggerHelper.Debug("AssemblyLoader", "Exception: " + e.ToString());
+                LoggerHelper.Debug(typeof(AssemblyLoader), "Exception: {0}", e.ToString());
             }
 
             return false;

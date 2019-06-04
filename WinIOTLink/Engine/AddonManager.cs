@@ -40,7 +40,7 @@ namespace WinIOTLink.Engine
             string addonTopic = GetAddonTopic(sender, topic);
             _topics.Add(addonTopic, msgHandler);
 
-            LoggerHelper.Info("AddonManager", string.Format("Addon {0} has subscribed to topic {1}", sender.GetAppInfo().AddonId, addonTopic));
+            LoggerHelper.Info(typeof(AddonManager), "Addon {0} has subscribed to topic {1}", sender.GetAppInfo().AddonId, addonTopic);
         }
 
         public bool HasSubscription(AddonScript sender, string topic)
@@ -60,7 +60,7 @@ namespace WinIOTLink.Engine
             string addonTopic = GetAddonTopic(sender, topic);
             _topics.Remove(addonTopic);
 
-            LoggerHelper.Info("AddonManager", string.Format("Addon {0} has removed subscription to topic {1}", sender.GetAppInfo().AddonId, addonTopic));
+            LoggerHelper.Info(typeof(AddonManager), "Addon {0} has removed subscription to topic {1}", sender.GetAppInfo().AddonId, addonTopic);
         }
 
         public void PublishMessage(AddonScript sender, string topic, string message)
@@ -137,7 +137,7 @@ namespace WinIOTLink.Engine
                 return;
 
             id = id.Trim().ToLowerInvariant();
-            LoggerHelper.Info("AddonManager", "Loading addon: " + id);
+            LoggerHelper.Info(typeof(AddonManager), "Loading addon: {0}", id);
             _addons.Add(id, addonInfo);
         }
 
@@ -162,7 +162,7 @@ namespace WinIOTLink.Engine
                 new Windows()
             };
 
-            LoggerHelper.Info("AddonManager", string.Format("Loading {0} internal addons", internalAddons.Length));
+            LoggerHelper.Info(typeof(AddonManager), "Loading {0} internal addons", internalAddons.Length);
             foreach (AddonScript addon in internalAddons)
             {
                 AddonInfo addonInfo = new AddonInfo();
@@ -194,13 +194,13 @@ namespace WinIOTLink.Engine
             // Create addons directory.
             if (!Directory.Exists(addonsPath))
             {
-                LoggerHelper.Warn("AddonManager", string.Format("Addons directory doesn't exists. Creating {0}", addonsPath));
+                LoggerHelper.Warn(typeof(AddonManager), "Addons directory doesn't exists. Creating {0}", addonsPath);
                 Directory.CreateDirectory(addonsPath);
                 return;
             }
 
             List<string> dirs = new List<string>(Directory.EnumerateDirectories(addonsPath));
-            LoggerHelper.Info("AddonManager", string.Format("Loading {0} external addons", dirs.Count));
+            LoggerHelper.Info(typeof(AddonManager), "Loading {0} external addons", dirs.Count);
             foreach (var dir in dirs)
             {
                 string DirName = dir.Substring(dir.LastIndexOf("/") + 1);
@@ -255,9 +255,9 @@ namespace WinIOTLink.Engine
 			 */
             if (string.IsNullOrWhiteSpace(addonInfo.AddonId) || !StringHelper.IsValidID(addonInfo.AddonId))
             {
-                LoggerHelper.Error("AddonManager", "Invalid App: " + addonInfo.AddonName);
-                LoggerHelper.Error("AddonManager", "App unique id is missing or is invalid (only a-zA-Z0-9_ characters allowed).");
-                LoggerHelper.Error("AddonManager", "App disabled.");
+                LoggerHelper.Error(typeof(AddonManager), "Invalid App: {0}", addonInfo.AddonName);
+                LoggerHelper.Error(typeof(AddonManager), "App unique id is missing or is invalid (only a-zA-Z0-9_ characters allowed).");
+                LoggerHelper.Error(typeof(AddonManager), "App disabled.");
                 addonInfo.Enabled = false;
             }
 
@@ -266,9 +266,9 @@ namespace WinIOTLink.Engine
 			 */
             if (string.IsNullOrWhiteSpace(addonInfo.AddonName))
             {
-                LoggerHelper.Error("AddonManager", "Invalid App: " + addonInfo.AddonName);
-                LoggerHelper.Error("AddonManager", "App name is missing.");
-                LoggerHelper.Error("AddonManager", "App disabled.");
+                LoggerHelper.Error(typeof(AddonManager), "Invalid App: {0}", addonInfo.AddonName);
+                LoggerHelper.Error(typeof(AddonManager), "App name is missing.");
+                LoggerHelper.Error(typeof(AddonManager), "App disabled.");
                 addonInfo.Enabled = false;
             }
 
@@ -277,14 +277,14 @@ namespace WinIOTLink.Engine
 			 */
             if (!AssemblyHelper.CheckAssemblyVersion(config.MinApiVersion, config.MaxApiVersion))
             {
-                LoggerHelper.Error("AddonManager", "Incompatible App found: " + addonInfo.AddonName);
-                LoggerHelper.Error("AddonManager", "CurrentVersion: " + AssemblyHelper.GetCurrentVersion());
-                LoggerHelper.Error("AddonManager", "MinVersion: " + config.MinApiVersion + ", MaxVersion: " + config.MaxApiVersion);
-                LoggerHelper.Error("AddonManager", "App disabled.");
+                LoggerHelper.Error(typeof(AddonManager), "Incompatible App found: {0}", addonInfo.AddonName);
+                LoggerHelper.Error(typeof(AddonManager), "CurrentVersion: " + AssemblyHelper.GetCurrentVersion());
+                LoggerHelper.Error(typeof(AddonManager), "MinVersion: {0}, MaxVersion: {1}", config.MinApiVersion, config.MaxApiVersion);
+                LoggerHelper.Error(typeof(AddonManager), "App disabled.");
                 addonInfo.Enabled = false;
             }
 
-            LoggerHelper.Info("AddonManager", "Addon configuration loaded: " + addonInfo.AddonName);
+            LoggerHelper.Info(typeof(AddonManager), "Addon configuration loaded: {0}", addonInfo.AddonName);
             return true;
         }
 

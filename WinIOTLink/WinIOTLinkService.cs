@@ -15,13 +15,13 @@ namespace WinIOTLink
 
         protected override void OnStart(string[] args)
         {
-            LoggerHelper.Info("WinIOTLink", "Service is started.");
+            LoggerHelper.Info(typeof(WinIOTLinkService), "Service is started.");
             MainEngine.GetInstance().StartApplication();
         }
 
         protected override void OnStop()
         {
-            LoggerHelper.Info("WinIOTLink", "Service is stopped.");
+            LoggerHelper.Info(typeof(WinIOTLinkService), "Service is stopped.");
             MainEngine.GetInstance().StopApplication();
         }
 

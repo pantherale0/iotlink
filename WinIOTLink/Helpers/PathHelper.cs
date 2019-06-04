@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace WinIOTLink.Helpers
 {
@@ -22,6 +23,20 @@ namespace WinIOTLink.Helpers
         public static string AddonsPath()
         {
             return BasePath() + "\\Addons";
+        }
+
+        public static string GetFileText(string path)
+        {
+            if (path == null || !File.Exists(path))
+                return null;
+
+            using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (var textReader = new StreamReader(fileStream))
+                {
+                    return textReader.ReadToEnd();
+                }
+            }
         }
     }
 }

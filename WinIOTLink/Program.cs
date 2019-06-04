@@ -38,7 +38,8 @@ namespace WinIOTLink
 
         private static void CurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            LoggerHelper.Critical("WinIOTLink", "Critical Unhandled Exception: " + e.ExceptionObject.ToString());
+            LoggerHelper.Critical(typeof(Program), "Critical Unhandled Exception: " + e.ExceptionObject.ToString());
+            LoggerHelper.GetInstance().Flush();
         }
     }
 }

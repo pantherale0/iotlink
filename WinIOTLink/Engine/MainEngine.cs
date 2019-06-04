@@ -37,7 +37,7 @@ namespace WinIOTLink.Engine
             ApplicationConfig config = ConfigHelper.GetApplicationConfig(true);
             if (config.MQTT == null)
             {
-                LoggerHelper.Error("MainEngine", "MQTT is disabled. Nothing to do.");
+                LoggerHelper.Error(typeof(MainEngine), "MQTT is disabled. Nothing to do.");
                 return;
             }
 
@@ -55,9 +55,9 @@ namespace WinIOTLink.Engine
 
         private void OnConfigChanged(object sender, FileSystemEventArgs e)
         {
-            if (_lastConfigChange == null || _lastConfigChange.AddSeconds(5) <= DateTime.Now)
+            if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
             {
-                LoggerHelper.Info("MainEngine", "Changes to configuration.yaml detected. Reloading.");
+                LoggerHelper.Info(typeof(MainEngine), "Changes to configuration.yaml detected. Reloading.");
                 _lastConfigChange = DateTime.Now;
 
                 MQTTClient client = MQTTClient.GetInstance();

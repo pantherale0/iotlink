@@ -22,7 +22,7 @@ namespace WinIOTLink.Addons
             _config = ConfigHelper.GetApplicationConfig().Monitor;
             if (_config == null || !_config.Enabled)
             {
-                LoggerHelper.Info("WindowsMonitor", "System monitor is disabled.");
+                LoggerHelper.Info(typeof(WindowsMonitor), "System monitor is disabled.");
                 return;
             }
 
@@ -35,27 +35,27 @@ namespace WinIOTLink.Addons
             _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
             _monitorTimer.Enabled = true;
 
-            LoggerHelper.Info("WindowsMonitor", string.Format("System monitor is set to an interval of {0} seconds.", seconds));
+            LoggerHelper.Info(typeof(WindowsMonitor), "System monitor is set to an interval of {0} seconds.", seconds);
 
             OnSessionChangeHandler += OnSessionChange;
         }
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            LoggerHelper.Info("WindowsMonitor", string.Format("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username));
+            LoggerHelper.Info(typeof(WindowsMonitor), "OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
             _manager.PublishMessage(this, e.Reason.ToString(), e.Username);
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
-            LoggerHelper.Info("WindowsMonitor", "System monitor running");
+            LoggerHelper.Info(typeof(WindowsMonitor), "System monitor running");
 
-            LoggerHelper.Debug("WindowsMonitor", string.Format("CPU Utilization: {0}", _cpuPerformanceCounter.NextValue()));
+            LoggerHelper.Debug(typeof(WindowsMonitor), string.Format("CPU Utilization: {0}", _cpuPerformanceCounter.NextValue()));
 
             MemoryInfo memoryInfo = WindowsHelper.GetMemoryInformation();
-            LoggerHelper.Debug("WindowsMonitor", string.Format("Physical Total: {0}", memoryInfo.TotalPhysical));
-            LoggerHelper.Debug("WindowsMonitor", string.Format("Physical Available: {0}", memoryInfo.AvailPhysical));
+            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Total: {0}", memoryInfo.TotalPhysical);
+            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Available: {0}", memoryInfo.AvailPhysical);
         }
     }
 }
