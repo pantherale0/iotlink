@@ -37,7 +37,7 @@ namespace WinIOTLink.Engine
             ApplicationConfig config = ConfigHelper.GetApplicationConfig(true);
             if (config.MQTT == null)
             {
-                LoggerHelper.Error(typeof(MainEngine), "MQTT is disabled. Nothing to do.");
+                LoggerHelper.Warn(typeof(MainEngine), "MQTT is disabled or not configured yet.");
                 return;
             }
 

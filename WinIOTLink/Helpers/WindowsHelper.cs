@@ -25,26 +25,40 @@ namespace WinIOTLink.Helpers
         public static void Shutdown(bool force = false)
         {
             if (force)
+            {
+                LoggerHelper.Debug(typeof(WindowsHelper), "Executing forced system shutdown.");
                 Process.Start("shutdown", "/s /f /t 0");
+            }
             else
+            {
+                LoggerHelper.Debug(typeof(WindowsHelper), "Executing normal system shutdown.");
                 Process.Start("shutdown", "/s /t 0");
+            }
         }
 
         public static void Reboot(bool force = false)
         {
             if (force)
+            {
+                LoggerHelper.Debug(typeof(WindowsHelper), "Executing forced system reboot.");
                 Process.Start("shutdown", "/r /f /t 0");
+            }
             else
+            {
+                LoggerHelper.Debug(typeof(WindowsHelper), "Executing normal system reboot.");
                 Process.Start("shutdown", "/r /t 0");
+            }
         }
 
         public static void Hibernate()
         {
+            LoggerHelper.Debug(typeof(WindowsHelper), "Executing system hibernation.");
             WindowsAPI.Hibernate();
         }
 
         public static void Suspend()
         {
+            LoggerHelper.Debug(typeof(WindowsHelper), "Executing system suspend.");
             WindowsAPI.Suspend();
         }
 
@@ -52,7 +66,7 @@ namespace WinIOTLink.Helpers
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), "Executing logoff on all users");
+                LoggerHelper.Debug(typeof(WindowsHelper), "Executing Logoff on all users");
                 WindowsAPI.LogoffAll();
             }
             else
@@ -81,7 +95,7 @@ namespace WinIOTLink.Helpers
             if (!string.IsNullOrWhiteSpace(args))
                 args = string.Format("{0} {1}", Path.GetFileName(command), args);
 
-            LoggerHelper.Info(typeof(WindowsHelper), String.Format("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username));
+            LoggerHelper.Debug(typeof(WindowsHelper), "Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username);
             WindowsAPI.Run(command, args, path, username);
         }
 

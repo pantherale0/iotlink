@@ -12,17 +12,17 @@ namespace WinIOTLink.Helpers
 
         public static string LogsPath()
         {
-            return BasePath() + "\\Logs";
+            return Path.Combine(BasePath(), "Logs");
         }
 
         public static string DataPath()
         {
-            return BasePath() + "\\Data";
+            return Path.Combine(BasePath(), "Data");
         }
 
         public static string AddonsPath()
         {
-            return BasePath() + "\\Addons";
+            return Path.Combine(BasePath(), "Addons");
         }
 
         public static string GetFileText(string path)

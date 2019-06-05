@@ -15,14 +15,14 @@ namespace WinIOTLink.Loaders
         {
             try
             {
-                string filename = addonInfo.AddonPath + "/" + addonInfo.AddonFile;
+                string filename = Path.Combine(addonInfo.AddonPath, addonInfo.AddonFile);
 
                 if (File.Exists(filename))
                 {
                     byte[] bytes = File.ReadAllBytes(filename);
                     Assembly asb = Assembly.Load(bytes);
 
-                    // Load App and AppScript from the assembly.
+                    // Load AddonScript from the assembly.
                     AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                     AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += CurrentDomain_ReflectionOnlyAssemblyResolve;
 
@@ -37,7 +37,7 @@ namespace WinIOTLink.Loaders
 
                     if (scriptType != null)
                     {
-                        LoggerHelper.Debug(typeof(AssemblyLoader), "Found AppScript!");
+                        LoggerHelper.Debug(typeof(AssemblyLoader), "Found AddonScript!");
                         addonInfo.ScriptClass = (AddonScript)Activator.CreateInstance(scriptType);
                         return true;
                     }
@@ -47,7 +47,7 @@ namespace WinIOTLink.Loaders
             }
             catch (Exception e)
             {
-                LoggerHelper.Debug(typeof(AssemblyLoader), "Exception: {0}", e.ToString());
+                LoggerHelper.Debug(typeof(AssemblyLoader), "Unhandled Exception: {0}", e.ToString());
             }
 
             return false;

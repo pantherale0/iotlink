@@ -16,7 +16,7 @@ namespace WinIOTLink.Helpers
 
             LoggerHelper.Info(typeof(ConfigHelper), "Reading configuration.yaml");
 
-            string path = PathHelper.DataPath() + "\\configuration.yaml";
+            string path = Path.Combine(PathHelper.DataPath(), "configuration.yaml");
             string ConfigText = PathHelper.GetFileText(path);
             StringReader Reader = new StringReader(ConfigText);
             IDeserializer YAMLDeserializer = new DeserializerBuilder().Build();

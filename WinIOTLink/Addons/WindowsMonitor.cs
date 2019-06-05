@@ -49,7 +49,7 @@ namespace WinIOTLink.Addons
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
-            LoggerHelper.Info(typeof(WindowsMonitor), "System monitor running");
+            LoggerHelper.Debug(typeof(WindowsMonitor), "System monitor running");
 
             LoggerHelper.Debug(typeof(WindowsMonitor), string.Format("CPU Utilization: {0}", _cpuPerformanceCounter.NextValue()));
 

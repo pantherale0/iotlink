@@ -9,6 +9,7 @@ namespace WinIOTLink.Helpers
         private static LoggerHelper _instance;
         private StreamWriter _logWriter;
         private Timer _flushTimer;
+        private DateTime _lastMessage;
 
         public enum LogLevel
         {
@@ -32,44 +33,16 @@ namespace WinIOTLink.Helpers
 
         private LoggerHelper()
         {
-            try
-            {
-                string logsPath = PathHelper.LogsPath();
-                if (!Directory.Exists(logsPath))
-                    Directory.CreateDirectory(logsPath);
+            OpenLogFile();
 
-                string path = logsPath + "\\ServiceLog_" + DateTime.Now.Date.ToShortDateString().Replace('/', '_') + ".log";
-
-                if (!File.Exists(path))
-                    _logWriter = File.CreateText(path);
-                else
-                    _logWriter = File.AppendText(path);
-
-                _flushTimer = new Timer();
-                _flushTimer.Interval = 1500;
-                _flushTimer.Elapsed += OnFlushInterval;
-                _flushTimer.Enabled = true;
-            }
-            catch (Exception)
-            {
-                //TODO: Cry
-            }
+            _flushTimer = new Timer();
+            _flushTimer.Interval = 1000;
+            _flushTimer.Elapsed += OnFlushInterval;
         }
 
         ~LoggerHelper()
         {
-            try
-            {
-                if (_logWriter != null)
-                {
-                    _logWriter.Flush();
-                    _logWriter.Close();
-                }
-            }
-            catch (Exception)
-            {
-                //TODO: Cry
-            }
+            CloseLogFile();
         }
 
         public void Flush()
@@ -81,20 +54,65 @@ namespace WinIOTLink.Helpers
             }
             catch (Exception)
             {
-                //TODO: Cry again
+                //TODO: Cry
             }
         }
 
-        private void WriteFile(string message)
+        private void WriteFile(string message = null)
         {
             try
             {
                 if (_logWriter != null)
+                {
                     _logWriter.WriteLine(message);
+                    _flushTimer.Stop();
+                    _flushTimer.Start();
+                    _lastMessage = DateTime.Now;
+                }
             }
             catch (Exception)
             {
                 //TODO: Cry again
+            }
+        }
+
+        private void OpenLogFile()
+        {
+            try
+            {
+                string logsPath = PathHelper.LogsPath();
+                if (!Directory.Exists(logsPath))
+                    Directory.CreateDirectory(logsPath);
+
+                string filename = string.Format("ServiceLog_{0}.log", DateTime.Now.Date.ToShortDateString().Replace('/', '_'));
+                string path = Path.Combine(logsPath, filename);
+
+                if (!File.Exists(path))
+                    _logWriter = File.CreateText(path);
+                else
+                    _logWriter = File.AppendText(path);
+            }
+            catch (Exception)
+            {
+                // Cry
+            }
+        }
+
+        private void CloseLogFile()
+        {
+            try
+            {
+                if (_logWriter != null)
+                {
+                    _flushTimer.Stop();
+                    _logWriter.Flush();
+                    _logWriter.Close();
+                    _logWriter = null;
+                }
+            }
+            catch (Exception)
+            {
+                //TODO: Cry
             }
         }
 
@@ -116,6 +134,13 @@ namespace WinIOTLink.Helpers
                 formatedMessage = string.Format(message, args);
 
             string finalMessage = string.Format("[{0}][{1}][{2}][{3}]: {4}", WindowsHelper.GetFullMachineName(), DateTime.Now, logLevel.ToString(), messageTag, formatedMessage);
+
+            if (_lastMessage != null && _lastMessage.DayOfYear != DateTime.Now.DayOfYear)
+            {
+                CloseLogFile();
+                OpenLogFile();
+            }
+
             WriteFile(finalMessage);
         }
 
@@ -147,6 +172,11 @@ namespace WinIOTLink.Helpers
         public static void Trace(Type origin, string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.TRACE, origin, message, args);
+        }
+
+        internal static void EmptyLine()
+        {
+            GetInstance().WriteFile();
         }
     }
 }

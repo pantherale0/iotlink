@@ -82,10 +82,10 @@ namespace WinIOTLink.Engine
         }
 
         /// <summary>
-		/// Check if any application exists with the given ID.
+		/// Check if any addon exists with the given ID.
 		/// </summary>
-		/// <param name="id">String containing the application ID.</param>
-		/// <returns>True if the app exists, false otherwise.</returns>
+		/// <param name="id">String containing the addon ID.</param>
+		/// <returns>True if the addon exists, false otherwise.</returns>
 		public bool AddonExists(string id)
         {
             if (id == null)
@@ -102,7 +102,7 @@ namespace WinIOTLink.Engine
         /// <summary>
         /// Get an <see cref="AddonInfo"/> by its Id.
         /// </summary>
-        /// <param name="id">String containing the application ID</param>
+        /// <param name="id">String containing the addon ID</param>
         /// <returns><see cref="AddonInfo"/> if found. Blank structure otherwise.</returns>
         public AddonInfo GetAppById(string id)
         {
@@ -118,9 +118,9 @@ namespace WinIOTLink.Engine
         }
 
         /// <summary>
-        /// Get a list of all loaded applications.
+        /// Get a list of all loaded addons.
         /// </summary>
-        /// <returns>A list containing all loaded <see cref="AddonInfo">applications</see>.</returns>
+        /// <returns>A list containing all loaded <see cref="AddonInfo">addons</see>.</returns>
         public List<AddonInfo> GetAppList()
         {
             return this._addons.Values.ToList();
@@ -129,7 +129,7 @@ namespace WinIOTLink.Engine
         /// <summary>
 		/// Add an <see cref="AddonInfo"/> to the current loaded list.
 		/// </summary>
-		/// <param name="id">String containing the application ID.</param>
+		/// <param name="id">String containing the addon ID.</param>
 		/// <param name="AddonInfo"><see cref="AddonInfo"/> structure.</param>
 		internal void AddAddon(string id, AddonInfo addonInfo)
         {
@@ -142,17 +142,19 @@ namespace WinIOTLink.Engine
         }
 
         /// <summary>
-		/// Search into app directory and load all enabled and valid applications.
+		/// Search into app directory and load all enabled and valid addons.
 		/// </summary>
 		internal void LoadAddons()
         {
             this._addons.Clear();
             this.LoadInternalAddons();
-            this.LoadExternalAddons();
+
+            if (ConfigHelper.GetApplicationConfig().Addons?.Enabled == true)
+                this.LoadExternalAddons();
         }
 
         /// <summary>
-		/// Search into app directory and load all enabled and valid applications.
+		/// Search into app directory and load all enabled and valid addons.
 		/// </summary>
 		private void LoadInternalAddons()
         {
@@ -185,7 +187,7 @@ namespace WinIOTLink.Engine
         }
 
         /// <summary>
-		/// Search into app directory and load all enabled and valid applications.
+		/// Search into app directory and load all enabled and valid addons.
 		/// </summary>
 		private void LoadExternalAddons()
         {
@@ -203,10 +205,10 @@ namespace WinIOTLink.Engine
             LoggerHelper.Info(typeof(AddonManager), "Loading {0} external addons", dirs.Count);
             foreach (var dir in dirs)
             {
-                string DirName = dir.Substring(dir.LastIndexOf("/") + 1);
+                DirectoryInfo directoryInfo = new DirectoryInfo(dir);
                 AddonInfo addonInfo = new AddonInfo();
 
-                if (this.LoadSettingsFromDir(DirName, ref addonInfo) == true && addonInfo.Enabled == true)
+                if (this.LoadSettingsFromDir(directoryInfo.Name, ref addonInfo) == true && addonInfo.Enabled == true)
                 {
                     if (!AssemblyLoader.LoadAppAssembly(ref addonInfo))
                         continue;
@@ -224,7 +226,7 @@ namespace WinIOTLink.Engine
         }
 
         /// <summary>
-        /// Load the application informations
+        /// Load the addon informations
         /// </summary>
         /// <param name="DirName">Directory name containing the configuration file.</param>
         /// <param name="addonInfo"><see cref="AppInfo"/> structure to be loaded.</param>
@@ -251,7 +253,7 @@ namespace WinIOTLink.Engine
             addonInfo.AddonFile = config.AddonFile;
 
             /**
-			 * Check for a valid AppID
+			 * Check for a valid AddonId
 			 */
             if (string.IsNullOrWhiteSpace(addonInfo.AddonId) || !StringHelper.IsValidID(addonInfo.AddonId))
             {
@@ -262,7 +264,7 @@ namespace WinIOTLink.Engine
             }
 
             /**
-			 * Check for a valid AppName
+			 * Check for a valid AddonName
 			 */
             if (string.IsNullOrWhiteSpace(addonInfo.AddonName))
             {

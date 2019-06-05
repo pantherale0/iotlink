@@ -32,7 +32,7 @@ mqtt:
     ########################################################################
     # Enabled
     ########################################################################
-    # This flag indicates wether the module is enabled or disabled.
+    # This flag indicates whether the module is enabled or disabled.
     ########################################################################
     # Type: Boolean
     # Default: false
@@ -59,7 +59,7 @@ mqtt:
     ########################################################################
     # Secure
     ########################################################################
-    # This flag indicates wether it will use secure connenection
+    # This flag indicates whether it will use secure connenection
     ########################################################################
     # Type: Boolean
     # Default: false
@@ -73,7 +73,7 @@ mqtt:
     ########################################################################
     # Enabled
     ########################################################################
-    # This flag indicates wether the module is enabled or disabled.
+    # This flag indicates whether the module is enabled or disabled.
     ########################################################################
     # Type: Boolean
     # Default: false
@@ -83,7 +83,7 @@ mqtt:
     ########################################################################
     # Secure
     ########################################################################
-    # This flag indicates wether it will use secure connenection
+    # This flag indicates whether it will use secure connenection
     ########################################################################
     # Type: Boolean
     # Default: false
@@ -133,7 +133,7 @@ mqtt:
     ########################################################################
     # Enabled
     ########################################################################
-    # This flag indicates wether the module is enabled or disabled.
+    # This flag indicates whether the module is enabled or disabled.
     ########################################################################
     # Type: Boolean
     # Default: false
@@ -231,13 +231,49 @@ mqtt:
   cleanSession: true
 
 ########################################################################
+# General Addon Configuration
+########################################################################
+addons:
+  ########################################################################
+  # Enabled
+  ########################################################################
+  # This flag indicates whether the engine will load external addons
+  ########################################################################
+  # Type: Boolean
+  # Default: true
+  ########################################################################
+  enabled: true
+  ########################################################################
+  # Global Topics
+  ########################################################################
+  # By default, addons can only listen and publish messages from theirs
+  # respective topics under the following schema:
+  #
+  # {prefix}/{machineDomain}/{machineName}/{addonId}
+  #
+  # However it is possible to allow addons to listen and publish messages
+  # to a more broad topics by specifying them below. Also, it is possible
+  # to use the following special marks which will be replaced by the
+  # engine:
+  # {prefix}        = Replaced by the 'prefix' configuration.
+  # {machineDomain} = Domain which the current machine is running on.
+  # {machineName}   = Current machine name
+  # {addonId}       = Unique Addon Identifier.
+  ########################################################################
+  # Type: List
+  # Default: Empty
+  ########################################################################
+  globalTopics:
+    - homeassistant/#
+
+########################################################################
 # Monitor Configuration
 ########################################################################
 monitor:
   ########################################################################
   # Enabled
   ########################################################################
-  # This flag indicates wether the module is enabled or disabled.
+  # This flag indicates whether the module is enabled or disabled.
   ########################################################################
   # Type: Boolean
   # Default: false
