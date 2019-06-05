@@ -36,31 +36,31 @@ PrivilegesRequired=admin
 
 
 [Files]
-Source: "IOTLink\bin\Release\IOTLink.exe";            DestDir: "{app}"; DestName: "{#APP_EXE_NAME}"; Flags: ignoreversion
+Source: "IOTLink\bin\Release\IOTLink.exe";               DestDir: "{app}"; DestName: "{#APP_EXE_NAME}"; Flags: ignoreversion
 Source: "IOTLink\bin\Release\MQTTnet.dll";               DestDir: "{app}"; Flags: ignoreversion
 Source: "IOTLink\bin\Release\Newtonsoft.Json.dll";       DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\IOTLink.exe.config";     DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
+Source: "IOTLink\bin\Release\IOTLink.exe.config";        DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
 Source: "IOTLink\bin\Release\YamlDotNet.dll";            DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: "Setup\config.yaml-sample"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs
 
 [Icons]
 ; Service Install/Uninstall
-Name: "{group}\Install Windows Service"; Filename: "{app}\{#APP_EXE_NAME}"; WorkingDir: "{app}"; Parameters: "--install"; AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
-Name: "{group}\Uninstall Windows Service"; Filename: "{app}\{#APP_EXE_NAME}"; WorkingDir: "{app}"; Parameters: "--uninstall"; AfterInstall: SetElevationBit('{group}\Uninstall Windows Service.lnk')
+Name: "{group}\Install Windows Service";      Filename: "{app}\{#APP_EXE_NAME}"; WorkingDir: "{app}"; Parameters: "--install";      AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
+Name: "{group}\Uninstall Windows Service";    Filename: "{app}\{#APP_EXE_NAME}"; WorkingDir: "{app}"; Parameters: "--uninstall";    AfterInstall: SetElevationBit('{group}\Uninstall Windows Service.lnk')
 ; Service Start/Stop
-Name: "{group}\Start Windows Service"; Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "start winiotlink"; Comment: "Start {#APP_NAME} Service"; AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
-Name: "{group}\Stop Windows Service"; Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "stop winiotlink"; Comment: "Stop {#APP_NAME} Service"; AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
+Name: "{group}\Start Windows Service";        Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "start winiotlink";    Comment: "Start {#APP_NAME} Service";    AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
+Name: "{group}\Stop Windows Service";         Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "stop winiotlink";     Comment: "Stop {#APP_NAME} Service";     AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
 ; Open Folders
-Name: "{group}\Open Addons Folder"; Filename: "{commonappdata}\{#APP_DIR_NAME}\Addons"; WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Addons"; Flags: foldershortcut
-Name: "{group}\Open Configuration Folder"; Filename: "{commonappdata}\{#APP_DIR_NAME}\Configs"; WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; Flags: foldershortcut
-Name: "{group}\Open Logs Folder"; Filename: "{commonappdata}\{#APP_DIR_NAME}\Logs"; WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Logs"; Flags: foldershortcut
+Name: "{group}\Open Addons Folder";           Filename: "{commonappdata}\{#APP_DIR_NAME}\Addons";     WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Addons";    Flags: foldershortcut
+Name: "{group}\Open Configuration Folder";    Filename: "{commonappdata}\{#APP_DIR_NAME}\Configs";    WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Configs";   Flags: foldershortcut
+Name: "{group}\Open Logs Folder";             Filename: "{commonappdata}\{#APP_DIR_NAME}\Logs";       WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Logs";      Flags: foldershortcut
 
 [Run]
-Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install"; WorkingDir: "{app}"; Flags: postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
+Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install";      WorkingDir: "{app}"; Flags: postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
 
 [UninstallRun]
-Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--uninstall"; WorkingDir: "{app}"; Flags: runhidden
+Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--uninstall";    WorkingDir: "{app}"; Flags: runhidden
 
 [Dirs]
 Name: "{commonappdata}\{#APP_DIR_NAME}"
