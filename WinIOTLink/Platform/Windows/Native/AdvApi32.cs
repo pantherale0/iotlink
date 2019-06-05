@@ -51,7 +51,7 @@ namespace WinIOTLink.Platform.Windows.Native
             public int dwThreadId;
         }
 
-        [DllImport("advapi32.dll", EntryPoint = "DuplicateTokenEx")]
+        [DllImport("advapi32.dll", EntryPoint = "DuplicateTokenEx", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool DuplicateTokenEx(
             IntPtr ExistingTokenHandle,
             uint dwDesiredAccess,
@@ -60,7 +60,7 @@ namespace WinIOTLink.Platform.Windows.Native
             int ImpersonationLevel,
             ref IntPtr DuplicateTokenHandle);
 
-        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("advapi32.dll", EntryPoint = "CreateProcessAsUser", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool CreateProcessAsUser(
             IntPtr hToken,
             string lpApplicationName,

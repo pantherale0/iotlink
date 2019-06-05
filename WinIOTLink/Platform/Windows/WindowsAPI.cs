@@ -21,7 +21,7 @@ namespace WinIOTLink.Platform.Windows
 
         public static string GetUsername(int sessionId)
         {
-            IntPtr server = WtsApi32.GetServerPtr();
+            IntPtr server = GetServerPtr();
             IntPtr buffer = IntPtr.Zero;
             string username = string.Empty;
             try
@@ -39,7 +39,7 @@ namespace WinIOTLink.Platform.Windows
 
         public static string GetDomainName(int sessionId)
         {
-            IntPtr server = WtsApi32.GetServerPtr();
+            IntPtr server = GetServerPtr();
             IntPtr buffer = IntPtr.Zero;
             string domain = string.Empty;
             try
@@ -58,7 +58,7 @@ namespace WinIOTLink.Platform.Windows
 
         public static void LockAll()
         {
-            IntPtr server = WtsApi32.GetServerPtr();
+            IntPtr server = GetServerPtr();
             try
             {
                 List<int> sessions = GetSessionIDs(server);
@@ -79,7 +79,7 @@ namespace WinIOTLink.Platform.Windows
 
         public static bool LockUser(string username)
         {
-            IntPtr server = WtsApi32.GetServerPtr();
+            IntPtr server = GetServerPtr();
             try
             {
                 username = username.Trim().ToUpper();
@@ -100,7 +100,7 @@ namespace WinIOTLink.Platform.Windows
 
         public static void LogoffAll()
         {
-            IntPtr server = WtsApi32.GetServerPtr();
+            IntPtr server = GetServerPtr();
             try
             {
                 List<int> sessions = GetSessionIDs(server);
@@ -121,7 +121,7 @@ namespace WinIOTLink.Platform.Windows
 
         public static bool LogOffUser(string username)
         {
-            IntPtr server = WtsApi32.GetServerPtr();
+            IntPtr server = GetServerPtr();
             try
             {
                 username = username.Trim().ToUpper();
@@ -158,7 +158,7 @@ namespace WinIOTLink.Platform.Windows
             if (string.IsNullOrWhiteSpace(workDir))
                 workDir = null;
 
-            IntPtr server = WtsApi32.GetServerPtr();
+            IntPtr server = GetServerPtr();
             try
             {
 
@@ -279,6 +279,11 @@ namespace WinIOTLink.Platform.Windows
                     userSession.Add(uName, sessionId);
             }
             return userSession;
+        }
+
+        private static IntPtr GetServerPtr()
+        {
+            return WtsApi32.WTSOpenServer(Environment.MachineName);
         }
     }
 }

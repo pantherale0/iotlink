@@ -4,7 +4,16 @@ namespace WinIOTLink.Platform.Windows.Native
 {
     public class PowrProf
     {
-        [DllImport("PowrProf.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        [DllImport("powrprof.dll")]
+        static extern bool IsPwrHibernateAllowed();
+
+        [DllImport("powrprof.dll")]
+        static extern bool IsPwrShutdownAllowed();
+
+        [DllImport("powrprof.dll")]
+        static extern bool IsPwrSuspendAllowed();
+
+        [DllImport("powrprof.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         public static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
     }
 }

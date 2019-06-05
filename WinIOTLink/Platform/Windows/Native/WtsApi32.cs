@@ -57,11 +57,6 @@ namespace WinIOTLink.Platform.Windows.Native
             public WtsConnectStateClass State;
         }
 
-        public static IntPtr GetServerPtr()
-        {
-            return WTSOpenServer(Environment.MachineName);
-        }
-
         [DllImport("wtsapi32.dll", SetLastError = true)]
         public static extern IntPtr WTSOpenServer([MarshalAs(UnmanagedType.LPStr)] String pServerName);
 

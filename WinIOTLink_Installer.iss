@@ -8,7 +8,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{CD785E2E-5102-4053-A1E1-208CA1D8DC98}
 AppName=IOT Link
-AppVersion=0.1
+AppVersion=0.1.0
 ;AppVerName=Win IOT Link 0.1
 AppPublisher=Alexandre Leites
 AppPublisherURL=http://alexslx.com/
@@ -20,8 +20,8 @@ AllowNoIcons=yes
 LicenseFile=LICENSE
 OutputDir=Setup
 OutputBaseFilename=WinIOTLink_Installer
-Compression=lzma
-SolidCompression=yes
+Compression=lzma2
+SolidCompression=no
 UsePreviousAppDir=yes
 PrivilegesRequired=admin
 WizardStyle=modern
