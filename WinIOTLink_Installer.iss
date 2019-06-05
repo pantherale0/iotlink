@@ -40,10 +40,13 @@ Source: "WinIOTLink\bin\Release\YamlDotNet.dll"; DestDir: "{app}"; Flags: ignore
 Source: "Setup\config.yaml-sample"; DestDir: "{app}\Data"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs
 
 [Icons]
-Name: "{group}\Start Windows Service"; Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "start winiotlink"; Comment: "Start IOT Link Service"; AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
-Name: "{group}\Stop Windows Service"; Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "stop winiotlink"; Comment: "Stop IOT Link Service"; AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
 Name: "{group}\Install Windows Service"; Filename: "{app}\WinIOTLink.exe"; WorkingDir: "{app}"; Parameters: "--install"; AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
 Name: "{group}\Uninstall WindowsService"; Filename: "{app}\WinIOTLink.exe"; WorkingDir: "{app}"; Parameters: "--uninstall"; AfterInstall: SetElevationBit('{group}\Uninstall WindowsService.lnk')
+Name: "{group}\Start Windows Service"; Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "start winiotlink"; Comment: "Start IOT Link Service"; AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
+Name: "{group}\Stop Windows Service"; Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "stop winiotlink"; Comment: "Stop IOT Link Service"; AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
+Name: "{group}\Open Addons Folder"; Filename: "{app}\Addons"; WorkingDir: "{app}\Addons"; Flags: foldershortcut
+Name: "{group}\Open Configuration Folder"; Filename: "{app}\Data"; WorkingDir: "{app}\Data"; Flags: foldershortcut
+Name: "{group}\Open Logs Folder"; Filename: "{app}\Logs"; WorkingDir: "{app}\Logs"; Flags: foldershortcut
 
 [Run]
 Filename: "{app}\WinIOTLink.exe"; Parameters: "--install"; WorkingDir: "{app}"; Flags: postinstall runhidden; Description: "Install IOT Link as Service"; StatusMsg: "Installing Windows Service"
