@@ -20,24 +20,39 @@ namespace WinIOTLink.Addons
             base.Init();
 
             _config = ConfigHelper.GetApplicationConfig().Monitor;
+            _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+            _cpuPerformanceCounter.NextValue();
+
+            OnSessionChangeHandler += OnSessionChange;
+            OnConfigReloadHandler += OnConfigReload;
+
+            SetupTimers();
+        }
+
+        private void SetupTimers()
+        {
             if (_config == null || !_config.Enabled)
             {
                 LoggerHelper.Info(typeof(WindowsMonitor), "System monitor is disabled.");
                 return;
             }
 
-            _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-            _cpuPerformanceCounter.NextValue();
+            if (_monitorTimer == null)
+            {
+                _monitorTimer = new Timer();
+                _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
+            }
 
-            int seconds = _config.Interval;
-            _monitorTimer = new Timer();
-            _monitorTimer.Interval = seconds * 1000;
-            _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
-            _monitorTimer.Enabled = true;
+            _monitorTimer.Stop();
+            _monitorTimer.Interval = _config.Interval * 1000;
+            _monitorTimer.Start();
 
-            LoggerHelper.Info(typeof(WindowsMonitor), "System monitor is set to an interval of {0} seconds.", seconds);
+            LoggerHelper.Info(typeof(WindowsMonitor), "System monitor is set to an interval of {0} seconds.", _config.Interval);
+        }
 
-            OnSessionChangeHandler += OnSessionChange;
+        private void OnConfigReload(object sender, EventArgs e)
+        {
+            SetupTimers();
         }
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
@@ -49,13 +64,30 @@ namespace WinIOTLink.Addons
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
+            _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
+
             LoggerHelper.Debug(typeof(WindowsMonitor), "System monitor running");
 
-            LoggerHelper.Debug(typeof(WindowsMonitor), string.Format("CPU Utilization: {0}", _cpuPerformanceCounter.NextValue()));
-
             MemoryInfo memoryInfo = WindowsHelper.GetMemoryInformation();
-            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Total: {0}", memoryInfo.TotalPhysical);
-            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Available: {0}", memoryInfo.AvailPhysical);
+            string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
+            string memoryUsage = memoryInfo.MemoryLoad.ToString();
+            string memoryTotal = memoryInfo.TotalPhysical.ToString();
+            string memoryAvailable = memoryInfo.AvailPhysical.ToString();
+            string memoryUsed = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical).ToString();
+
+            LoggerHelper.Debug(typeof(WindowsMonitor), "Processor Used: {0} %", cpuUsage);
+            LoggerHelper.Debug(typeof(WindowsMonitor), "Memory Usage: {0} %", memoryUsage);
+            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Available: {0} MB", memoryAvailable);
+            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Used: {0} MB", memoryUsed);
+            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Total: {0} MB", memoryTotal);
+
+            _manager.PublishMessage(this, "Stats/CPU", cpuUsage);
+            _manager.PublishMessage(this, "Stats/MemoryUsage", memoryUsage);
+            _manager.PublishMessage(this, "Stats/MemoryAvailable", memoryAvailable);
+            _manager.PublishMessage(this, "Stats/MemoryUsed", memoryUsed);
+            _manager.PublishMessage(this, "Stats/MemoryTotal", memoryTotal);
+
+            _monitorTimer.Start(); // After everything, start the timer again.
         }
     }
 }
