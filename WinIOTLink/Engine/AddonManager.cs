@@ -300,6 +300,16 @@ namespace WinIOTLink.Engine
             return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addonId, topic));
         }
 
+        internal void Raise_OnConfigReloadHandler(object sender, EventArgs e)
+        {
+            List<AddonInfo> addons = this.GetAppList();
+            foreach (AddonInfo addonInfo in addons)
+            {
+                if (addonInfo.ScriptClass != null)
+                    addonInfo.ScriptClass.Raise_OnConfigReloadHandler(sender, e);
+            }
+        }
+
         internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
             List<AddonInfo> addons = this.GetAppList();

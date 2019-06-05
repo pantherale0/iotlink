@@ -151,6 +151,11 @@ namespace WinIOTLink.Engine.MQTT
             await _client.PublishAsync(mqttMsg);
         }
 
+        internal bool IsConnected()
+        {
+            return _client != null && _client.IsConnected;
+        }
+
         internal void Disconnect()
         {
             if (!_client.IsConnected)
@@ -226,7 +231,7 @@ namespace WinIOTLink.Engine.MQTT
 
         private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
         {
-            LoggerHelper.Info(typeof(MQTTClient), "MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
+            LoggerHelper.Debug(typeof(MQTTClient), "MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
 
             // Fire event
             MQTTMessage message = GetMQTTMessage(arg);

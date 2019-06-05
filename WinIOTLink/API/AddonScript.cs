@@ -17,8 +17,10 @@ namespace WinIOTLink.API
         public event MQTTEventHandler OnMQTTDisconnectedHandler;
         public event MQTTMessageEventHandler OnMQTTMessageReceivedHandler;
         public event SessionChangeHandler OnSessionChangeHandler;
+        public event ConfigReloadedHandler OnConfigReloadHandler;
 
         public delegate void SessionChangeHandler(Object sender, SessionChangeEventArgs e);
+        public delegate void ConfigReloadedHandler(Object sender, EventArgs e);
 
         internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
@@ -42,6 +44,12 @@ namespace WinIOTLink.API
         {
             if (OnMQTTMessageReceivedHandler != null)
                 OnMQTTMessageReceivedHandler(sender, e);
+        }
+
+        internal void Raise_OnConfigReloadHandler(object sender, EventArgs e)
+        {
+            if (OnConfigReloadHandler != null)
+                OnConfigReloadHandler(sender, e);
         }
     }
 }

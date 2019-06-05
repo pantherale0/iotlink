@@ -32,7 +32,17 @@ namespace WinIOTLink.Engine
             _configWatcher.EnableRaisingEvents = true;
         }
 
-        public void StartApplication()
+        internal void StartApplication()
+        {
+            SetupMQTTHandlers();
+        }
+
+        internal void StopApplication()
+        {
+            LoggerHelper.GetInstance().Flush();
+        }
+
+        private void SetupMQTTHandlers()
         {
             ApplicationConfig config = ConfigHelper.GetApplicationConfig(true);
             if (config.MQTT == null)
@@ -42,15 +52,13 @@ namespace WinIOTLink.Engine
             }
 
             MQTTClient client = MQTTClient.GetInstance();
+            if (client.IsConnected())
+                client.Disconnect();
+
             client.Init(config.MQTT);
             client.OnMQTTConnected += OnMQTTConnected;
             client.OnMQTTDisconnected += OnMQTTDisconnected;
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
-        }
-
-        internal void StopApplication()
-        {
-            LoggerHelper.GetInstance().Flush();
         }
 
         private void OnConfigChanged(object sender, FileSystemEventArgs e)
@@ -58,11 +66,11 @@ namespace WinIOTLink.Engine
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
             {
                 LoggerHelper.Info(typeof(MainEngine), "Changes to configuration.yaml detected. Reloading.");
-                _lastConfigChange = DateTime.Now;
 
-                MQTTClient client = MQTTClient.GetInstance();
-                client.Disconnect();
-                StartApplication();
+                SetupMQTTHandlers();
+                AddonManager.GetInstance().Raise_OnConfigReloadHandler(this, EventArgs.Empty);
+
+                _lastConfigChange = DateTime.Now;
             }
         }
 
