@@ -8,8 +8,10 @@ namespace WinIOTLink.Platform.Windows
 {
     public static class WindowsAPI
     {
+        private const int MemoryDivisor = 1024 * 1024;
         public class MemoryInfo
         {
+            public uint MemoryLoad { get; set; }
             public ulong TotalPhysical { get; set; }
             public ulong AvailPhysical { get; set; }
             public ulong TotalPageFile { get; set; }
@@ -231,13 +233,14 @@ namespace WinIOTLink.Platform.Windows
             {
                 MemoryInfo memoryInfo = new MemoryInfo
                 {
-                    AvailPhysical = memoryStatusEx.ullAvailPhys,
-                    AvailVirtual = memoryStatusEx.ullAvailVirtual,
-                    AvailExtendedVirtual = memoryStatusEx.ullAvailExtendedVirtual,
-                    AvailPageFile = memoryStatusEx.ullAvailPageFile,
-                    TotalPhysical = memoryStatusEx.ullTotalPhys,
-                    TotalVirtual = memoryStatusEx.ullTotalVirtual,
-                    TotalPageFile = memoryStatusEx.ullTotalPageFile,
+                    MemoryLoad = memoryStatusEx.dwMemoryLoad,
+                    AvailPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPhys / MemoryDivisor, 0),
+                    AvailVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailVirtual / MemoryDivisor),
+                    AvailExtendedVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailExtendedVirtual / MemoryDivisor),
+                    AvailPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPageFile / MemoryDivisor),
+                    TotalPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPhys / MemoryDivisor),
+                    TotalVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullTotalVirtual / MemoryDivisor),
+                    TotalPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPageFile / MemoryDivisor),
                 };
 
                 return memoryInfo;
