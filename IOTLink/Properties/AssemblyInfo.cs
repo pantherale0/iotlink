@@ -10,8 +10,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("alexslx.com")]
 [assembly: AssemblyProduct("IOTLink")]
-[assembly: AssemblyCopyright("Copyright © Alexandre Leites 2019")]
-[assembly: AssemblyTrademark("Copyright © Alexandre Leites 2019")]
+[assembly: AssemblyCopyright("Copyright © 2019 Alexandre Leites")]
+[assembly: AssemblyTrademark("Alexandre Leites <https://alexslx.com/>")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible

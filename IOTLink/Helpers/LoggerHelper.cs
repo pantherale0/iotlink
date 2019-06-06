@@ -8,6 +8,7 @@ using System.Timers;
 
 namespace IOTLink.Helpers
 {
+#pragma warning disable 1591
     public class LoggerHelper
     {
         private static LoggerHelper _instance;

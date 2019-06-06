@@ -58,6 +58,13 @@ Source: "Assets\icons\uninstall_service.ico"; DestDir: "{app}\Icons"; Flags: ign
 ; Service Start/Stop
 Source: "Assets\icons\start_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
 Source: "Assets\icons\stop_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+; Addon - Commands
+Source: "Addons\Commands\addon.yaml"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
+Source: "Addons\Commands\bin\Release\Commands.dll"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
+; Addon - Windows Monitor
+Source: "Addons\WindowsMonitor\addon.yaml"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\config.yaml"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
 
 [Icons]
 ; Service Install/Uninstall
@@ -85,6 +92,11 @@ Name: "{commonappdata}\{#APP_DIR_NAME}\Addons"; Permissions: everyone-full
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
+
+[Tasks]
+Name: "Addons"; Description: "Install Addons"
+Name: "Addons\Commands"; Description: "Addon: Commands"
+Name: "Addons\WindowsMonitor"; Description: "Addon: Windows Monitor"
 
 [Code]
 procedure SetElevationBit(Filename: string);

@@ -4,9 +4,9 @@ using IOTLink.API;
 using IOTLink.Engine.MQTT;
 using IOTLink.Helpers;
 
-namespace IOTLink.Addons
+namespace IOTLinkAddon
 {
-    internal class Windows : AddonScript
+    public class Commands : AddonScript
     {
         public override void Init()
         {
@@ -23,43 +23,43 @@ namespace IOTLink.Addons
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Info("OnShutdownMessage message received");
+            LoggerHelper.Debug("OnShutdownMessage message received");
             PlatformHelper.Shutdown();
         }
 
         private void OnRebootMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Info("OnRebootMessage message received");
+            LoggerHelper.Debug("OnRebootMessage message received");
             PlatformHelper.Reboot();
         }
 
         private void OnLogoffMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Info("OnLogoffMessage message received");
+            LoggerHelper.Debug("OnLogoffMessage message received");
             PlatformHelper.Logoff(e.Message.GetPayload());
         }
 
         private void OnLockMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Info("OnLockMessage message received");
+            LoggerHelper.Debug("OnLockMessage message received");
             PlatformHelper.Lock(e.Message.GetPayload());
         }
 
         private void OnHibernateMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Info("OnHibernateMessage message received");
+            LoggerHelper.Debug("OnHibernateMessage message received");
             PlatformHelper.Hibernate();
         }
 
         private void OnSuspendMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Info("OnSuspendMessage message received");
+            LoggerHelper.Debug("OnSuspendMessage message received");
             PlatformHelper.Suspend();
         }
 
         private void OnCommandRun(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Info("OnCommandRun message received");
+            LoggerHelper.Debug("OnCommandRun message received");
             string value = e.Message.GetPayload();
             if (value == null)
                 return;
@@ -76,7 +76,7 @@ namespace IOTLink.Addons
             }
             catch (Exception ex)
             {
-                LoggerHelper.Info("OnCommandRun failure: {0}", ex.Message);
+                LoggerHelper.Error("OnCommandRun failure: {0}", ex.Message);
             }
         }
     }

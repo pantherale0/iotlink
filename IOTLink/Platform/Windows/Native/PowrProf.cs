@@ -2,6 +2,7 @@
 
 namespace IOTLink.Platform.Windows.Native
 {
+#pragma warning disable 1591
     public class PowrProf
     {
         [DllImport("powrprof.dll")]

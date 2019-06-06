@@ -11,7 +11,7 @@ namespace IOTLink.Loaders
 {
     internal class AssemblyLoader
     {
-        internal static bool LoadAppAssembly(ref AddonInfo addonInfo)
+        internal static bool LoadAssemblyDLL(ref AddonInfo addonInfo)
         {
             try
             {

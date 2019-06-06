@@ -6,6 +6,7 @@ using IOTLink.Platform.Windows.Native;
 
 namespace IOTLink.Platform.Windows
 {
+#pragma warning disable 1591
     public static class WindowsAPI
     {
         public enum DialogStyle

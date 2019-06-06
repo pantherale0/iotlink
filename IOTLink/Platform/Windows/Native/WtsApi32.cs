@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace IOTLink.Platform.Windows.Native
 {
+#pragma warning disable 1591
     public static class WtsApi32
     {
         public enum WtsInfoClass

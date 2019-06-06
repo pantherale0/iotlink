@@ -4,11 +4,9 @@ using YamlDotNet.Serialization;
 
 namespace IOTLink.Configs
 {
+#pragma warning disable 1591
     public class ApplicationConfig
     {
-        [YamlMember(Alias = "monitor")]
-        public MonitorConfig Monitor { get; set; }
-
         [YamlMember(Alias = "mqtt")]
         public MqttConfig MQTT { get; set; }
 
@@ -17,15 +15,6 @@ namespace IOTLink.Configs
 
         [YamlMember(Alias = "logging")]
         public LoggingConfiguration Logging { get; set; }
-
-        public class MonitorConfig
-        {
-            [YamlMember(Alias = "enabled")]
-            public bool Enabled { get; set; }
-
-            [YamlMember(Alias = "interval")]
-            public int Interval { get; set; }
-        }
 
         public class AddonsConfiguration
         {

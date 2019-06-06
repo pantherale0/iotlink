@@ -3,6 +3,7 @@ using YamlDotNet.Serialization;
 
 namespace IOTLink.Configs
 {
+#pragma warning disable 1591
     public class MqttConfig
     {
         [YamlMember(Alias = "credentials")]

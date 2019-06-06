@@ -1,15 +1,25 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Timers;
 using IOTLink.API;
 using IOTLink.Engine.System;
 using IOTLink.Helpers;
 using IOTLink.Platform;
-using static IOTLink.Configs.ApplicationConfig;
+using YamlDotNet.Serialization;
 
-namespace IOTLink.Addons
+namespace IOTLinkAddon
 {
-    internal class WindowsMonitor : AddonScript
+    public class MonitorConfig
+    {
+        [YamlMember(Alias = "enabled")]
+        public bool Enabled { get; set; }
+
+        [YamlMember(Alias = "interval")]
+        public int Interval { get; set; }
+    }
+
+    public class WindowsMonitor : AddonScript
     {
         private Timer _monitorTimer;
         private MonitorConfig _config;
@@ -19,7 +29,7 @@ namespace IOTLink.Addons
         {
             base.Init();
 
-            _config = ConfigHelper.GetApplicationConfig().Monitor;
+            _config = ConfigHelper.GetConfig<MonitorConfig>(Path.Combine(this._currentPath, "config.yaml"));
             _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             _cpuPerformanceCounter.NextValue();
 
@@ -57,7 +67,7 @@ namespace IOTLink.Addons
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            LoggerHelper.Info("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
+            LoggerHelper.Debug("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
             _manager.PublishMessage(this, e.Reason.ToString(), e.Username);
         }

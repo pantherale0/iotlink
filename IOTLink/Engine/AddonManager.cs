@@ -235,7 +235,7 @@ namespace IOTLink.Engine
 
                 if (this.LoadAddonConfig(directoryInfo.Name, ref addonInfo) == true && addonInfo.Enabled == true)
                 {
-                    if (!AssemblyLoader.LoadAppAssembly(ref addonInfo))
+                    if (!AssemblyLoader.LoadAssemblyDLL(ref addonInfo))
                         continue;
 
                     if (addonInfo.ScriptClass != null)

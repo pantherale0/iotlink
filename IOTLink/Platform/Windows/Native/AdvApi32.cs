@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace IOTLink.Platform.Windows.Native
 {
+#pragma warning disable 1591
     public class AdvApi32
     {
         public enum SecurityImpersonationLevel
