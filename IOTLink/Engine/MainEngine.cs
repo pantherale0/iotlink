@@ -26,7 +26,7 @@ namespace IOTLink.Engine
 
         private MainEngine()
         {
-            _configWatcher = new FileSystemWatcher(PathHelper.DataPath(), "configuration.yaml");
+            _configWatcher = new FileSystemWatcher(PathHelper.ConfigPath(), "configuration.yaml");
             _configWatcher.NotifyFilter = NotifyFilters.LastWrite;
             _configWatcher.Changed += OnConfigChanged;
             _configWatcher.Created += OnConfigChanged;
@@ -45,7 +45,7 @@ namespace IOTLink.Engine
 
         private void SetupMQTTHandlers()
         {
-            ApplicationConfig config = ConfigHelper.GetApplicationConfig(true);
+            ApplicationConfig config = ConfigHelper.GetEngineConfig(true);
             if (config.MQTT == null)
             {
                 LoggerHelper.Warn("MQTT is disabled or not configured yet.");

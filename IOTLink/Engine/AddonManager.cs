@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IOTLink.Addons;
 using IOTLink.API;
 using IOTLink.Configs;
 using IOTLink.Engine.MQTT;
@@ -32,52 +31,80 @@ namespace IOTLink.Engine
 
         }
 
+        /// <summary>
+        /// Add a subscription to a specific topic
+        /// </summary>
+        /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
+        /// <param name="topic">MQTT Topic</param>
+        /// <param name="msgHandler"><see cref="MQTTMessageEventHandler">Event Handler</see></param>
         public void SubscribeTopic(AddonScript sender, string topic, MQTTMessageEventHandler msgHandler)
         {
             if (sender == null || string.IsNullOrWhiteSpace(topic) || HasSubscription(sender, topic))
                 return;
 
-            string addonTopic = GetAddonTopic(sender, topic);
+            string addonTopic = BuildTopicName(sender, topic);
             _topics.Add(addonTopic, msgHandler);
 
             LoggerHelper.Info("Addon {0} has subscribed to topic {1}", sender.GetAppInfo().AddonId, addonTopic);
         }
 
+        /// <summary>
+        /// Checks if an addon has a subscription to a specific topic
+        /// </summary>
+        /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
+        /// <param name="topic">MQTT Topic</param>
         public bool HasSubscription(AddonScript sender, string topic)
         {
             if (sender == null)
                 return false;
 
-            string addonTopic = GetAddonTopic(sender, topic);
+            string addonTopic = BuildTopicName(sender, topic);
             return _topics.ContainsKey(addonTopic);
         }
 
+        /// <summary>
+        /// Remove an addon subscription to a specific topic
+        /// </summary>
+        /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
+        /// <param name="topic">MQTT Topic</param>
         public void RemoveSubscription(AddonScript sender, string topic)
         {
             if (sender == null || !HasSubscription(sender, topic))
                 return;
 
-            string addonTopic = GetAddonTopic(sender, topic);
+            string addonTopic = BuildTopicName(sender, topic);
             _topics.Remove(addonTopic);
 
             LoggerHelper.Info("Addon {0} has removed subscription to topic {1}", sender.GetAppInfo().AddonId, addonTopic);
         }
 
+        /// <summary>
+        /// Publish a message using the origin addon information.
+        /// </summary>
+        /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
+        /// <param name="topic">MQTT Topic</param>
+        /// <param name="message">String containing the message</param>
         public void PublishMessage(AddonScript sender, string topic, string message)
         {
-            if (sender == null || string.IsNullOrWhiteSpace(topic))
+            if (sender == null || string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(message))
                 return;
 
-            string addonTopic = GetAddonTopic(sender, topic);
+            string addonTopic = BuildTopicName(sender, topic);
             MQTTClient.GetInstance().PublishMessage(addonTopic, message);
         }
 
+        /// <summary>
+        /// Publish a message using the origin addon information.
+        /// </summary>
+        /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
+        /// <param name="topic">MQTT Topic</param>
+        /// <param name="message">Message (byte[])</param>
         public void PublishMessage(AddonScript sender, string topic, byte[] message)
         {
             if (sender == null || string.IsNullOrWhiteSpace(topic))
                 return;
 
-            string addonTopic = GetAddonTopic(sender, topic);
+            string addonTopic = BuildTopicName(sender, topic);
             MQTTClient.GetInstance().PublishMessage(addonTopic, message);
         }
 
@@ -142,27 +169,25 @@ namespace IOTLink.Engine
         }
 
         /// <summary>
-		/// Search into app directory and load all enabled and valid addons.
+		/// Load all available addons
 		/// </summary>
 		internal void LoadAddons()
         {
             this._addons.Clear();
             this.LoadInternalAddons();
 
-            if (ConfigHelper.GetApplicationConfig().Addons?.Enabled == true)
+            if (ConfigHelper.GetEngineConfig().Addons?.Enabled == true)
                 this.LoadExternalAddons();
         }
 
         /// <summary>
-		/// Search into app directory and load all enabled and valid addons.
+		/// Load embedded addons
 		/// </summary>
 		private void LoadInternalAddons()
         {
-            AddonScript[] internalAddons = new AddonScript[]
-            {
-                new WindowsMonitor(),
-                new Windows()
-            };
+            AddonScript[] internalAddons = new AddonScript[] { };
+            if (internalAddons.Length == 0)
+                return;
 
             LoggerHelper.Info("Loading {0} internal addons", internalAddons.Length);
             foreach (AddonScript addon in internalAddons)
@@ -187,7 +212,7 @@ namespace IOTLink.Engine
         }
 
         /// <summary>
-		/// Search into app directory and load all enabled and valid addons.
+		/// Load external addons
 		/// </summary>
 		private void LoadExternalAddons()
         {
@@ -202,13 +227,13 @@ namespace IOTLink.Engine
             }
 
             List<string> dirs = new List<string>(Directory.EnumerateDirectories(addonsPath));
-            LoggerHelper.Info("Loading {0} external addons", dirs.Count);
+            LoggerHelper.Debug("Loading {0} external addons", dirs.Count);
             foreach (var dir in dirs)
             {
                 DirectoryInfo directoryInfo = new DirectoryInfo(dir);
                 AddonInfo addonInfo = new AddonInfo();
 
-                if (this.LoadSettingsFromDir(directoryInfo.Name, ref addonInfo) == true && addonInfo.Enabled == true)
+                if (this.LoadAddonConfig(directoryInfo.Name, ref addonInfo) == true && addonInfo.Enabled == true)
                 {
                     if (!AssemblyLoader.LoadAppAssembly(ref addonInfo))
                         continue;
@@ -231,16 +256,23 @@ namespace IOTLink.Engine
         /// <param name="DirName">Directory name containing the configuration file.</param>
         /// <param name="addonInfo"><see cref="AppInfo"/> structure to be loaded.</param>
         /// <returns>True if valid configuration file found, false otherwise.</returns>
-        private bool LoadSettingsFromDir(string DirName, ref AddonInfo addonInfo)
+        private bool LoadAddonConfig(string DirName, ref AddonInfo addonInfo)
         {
             AddonConfig config = AddonConfig.GetInstance(DirName);
             if (!config.Load())
                 return false;
 
-            return LoadAppSettings(config, ref addonInfo);
+            return LoadAddonInfo(config, ref addonInfo);
         }
 
-        private bool LoadAppSettings(AddonConfig config, ref AddonInfo addonInfo)
+        /// <summary>
+        /// Load the complete addon information from its configuration file.
+        /// It also checks for invalid configuration entries and formats.
+        /// </summary>
+        /// <param name="config"><see cref="AddonConfig"/> object</param>
+        /// <param name="addonInfo"><see cref="AddonInfo"/> object (ref)</param>
+        /// <returns></returns>
+        private bool LoadAddonInfo(AddonConfig config, ref AddonInfo addonInfo)
         {
             if (config == null)
                 return false;
@@ -286,11 +318,17 @@ namespace IOTLink.Engine
                 addonInfo.Enabled = false;
             }
 
-            LoggerHelper.Info("Addon configuration loaded: {0}", addonInfo.AddonName);
+            LoggerHelper.Debug("Addon configuration loaded: {0}", addonInfo.AddonName);
             return true;
         }
 
-        internal string GetAddonTopic(AddonScript addon, string topic)
+        /// <summary>
+        /// Build the topic name including the origin addon information.
+        /// </summary>
+        /// <param name="addon">Origin <see cref="AddonScript"/> object</param>
+        /// <param name="topic">String containing the desired topic</param>
+        /// <returns></returns>
+        internal string BuildTopicName(AddonScript addon, string topic)
         {
             if (addon == null)
                 return string.Empty;
@@ -300,6 +338,11 @@ namespace IOTLink.Engine
             return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addonId, topic));
         }
 
+        /// <summary>
+        /// Broadcast system configuration change to all addons.
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e"><see cref="EventArgs"/> (Always Empty)</param>
         internal void Raise_OnConfigReloadHandler(object sender, EventArgs e)
         {
             List<AddonInfo> addons = this.GetAppList();
@@ -310,6 +353,11 @@ namespace IOTLink.Engine
             }
         }
 
+        /// <summary>
+        /// Broadcast system session change to all addons.
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e"><see cref="SessionChangeEventArgs"/> object</param>
         internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
             List<AddonInfo> addons = this.GetAppList();
@@ -320,6 +368,11 @@ namespace IOTLink.Engine
             }
         }
 
+        /// <summary>
+        /// Broadcast MQTT Client connection to all addons.
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e"><see cref="MQTTEventEventArgs"/> object</param>
         internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
             List<AddonInfo> addons = this.GetAppList();
@@ -330,6 +383,11 @@ namespace IOTLink.Engine
             }
         }
 
+        /// <summary>
+        /// Broadcast MQTT Client disconnection to all addons.
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e"><see cref="MQTTEventEventArgs"/> object</param>
         internal void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
             List<AddonInfo> addons = this.GetAppList();
@@ -340,6 +398,12 @@ namespace IOTLink.Engine
             }
         }
 
+        /// <summary>
+        /// Dispatch MQTT Message Received event to all addons 
+        /// which has been subscribed to the related topic
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e"><see cref="MQTTMessageEventEventArgs"/> object</param>
         internal void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
             if (_topics.ContainsKey(e.Message.Topic))

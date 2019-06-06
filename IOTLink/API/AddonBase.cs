@@ -8,12 +8,12 @@ namespace IOTLink.API
     public abstract class AddonBase
     {
         /// <summary>
-		/// Current application directory.
+		/// Current addon directory.
 		/// </summary>
 		protected string _currentPath;
 
         /// <summary>
-        /// Current set of informations about this application.
+        /// Current set of informations about this addon.
         /// </summary>
         protected AddonInfo _addonInfo;
 
@@ -23,7 +23,7 @@ namespace IOTLink.API
         protected AddonManager _manager = AddonManager.GetInstance();
 
         /// <summary>
-		/// Application constructor
+		/// Addon constructor
 		/// </summary>
 		public AddonBase()
         {
@@ -31,7 +31,7 @@ namespace IOTLink.API
         }
 
         /// <summary>
-        /// Initialize the App
+        /// Initialize the Addon
         /// </summary>
         public virtual void Init()
         {
@@ -39,18 +39,18 @@ namespace IOTLink.API
         }
 
         /// <summary>
-		/// Get the current application directory
+		/// Get the current addon directory
 		/// </summary>
-		/// <returns>string containing the app directory</returns>
+		/// <returns>string containing the addon directory</returns>
 		public string GetCurrentPath()
         {
             return _currentPath;
         }
 
         /// <summary>
-		/// Set the current app directory. Used internally.
+		/// Set the current addon directory. Used internally.
 		/// </summary>
-		/// <param name="path">String containing the app directory</param>
+		/// <param name="path">String containing the addon directory</param>
 		internal void SetCurrentPath(string path)
         {
             _currentPath = path;

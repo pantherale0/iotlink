@@ -6,9 +6,8 @@ using static IOTLink.Engine.MQTT.MQTTHandlers;
 namespace IOTLink.API
 {
     /// <summary>
-	/// Base application class.
-	/// This class should be inherited by any application that needs to run in background.
-	/// This class is a simplified version of Script class of SHDN (As SHDN do not allow us to register new scripts on runtime).
+	/// Base Addon class.
+	/// This class should be inherited by any addon that needs to run in background.
 	/// </summary>
 	/// <seealso cref="AddonBase"/>
     public abstract class AddonScript : AddonBase

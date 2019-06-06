@@ -8,12 +8,12 @@ namespace IOTLink.Helpers
     {
         private static ApplicationConfig _config;
 
-        internal static ApplicationConfig GetApplicationConfig(bool force = false)
+        internal static ApplicationConfig GetEngineConfig(bool force = false)
         {
             if (_config != null && !force)
                 return _config;
 
-            string path = Path.Combine(PathHelper.DataPath(), "configuration.yaml");
+            string path = Path.Combine(PathHelper.ConfigPath(), "configuration.yaml");
             string ConfigText = PathHelper.GetFileText(path);
             StringReader Reader = new StringReader(ConfigText);
             IDeserializer YAMLDeserializer = new DeserializerBuilder().Build();

@@ -123,7 +123,7 @@ namespace IOTLink.Helpers
             if (string.IsNullOrWhiteSpace(messageTag) || string.IsNullOrWhiteSpace(message))
                 return;
 
-            ApplicationConfig config = ConfigHelper.GetApplicationConfig();
+            ApplicationConfig config = ConfigHelper.GetEngineConfig();
             if (config.Logging == null || !config.Logging.Enabled || config.Logging.Level < logLevel)
                 return;
 

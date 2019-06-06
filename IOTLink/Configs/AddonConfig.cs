@@ -12,37 +12,37 @@ namespace IOTLink.Configs
     public class AddonConfig
     {
         /// <summary>
-		/// Application Unique ID
+		/// Addon Unique ID
 		/// </summary>
 		public string AddonId;
 
         /// <summary>
-        /// Application Name
+        /// Addon Name
         /// </summary>
         public string AddonName;
 
         /// <summary>
-        /// Application DLL file.
+        /// Addon DLL file.
         /// </summary>
         public string AddonFile;
 
         /// <summary>
-        /// Application Directory Path
+        /// Addon Directory Path
         /// </summary>
         public string AddonPath;
 
         /// <summary>
-        /// Minimum API version to run this application.
+        /// Minimum API version to run this addon.
         /// </summary>
         public string MinApiVersion;
 
         /// <summary>
-        /// Maximum API version to run this application.
+        /// Maximum API version to run this addon.
         /// </summary>
         public string MaxApiVersion;
 
         /// <summary>
-        /// Define if the app is enabled or not.
+        /// Define if the addon is enabled or not.
         /// </summary>
         public bool Enabled;
 
@@ -51,8 +51,8 @@ namespace IOTLink.Configs
         /// <summary>
         /// Get a valid instance of this class or create a new one if necessary.
         /// </summary>
-        /// <param name="dirName">String containing the directory name of the App to be read.</param>
-        /// <returns>AppConfig instance</returns>
+        /// <param name="dirName">String containing the directory name of the Addon to be read.</param>
+        /// <returns><see cref="AddonConfig">Configuration</see> instance</returns>
         public static AddonConfig GetInstance(string dirName)
         {
             if (!_configs.ContainsKey(dirName))
@@ -63,7 +63,7 @@ namespace IOTLink.Configs
 
         private AddonConfig(string dirName)
         {
-            this.AddonPath = PathHelper.AddonsPath() + "\\" + dirName;
+            this.AddonPath = Path.Combine(PathHelper.AddonsPath(), dirName);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace IOTLink.Configs
         /// <returns>True when successful, false otherwise.</returns>
         public bool Load()
         {
-            string filename = this.AddonPath + "/config.yaml";
+            string filename = Path.Combine(this.AddonPath, "addon.yaml");
             if (!File.Exists(filename))
                 return false;
 

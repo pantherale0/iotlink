@@ -9,6 +9,10 @@ namespace IOTLink.Helpers
 {
     public static class PlatformHelper
     {
+        /// <summary>
+        /// Return the machine name containing the domain is necessary
+        /// </summary>
+        /// <returns>String</returns>
         public static string GetFullMachineName()
         {
             string domainName = Environment.UserDomainName;
@@ -19,6 +23,11 @@ namespace IOTLink.Helpers
             return string.Format("{0}\\{1}", domainName, computerName);
         }
 
+        /// <summary>
+        /// Return the username from the sessionId
+        /// </summary>
+        /// <param name="sessionId">Integer</param>
+        /// <returns>String</returns>
         public static string GetUsername(int sessionId)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -27,6 +36,10 @@ namespace IOTLink.Helpers
             throw new PlatformNotSupportedException();
         }
 
+        /// <summary>
+        /// Execute a system shutdown
+        /// </summary>
+        /// <param name="force">Boolean indicating if the call should be flagged as forced</param>
         public static void Shutdown(bool force = false)
         {
             LoggerHelper.Debug("Executing {0} system shutdown.", force ? "forced" : "normal");
@@ -44,6 +57,10 @@ namespace IOTLink.Helpers
             Process.Start(filename, args);
         }
 
+        /// <summary>
+        /// Execute a system reboot
+        /// </summary>
+        /// <param name="force">Boolean indicating if the call should be flagged as forced</param>
         public static void Reboot(bool force = false)
         {
             LoggerHelper.Debug("Executing {0} system shutdown.", force ? "forced" : "normal");
@@ -61,6 +78,9 @@ namespace IOTLink.Helpers
             Process.Start(filename, args);
         }
 
+        /// <summary>
+        /// Puts the system into a hibernate state if possible
+        /// </summary>
         public static void Hibernate()
         {
             LoggerHelper.Debug("Executing system hibernation.");
@@ -70,6 +90,9 @@ namespace IOTLink.Helpers
             throw new PlatformNotSupportedException();
         }
 
+        /// <summary>
+        /// Puts the system into a suspended state if possible
+        /// </summary>
         public static void Suspend()
         {
             LoggerHelper.Debug("Executing system suspend.");
@@ -79,6 +102,10 @@ namespace IOTLink.Helpers
             throw new PlatformNotSupportedException();
         }
 
+        /// <summary>
+        /// Logoff the user from the system
+        /// </summary>
+        /// <param name="username">User which needs be logged-off</param>
         public static void Logoff(string username)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -96,6 +123,10 @@ namespace IOTLink.Helpers
             }
         }
 
+        /// <summary>
+        /// Lock the user session from the system
+        /// </summary>
+        /// <param name="username">User which needs be its session locked</param>
         public static void Lock(string username)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -113,6 +144,13 @@ namespace IOTLink.Helpers
             }
         }
 
+        /// <summary>
+        /// Execute a system application
+        /// </summary>
+        /// <param name="command">Filename or command line</param>
+        /// <param name="args">String containing all arguments</param>
+        /// <param name="path">String containing the work path</param>
+        /// <param name="username">String containing the user which the application will be executed</param>
         public static void Run(string command, string args, string path, string username)
         {
             if (!string.IsNullOrWhiteSpace(args))
@@ -125,6 +163,10 @@ namespace IOTLink.Helpers
             WindowsAPI.Run(command, args, path, username);
         }
 
+        /// <summary>
+        /// Return a <see cref="MemoryInfo"/> object with all current memory information.
+        /// </summary>
+        /// <returns><see cref="MemoryInfo"/> object</returns>
         public static MemoryInfo GetMemoryInformation()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

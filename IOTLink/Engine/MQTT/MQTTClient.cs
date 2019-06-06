@@ -40,6 +40,10 @@ namespace IOTLink.Engine.MQTT
 
         }
 
+        /// <summary>
+        /// Initialize the MQTT Client based on the current configurations.
+        /// </summary>
+        /// <param name="MQTT"><see cref="MqttConfig">MQTT</see> configuration</param>
         public void Init(MqttConfig MQTT)
         {
             // Configuration not found
@@ -125,6 +129,11 @@ namespace IOTLink.Engine.MQTT
             Connect();
         }
 
+        /// <summary>
+        /// Publish a message to the connected broker
+        /// </summary>
+        /// <param name="topic">String containg the topic</param>
+        /// <param name="message">String containg the message</param>
         public async void PublishMessage(string topic, string message)
         {
             if (!_client.IsConnected)
@@ -138,6 +147,11 @@ namespace IOTLink.Engine.MQTT
             await _client.PublishAsync(mqttMsg);
         }
 
+        /// <summary>
+        /// Publish a message to the connected broker
+        /// </summary>
+        /// <param name="topic">String containg the topic</param>
+        /// <param name="message">Message bytes[]</param>
         public async void PublishMessage(string topic, byte[] message)
         {
             if (!_client.IsConnected)
@@ -151,11 +165,18 @@ namespace IOTLink.Engine.MQTT
             await _client.PublishAsync(mqttMsg);
         }
 
+        /// <summary>
+        /// Return the current connection state
+        /// </summary>
+        /// <returns>Boolean</returns>
         internal bool IsConnected()
         {
             return _client != null && _client.IsConnected;
         }
 
+        /// <summary>
+        /// Disconnect from the broker
+        /// </summary>
         internal void Disconnect()
         {
             if (!_client.IsConnected)
@@ -169,6 +190,10 @@ namespace IOTLink.Engine.MQTT
             }
         }
 
+        /// <summary>
+        /// Try to connect to the configured broker.
+        /// Every attempt a delay of (5 * attemps, max 60) seconds is executed.
+        /// </summary>
         private async void Connect()
         {
             if (_connecting)
@@ -190,7 +215,7 @@ namespace IOTLink.Engine.MQTT
                     LoggerHelper.Info("Connection failed");
                     tries++;
 
-                    double waitTime = Math.Min(10 * tries, 300);
+                    double waitTime = Math.Min(5 * tries, 60);
 
                     LoggerHelper.Info("Waiting {0} seconds before trying again...", null, waitTime);
                     await Task.Delay(TimeSpan.FromSeconds(waitTime));
@@ -199,6 +224,11 @@ namespace IOTLink.Engine.MQTT
             _connecting = false;
         }
 
+        /// <summary>
+        /// Handle broker connection
+        /// </summary>
+        /// <param name="arg"><see cref="MqttClientConnectedEventArgs"/> event</param>
+        /// <returns></returns>
         private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
             LoggerHelper.Info("MQTT Connected");
@@ -216,6 +246,11 @@ namespace IOTLink.Engine.MQTT
             SubscribeTopic(GetFullTopicName("#"));
         }
 
+        /// <summary>
+        /// Handle broker disconnection.
+        /// </summary>
+        /// <param name="arg"><see cref="MqttClientDisconnectedEventArgs"/> event</param>
+        /// <returns></returns>
         private async Task OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
             LoggerHelper.Info("MQTT Disconnected");
@@ -229,6 +264,11 @@ namespace IOTLink.Engine.MQTT
                 Connect();
         }
 
+        /// <summary>
+        /// Handle received messages from the broker
+        /// </summary>
+        /// <param name="arg"><see cref="MqttApplicationMessageReceivedEventArgs"/> event</param>
+        /// <returns></returns>
         private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
         {
             LoggerHelper.Debug("MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
@@ -240,13 +280,22 @@ namespace IOTLink.Engine.MQTT
                 OnMQTTMessageReceived(this, mqttEvent);
         }
 
+        /// <summary>
+        /// Subscribe to a topic
+        /// </summary>
+        /// <param name="topic">String containg the topic</param>
         private async void SubscribeTopic(string topic)
         {
-            LoggerHelper.Info("Subscribing to {0}", topic);
+            LoggerHelper.Debug("Subscribing to {0}", topic);
 
             await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
         }
 
+        /// <summary>
+        /// Transform the <see cref="MqttApplicationMessageReceivedEventArgs"/> into <see cref="MQTTMessage"/>
+        /// </summary>
+        /// <param name="arg"><see cref="MqttApplicationMessageReceivedEventArgs"/> object</param>
+        /// <returns><see cref="MQTTMessage"/> object</returns>
         private MQTTMessage GetMQTTMessage(MqttApplicationMessageReceivedEventArgs arg)
         {
             if (arg == null)
