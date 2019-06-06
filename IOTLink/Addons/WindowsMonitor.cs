@@ -33,7 +33,7 @@ namespace IOTLink.Addons
         {
             if (_config == null || !_config.Enabled)
             {
-                LoggerHelper.Info(typeof(WindowsMonitor), "System monitor is disabled.");
+                LoggerHelper.Info("System monitor is disabled.");
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace IOTLink.Addons
             _monitorTimer.Interval = _config.Interval * 1000;
             _monitorTimer.Start();
 
-            LoggerHelper.Info(typeof(WindowsMonitor), "System monitor is set to an interval of {0} seconds.", _config.Interval);
+            LoggerHelper.Info("System monitor is set to an interval of {0} seconds.", _config.Interval);
         }
 
         private void OnConfigReload(object sender, EventArgs e)
@@ -57,7 +57,7 @@ namespace IOTLink.Addons
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            LoggerHelper.Info(typeof(WindowsMonitor), "OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
+            LoggerHelper.Info("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
             _manager.PublishMessage(this, e.Reason.ToString(), e.Username);
         }
@@ -66,7 +66,7 @@ namespace IOTLink.Addons
         {
             _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
 
-            LoggerHelper.Debug(typeof(WindowsMonitor), "System monitor running");
+            LoggerHelper.Debug("System monitor running");
 
             MemoryInfo memoryInfo = WindowsHelper.GetMemoryInformation();
             string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
@@ -75,11 +75,11 @@ namespace IOTLink.Addons
             string memoryAvailable = memoryInfo.AvailPhysical.ToString();
             string memoryUsed = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical).ToString();
 
-            LoggerHelper.Debug(typeof(WindowsMonitor), "Processor Used: {0} %", cpuUsage);
-            LoggerHelper.Debug(typeof(WindowsMonitor), "Memory Usage: {0} %", memoryUsage);
-            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Available: {0} MB", memoryAvailable);
-            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Used: {0} MB", memoryUsed);
-            LoggerHelper.Debug(typeof(WindowsMonitor), "Physical Total: {0} MB", memoryTotal);
+            LoggerHelper.Debug("Processor Used: {0} %", cpuUsage);
+            LoggerHelper.Debug("Memory Usage: {0} %", memoryUsage);
+            LoggerHelper.Debug("Physical Available: {0} MB", memoryAvailable);
+            LoggerHelper.Debug("Physical Used: {0} MB", memoryUsed);
+            LoggerHelper.Debug("Physical Total: {0} MB", memoryTotal);
 
             _manager.PublishMessage(this, "Stats/CPU", cpuUsage);
             _manager.PublishMessage(this, "Stats/MemoryUsage", memoryUsage);

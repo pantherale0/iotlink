@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Timers;
 
 namespace IOTLink.Helpers
@@ -21,14 +24,6 @@ namespace IOTLink.Helpers
             DEBUG,
             TRACE,
             HELP_ME
-        }
-
-        public static LoggerHelper GetInstance()
-        {
-            if (_instance == null)
-                _instance = new LoggerHelper();
-
-            return _instance;
         }
 
         private LoggerHelper()
@@ -84,7 +79,8 @@ namespace IOTLink.Helpers
                 if (!Directory.Exists(logsPath))
                     Directory.CreateDirectory(logsPath);
 
-                string filename = string.Format("ServiceLog_{0}.log", DateTime.Now.Date.ToShortDateString().Replace('/', '_'));
+                string date = DateTime.Now.ToString("yyyy_MM_dd");
+                string filename = string.Format("ServiceLog_{0}.log", date);
                 string path = Path.Combine(logsPath, filename);
 
                 if (!File.Exists(path))
@@ -121,19 +117,20 @@ namespace IOTLink.Helpers
             Flush();
         }
 
-        private void WriteLog(LogLevel logLevel, Type origin, string message, params object[] args)
+        private void WriteLog(LogLevel logLevel, string messageTag, string message, params object[] args)
         {
-            if (origin == null || string.IsNullOrWhiteSpace(message))
+            if (string.IsNullOrWhiteSpace(messageTag) || string.IsNullOrWhiteSpace(message))
                 return;
 
-            string messageTag = origin.Name;
             string formatedMessage;
             if (args == null || args.Length == 0)
                 formatedMessage = message;
             else
                 formatedMessage = string.Format(message, args);
 
-            string finalMessage = string.Format("[{0}][{1}][{2}][{3}]: {4}", WindowsHelper.GetFullMachineName(), DateTime.Now, logLevel.ToString(), messageTag, formatedMessage);
+            string datetime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss zzz");
+            string machineName = WindowsHelper.GetFullMachineName();
+            string finalMessage = string.Format("[{0}][{1}][{2}][{3}]: {4}", machineName, datetime, logLevel.ToString(), messageTag, formatedMessage);
 
             if (_lastMessage != null && _lastMessage.DayOfYear != DateTime.Now.DayOfYear)
             {
@@ -144,39 +141,73 @@ namespace IOTLink.Helpers
             WriteFile(finalMessage);
         }
 
-        public static void Critical(Type origin, string message, params object[] args)
+        public static void Critical(string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.CRITICAL, origin, message, args);
+            GetInstance().WriteLog(LogLevel.CRITICAL, GetCallerInformation(), message, args);
         }
 
-        public static void Error(Type origin, string message, params object[] args)
+        public static void Error(string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.ERROR, origin, message, args);
+            GetInstance().WriteLog(LogLevel.ERROR, GetCallerInformation(), message, args);
         }
 
-        public static void Warn(Type origin, string message, params object[] args)
+        public static void Warn(string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.WARNING, origin, message, args);
+            GetInstance().WriteLog(LogLevel.WARNING, GetCallerInformation(), message, args);
         }
 
-        public static void Info(Type origin, string message, params object[] args)
+        public static void Info(string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.INFO, origin, message, args);
+            GetInstance().WriteLog(LogLevel.INFO, GetCallerInformation(), message, args);
         }
 
-        public static void Debug(Type origin, string message, params object[] args)
+        public static void Debug(string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.DEBUG, origin, message, args);
+            GetInstance().WriteLog(LogLevel.DEBUG, GetCallerInformation(), message, args);
         }
 
-        public static void Trace(Type origin, string message, params object[] args)
+        public static void Trace(string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.TRACE, origin, message, args);
+            GetInstance().WriteLog(LogLevel.TRACE, GetCallerInformation(), message, args);
+        }
+
+        internal static void HelpMe(string message, params object[] args)
+        {
+            GetInstance().WriteLog(LogLevel.HELP_ME, GetCallerInformation(), message, args);
         }
 
         internal static void EmptyLine()
         {
             GetInstance().WriteFile();
+        }
+
+        private static string GetCallerInformation()
+        {
+            string fullName;
+            Type declaringType;
+            int skipFrames = 2;
+            do
+            {
+                MethodBase method = new StackFrame(skipFrames, false).GetMethod();
+                declaringType = method.DeclaringType;
+                if (declaringType == null)
+                {
+                    return method.Name;
+                }
+                skipFrames++;
+                fullName = declaringType.FullName;
+            }
+            while (declaringType.Module.Name.Equals("mscorlib.dll", StringComparison.OrdinalIgnoreCase));
+
+            return fullName;
+        }
+
+        public static LoggerHelper GetInstance()
+        {
+            if (_instance == null)
+                _instance = new LoggerHelper();
+
+            return _instance;
         }
     }
 }

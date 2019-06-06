@@ -45,21 +45,21 @@ namespace IOTLink.Engine.MQTT
             // Configuration not found
             if (MQTT == null)
             {
-                LoggerHelper.Error(typeof(MQTTClient), "MQTT Configuration not found.");
+                LoggerHelper.Error("MQTT Configuration not found.");
                 return;
             }
 
             // No broker information
             if ((MQTT.TCP == null || !MQTT.TCP.Enabled) && (MQTT.WebSocket == null || !MQTT.WebSocket.Enabled))
             {
-                LoggerHelper.Error(typeof(MQTTClient), "You need to configure TCP or WebSocket connection");
+                LoggerHelper.Error("You need to configure TCP or WebSocket connection");
                 return;
             }
 
             // Ambiguous broker information
             if ((MQTT.TCP != null && MQTT.TCP.Enabled) && (MQTT.WebSocket != null && MQTT.WebSocket.Enabled))
             {
-                LoggerHelper.Error(typeof(MQTTClient), "You need to disable TCP or WebSocket connection. Cannot use both together.");
+                LoggerHelper.Error("You need to disable TCP or WebSocket connection. Cannot use both together.");
                 return;
             }
 
@@ -108,7 +108,7 @@ namespace IOTLink.Engine.MQTT
                 }
                 else
                 {
-                    LoggerHelper.Warn(typeof(MQTTClient), "LWT Disabled - LWT disconnected message is empty or null. Fix your configuration.yaml");
+                    LoggerHelper.Warn("LWT Disabled - LWT disconnected message is empty or null. Fix your configuration.yaml");
                 }
             }
 
@@ -132,7 +132,7 @@ namespace IOTLink.Engine.MQTT
 
             topic = GetFullTopicName(topic);
 
-            LoggerHelper.Info(typeof(MQTTClient), "Publishing to {0}: {1}", topic, message);
+            LoggerHelper.Info("Publishing to {0}: {1}", topic, message);
 
             MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
             await _client.PublishAsync(mqttMsg);
@@ -145,7 +145,7 @@ namespace IOTLink.Engine.MQTT
 
             topic = GetFullTopicName(topic);
 
-            LoggerHelper.Info(typeof(MQTTClient), "Publishing to {0}: ({1} bytes)", topic, message?.Length);
+            LoggerHelper.Info("Publishing to {0}: ({1} bytes)", topic, message?.Length);
 
             MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
             await _client.PublishAsync(mqttMsg);
@@ -179,20 +179,20 @@ namespace IOTLink.Engine.MQTT
             int tries = 0;
             do
             {
-                LoggerHelper.Info(typeof(MQTTClient), "Trying to connect to broker: {0} (Try: {1})", GetBrokerInfo(), (tries + 1));
+                LoggerHelper.Info("Trying to connect to broker: {0} (Try: {1})", GetBrokerInfo(), (tries + 1));
                 try
                 {
                     await _client.ConnectAsync(_options);
-                    LoggerHelper.Info(typeof(MQTTClient), "Connection successful");
+                    LoggerHelper.Info("Connection successful");
                 }
                 catch
                 {
-                    LoggerHelper.Info(typeof(MQTTClient), "Connection failed");
+                    LoggerHelper.Info("Connection failed");
                     tries++;
 
                     double waitTime = Math.Min(10 * tries, 300);
 
-                    LoggerHelper.Info(typeof(MQTTClient), "Waiting {0} seconds before trying again...", waitTime);
+                    LoggerHelper.Info("Waiting {0} seconds before trying again...", null, waitTime);
                     await Task.Delay(TimeSpan.FromSeconds(waitTime));
                 }
             } while (!_client.IsConnected);
@@ -201,7 +201,7 @@ namespace IOTLink.Engine.MQTT
 
         private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
-            LoggerHelper.Info(typeof(MQTTClient), "MQTT Connected");
+            LoggerHelper.Info("MQTT Connected");
 
             // Send LWT Connected
             if (_config.LWT != null && _config.LWT.Enabled && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
@@ -218,7 +218,7 @@ namespace IOTLink.Engine.MQTT
 
         private async Task OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
-            LoggerHelper.Info(typeof(MQTTClient), "MQTT Disconnected");
+            LoggerHelper.Info("MQTT Disconnected");
 
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
@@ -231,7 +231,7 @@ namespace IOTLink.Engine.MQTT
 
         private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
         {
-            LoggerHelper.Debug(typeof(MQTTClient), "MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
+            LoggerHelper.Debug("MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
 
             // Fire event
             MQTTMessage message = GetMQTTMessage(arg);
@@ -242,7 +242,7 @@ namespace IOTLink.Engine.MQTT
 
         private async void SubscribeTopic(string topic)
         {
-            LoggerHelper.Info(typeof(MQTTClient), "Subscribing to {0}", topic);
+            LoggerHelper.Info("Subscribing to {0}", topic);
 
             await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
         }
@@ -310,7 +310,7 @@ namespace IOTLink.Engine.MQTT
                         builder = builder.WithExactlyOnceQoS();
                         break;
                     default:
-                        LoggerHelper.Warn(typeof(MQTTClient), "Wrong LWT QoS configuration. Defaulting to 0.");
+                        LoggerHelper.Warn("Wrong LWT QoS configuration. Defaulting to 0.");
                         builder = builder.WithAtMostOnceQoS();
                         break;
                 }

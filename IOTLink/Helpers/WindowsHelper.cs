@@ -26,12 +26,12 @@ namespace IOTLink.Helpers
         {
             if (force)
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), "Executing forced system shutdown.");
+                LoggerHelper.Debug("Executing forced system shutdown.");
                 Process.Start("shutdown", "/s /f /t 0");
             }
             else
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), "Executing normal system shutdown.");
+                LoggerHelper.Debug("Executing normal system shutdown.");
                 Process.Start("shutdown", "/s /t 0");
             }
         }
@@ -40,25 +40,25 @@ namespace IOTLink.Helpers
         {
             if (force)
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), "Executing forced system reboot.");
+                LoggerHelper.Debug("Executing forced system reboot.");
                 Process.Start("shutdown", "/r /f /t 0");
             }
             else
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), "Executing normal system reboot.");
+                LoggerHelper.Debug("Executing normal system reboot.");
                 Process.Start("shutdown", "/r /t 0");
             }
         }
 
         public static void Hibernate()
         {
-            LoggerHelper.Debug(typeof(WindowsHelper), "Executing system hibernation.");
+            LoggerHelper.Debug("Executing system hibernation.");
             WindowsAPI.Hibernate();
         }
 
         public static void Suspend()
         {
-            LoggerHelper.Debug(typeof(WindowsHelper), "Executing system suspend.");
+            LoggerHelper.Debug("Executing system suspend.");
             WindowsAPI.Suspend();
         }
 
@@ -66,12 +66,12 @@ namespace IOTLink.Helpers
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), "Executing Logoff on all users");
+                LoggerHelper.Debug("Executing Logoff on all users");
                 WindowsAPI.LogoffAll();
             }
             else
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), string.Format("Executing Logoff on user {0}", username));
+                LoggerHelper.Debug(string.Format("Executing Logoff on user {0}", username));
                 WindowsAPI.LogOffUser(username);
             }
         }
@@ -80,12 +80,12 @@ namespace IOTLink.Helpers
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), "Locking all users sessions");
+                LoggerHelper.Debug("Locking all users sessions");
                 WindowsAPI.LockAll();
             }
             else
             {
-                LoggerHelper.Debug(typeof(WindowsHelper), string.Format("Locking {0} user session", username));
+                LoggerHelper.Debug(string.Format("Locking {0} user session", username));
                 WindowsAPI.LockUser(username);
             }
         }
@@ -95,7 +95,7 @@ namespace IOTLink.Helpers
             if (!string.IsNullOrWhiteSpace(args))
                 args = string.Format("{0} {1}", Path.GetFileName(command), args);
 
-            LoggerHelper.Debug(typeof(WindowsHelper), "Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username);
+            LoggerHelper.Debug("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username);
             WindowsAPI.Run(command, args, path, username);
         }
 

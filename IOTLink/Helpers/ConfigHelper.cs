@@ -14,7 +14,7 @@ namespace IOTLink.Helpers
             if (_config != null && !force)
                 return _config;
 
-            LoggerHelper.Info(typeof(ConfigHelper), "Reading configuration.yaml");
+            LoggerHelper.Info("Reading configuration.yaml");
 
             string path = Path.Combine(PathHelper.DataPath(), "configuration.yaml");
             string ConfigText = PathHelper.GetFileText(path);

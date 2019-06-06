@@ -78,7 +78,7 @@ namespace IOTLink
 
         private static void CurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            LoggerHelper.Critical(typeof(Program), "Critical Unhandled Exception: " + e.ExceptionObject.ToString());
+            LoggerHelper.Critical("Critical Unhandled Exception: " + e.ExceptionObject.ToString());
             LoggerHelper.GetInstance().Flush();
         }
     }

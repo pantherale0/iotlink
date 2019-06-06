@@ -48,7 +48,7 @@ namespace IOTLink.Engine
             ApplicationConfig config = ConfigHelper.GetApplicationConfig(true);
             if (config.MQTT == null)
             {
-                LoggerHelper.Warn(typeof(MainEngine), "MQTT is disabled or not configured yet.");
+                LoggerHelper.Warn("MQTT is disabled or not configured yet.");
                 return;
             }
 
@@ -66,7 +66,7 @@ namespace IOTLink.Engine
         {
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
             {
-                LoggerHelper.Info(typeof(MainEngine), "Changes to configuration.yaml detected. Reloading.");
+                LoggerHelper.Info("Changes to configuration.yaml detected. Reloading.");
 
                 SetupMQTTHandlers();
                 AddonManager.GetInstance().Raise_OnConfigReloadHandler(this, EventArgs.Empty);
