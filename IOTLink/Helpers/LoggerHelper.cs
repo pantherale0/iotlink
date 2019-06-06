@@ -1,8 +1,8 @@
-﻿using System;
+﻿using IOTLink.Configs;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Timers;
 
@@ -121,6 +121,10 @@ namespace IOTLink.Helpers
         private void WriteLog(LogLevel logLevel, string messageTag, string message, params object[] args)
         {
             if (string.IsNullOrWhiteSpace(messageTag) || string.IsNullOrWhiteSpace(message))
+                return;
+
+            ApplicationConfig config = ConfigHelper.GetApplicationConfig();
+            if (config.Logging == null || !config.Logging.Enabled || config.Logging.Level < logLevel)
                 return;
 
             string formatedMessage;

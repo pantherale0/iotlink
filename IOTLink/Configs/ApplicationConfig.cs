@@ -1,4 +1,4 @@
-﻿using System;
+﻿using IOTLink.Helpers;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
@@ -14,6 +14,9 @@ namespace IOTLink.Configs
 
         [YamlMember(Alias = "addons")]
         public AddonsConfiguration Addons { get; set; }
+
+        [YamlMember(Alias = "logging")]
+        public LoggingConfiguration Logging { get; set; }
 
         public class MonitorConfig
         {
@@ -31,6 +34,15 @@ namespace IOTLink.Configs
 
             [YamlMember(Alias = "globalTopics")]
             public List<string> GlobalTopics { get; set; }
+        }
+
+        public class LoggingConfiguration
+        {
+            [YamlMember(Alias = "enabled")]
+            public bool Enabled { get; set; }
+
+            [YamlMember(Alias = "level")]
+            public LoggerHelper.LogLevel Level { get; set; }
         }
     }
 }

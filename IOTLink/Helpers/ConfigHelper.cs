@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using IOTLink.Configs;
 using YamlDotNet.Serialization;
 
@@ -13,8 +12,6 @@ namespace IOTLink.Helpers
         {
             if (_config != null && !force)
                 return _config;
-
-            LoggerHelper.Info("Reading configuration.yaml");
 
             string path = Path.Combine(PathHelper.DataPath(), "configuration.yaml");
             string ConfigText = PathHelper.GetFileText(path);
