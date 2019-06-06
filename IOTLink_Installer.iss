@@ -5,6 +5,7 @@
 #define APP_NAME     "IOT Link"
 #define APP_DIR_NAME "IOTLink"
 #define APP_EXE_NAME "IOTLink.exe"
+#define APP_VERSION  "0.1"
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
 #define APP_AUTHOR_URL  "https://alexslx.com"
@@ -13,7 +14,7 @@
 ; Basic Information
 AppId={{CD785E2E-5102-4053-A1E1-208CA1D8DC98}
 AppName={#APP_NAME}
-AppVersion=0.1.0
+AppVersion={#APP_VERSION}
 ; Publisher Information
 AppPublisher={#APP_AUTHOR_NAME}
 AppPublisherURL={#APP_AUTHOR_URL}
@@ -25,7 +26,8 @@ DefaultGroupName={#APP_NAME}
 UsePreviousAppDir=yes
 ; Setup Settings
 OutputDir=Setup
-OutputBaseFilename={#APP_DIR_NAME}_InstallerWizardStyle=modern
+OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}
+WizardStyle=modern
 AllowNoIcons=yes
 LicenseFile=LICENSE
 ; Compression
@@ -33,40 +35,56 @@ Compression=lzma2
 SolidCompression=no
 ; Privileges Settings
 PrivilegesRequired=admin
-
+SetupIconFile=Assets\icons\application.ico
 
 [Files]
-Source: "IOTLink\bin\Release\IOTLink.exe";               DestDir: "{app}"; DestName: "{#APP_EXE_NAME}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\MQTTnet.dll";               DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\Newtonsoft.Json.dll";       DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\IOTLink.exe.config";        DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\YamlDotNet.dll";            DestDir: "{app}"; Flags: ignoreversion
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: "Setup\config.yaml-sample"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs
+; Main Files
+Source: "IOTLink\bin\Release\IOTLink.exe"; DestDir: "{app}"; DestName: "{#APP_EXE_NAME}"; Flags: ignoreversion
+Source: "IOTLink\bin\Release\MQTTnet.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "IOTLink\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "IOTLink\bin\Release\IOTLink.exe.config"; DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
+Source: "IOTLink\bin\Release\YamlDotNet.dll"; DestDir: "{app}"; Flags: ignoreversion
+; Configuration Sample
+Source: "Assets\config.yaml-sample"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs; Permissions: everyone-full
+; Application Icon
+Source: "Assets\icons\application.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+; Folder Icons
+Source: "Assets\icons\addons.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\configs.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\logs.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+; Service Install/Uninstall
+Source: "Assets\icons\install_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\uninstall_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+; Service Start/Stop
+Source: "Assets\icons\start_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\stop_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
 
 [Icons]
 ; Service Install/Uninstall
-Name: "{group}\Install Windows Service";      Filename: "{app}\{#APP_EXE_NAME}"; WorkingDir: "{app}"; Parameters: "--install";      AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
-Name: "{group}\Uninstall Windows Service";    Filename: "{app}\{#APP_EXE_NAME}"; WorkingDir: "{app}"; Parameters: "--uninstall";    AfterInstall: SetElevationBit('{group}\Uninstall Windows Service.lnk')
+Name: "{group}\Install Windows Service";      Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\install_service.ico";    WorkingDir: "{app}"; Parameters: "--install";              AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
+Name: "{group}\Uninstall Windows Service";    Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\uninstall_service.ico";  WorkingDir: "{app}"; Parameters: "--uninstall";            AfterInstall: SetElevationBit('{group}\Uninstall Windows Service.lnk')
 ; Service Start/Stop
-Name: "{group}\Start Windows Service";        Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "start winiotlink";    Comment: "Start {#APP_NAME} Service";    AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
-Name: "{group}\Stop Windows Service";         Filename: "net.exe"; WorkingDir: "{sys}"; Parameters: "stop winiotlink";     Comment: "Stop {#APP_NAME} Service";     AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
+Name: "{group}\Start Windows Service";        Filename: "net.exe";                  IconFilename: "{app}\Icons\start_service.ico";      WorkingDir: "{sys}"; Parameters: "start {#APP_DIR_NAME}";  AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
+Name: "{group}\Stop Windows Service";         Filename: "net.exe";                  IconFilename: "{app}\Icons\stop_service.ico";       WorkingDir: "{sys}"; Parameters: "stop {#APP_DIR_NAME}";   AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
 ; Open Folders
-Name: "{group}\Open Addons Folder";           Filename: "{commonappdata}\{#APP_DIR_NAME}\Addons";     WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Addons";    Flags: foldershortcut
-Name: "{group}\Open Configuration Folder";    Filename: "{commonappdata}\{#APP_DIR_NAME}\Configs";    WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Configs";   Flags: foldershortcut
-Name: "{group}\Open Logs Folder";             Filename: "{commonappdata}\{#APP_DIR_NAME}\Logs";       WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Logs";      Flags: foldershortcut
+Name: "{group}\Open Configuration File";      Filename: "{commonappdata}\{#APP_DIR_NAME}\Configs\configuration.yaml";    IconFilename: "{app}\Icons\configs.ico";            WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Configs";
+Name: "{group}\Open Addons Folder";           Filename: "{commonappdata}\{#APP_DIR_NAME}\Addons";                        IconFilename: "{app}\Icons\addons.ico";             WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Addons";    Flags: foldershortcut
+Name: "{group}\Open Logs Folder";             Filename: "{commonappdata}\{#APP_DIR_NAME}\Logs";                          IconFilename: "{app}\Icons\logs.ico";               WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Logs";      Flags: foldershortcut
 
 [Run]
-Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install";      WorkingDir: "{app}"; Flags: postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
+Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install";      WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
 
 [UninstallRun]
 Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--uninstall";    WorkingDir: "{app}"; Flags: runhidden
 
 [Dirs]
-Name: "{commonappdata}\{#APP_DIR_NAME}"
-Name: "{commonappdata}\{#APP_DIR_NAME}\Configs"
-Name: "{commonappdata}\{#APP_DIR_NAME}\Logs"
-Name: "{commonappdata}\{#APP_DIR_NAME}\Addons"
+Name: "{commonappdata}\{#APP_DIR_NAME}"; Permissions: everyone-full
+Name: "{commonappdata}\{#APP_DIR_NAME}\Configs"; Permissions: everyone-full
+Name: "{commonappdata}\{#APP_DIR_NAME}\Logs"; Permissions: everyone-full
+Name: "{commonappdata}\{#APP_DIR_NAME}\Addons"; Permissions: everyone-full
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}"
 
 [Code]
 procedure SetElevationBit(Filename: string);

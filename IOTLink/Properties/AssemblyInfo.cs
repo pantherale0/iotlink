@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Win IOT Link")]
-[assembly: AssemblyDescription("Service to provide Internet Of Things (IOT) integration with Windows using MQTT.")]
+[assembly: AssemblyDescription("Service to provide Internet Of Things (IOT) integration using MQTT.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("alexslx.com")]
 [assembly: AssemblyProduct("IOTLink")]

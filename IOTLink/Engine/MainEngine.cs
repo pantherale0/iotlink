@@ -29,6 +29,7 @@ namespace IOTLink.Engine
             _configWatcher = new FileSystemWatcher(PathHelper.DataPath(), "configuration.yaml");
             _configWatcher.NotifyFilter = NotifyFilters.LastWrite;
             _configWatcher.Changed += OnConfigChanged;
+            _configWatcher.Created += OnConfigChanged;
             _configWatcher.EnableRaisingEvents = true;
         }
 

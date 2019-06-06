@@ -201,7 +201,7 @@ mqtt:
   # Type: String
   # Default: The client will use the machine name as the ClientID.
   ########################################################################
-  clientId: custom-id
+  clientId: 
   
   ########################################################################
   # Prefix
@@ -209,9 +209,9 @@ mqtt:
   # Every topic
   ########################################################################
   # Type: String
-  # Default: winiotlink
+  # Default: IOTLink
   ########################################################################
-  prefix: winiotlink
+  prefix: IOTLink
   
   ########################################################################
   # CleanSession
@@ -244,7 +244,7 @@ addons:
   ########################################################################
   enabled: true
   ########################################################################
-  # Global Topics
+  # Global Topics (NOT WORKING YET)
   ########################################################################
   # By default, addons can only listen and publish messages from theirs
   # respective topics under the following schema:
@@ -285,6 +285,6 @@ monitor:
   # Interval in seconds which the monitor will send system info to MQTT.
   ########################################################################
   # Type: Integer
-  # Default: 60
+  # Default: 300 (5 minutes)
   ########################################################################
-  interval: 60
+  interval: 300

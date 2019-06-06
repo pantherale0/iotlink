@@ -27,6 +27,9 @@ namespace IOTLink.Platform.Windows.Native
         [DllImport("kernel32.dll", EntryPoint = "CloseHandle", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool CloseHandle(IntPtr hHandle);
 
+        [DllImport("kernel32.dll", EntryPoint = "WTSGetActiveConsoleSessionId", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern uint WTSGetActiveConsoleSessionId();
+
         [DllImport("kernel32.dll", EntryPoint = "GlobalMemoryStatusEx", CharSet = CharSet.Auto, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool GlobalMemoryStatusEx([In, Out] MemoryStatusEx lpBuffer);

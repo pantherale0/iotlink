@@ -80,5 +80,18 @@ namespace IOTLink.Platform.Windows.Native
 
         [DllImport("wtsapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool WTSQueryUserToken(Int32 sessionId, out IntPtr Token);
+
+        [DllImport("wtsapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool WTSSendMessage(
+            IntPtr hServer,
+            [MarshalAs(UnmanagedType.I4)] int SessionId,
+            String pTitle,
+            [MarshalAs(UnmanagedType.U4)] int TitleLength,
+            String pMessage,
+            [MarshalAs(UnmanagedType.U4)] int MessageLength,
+            [MarshalAs(UnmanagedType.U4)] int Style,
+            [MarshalAs(UnmanagedType.U4)] int Timeout,
+            [MarshalAs(UnmanagedType.U4)] out int pResponse,
+            bool bWait);
     }
 }

@@ -1,4 +1,8 @@
-﻿namespace IOTLink
+﻿using System;
+using System.Configuration.Install;
+using System.ServiceProcess;
+
+namespace IOTLink
 {
     partial class ProjectInstaller
     {
@@ -20,8 +24,6 @@
             base.Dispose(disposing);
         }
 
-        #region Component Designer generated code
-
         /// <summary>
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
@@ -39,10 +41,12 @@
             // 
             // serviceInstaller1
             // 
-            this.serviceInstaller1.DisplayName = "Win IOT Link";
+            this.serviceInstaller1.DisplayName = "IOT Link";
             this.serviceInstaller1.ServiceName = "IOTLink";
-            this.serviceInstaller1.Description = "Service to provide Internet Of Things (IOT) extensions";
+            this.serviceInstaller1.Description = "Service to provide Internet Of Things (IOT) integration using MQTT.";
             this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
+            this.serviceInstaller1.AfterInstall += AfterInstallHandler;
+            this.serviceInstaller1.BeforeUninstall += BeforeUninstallHandler;
             // 
             // ProjectInstaller
             // 
@@ -52,7 +56,63 @@
 
         }
 
-        #endregion
+        private void AfterInstallHandler(object sender, InstallEventArgs e)
+        {
+            ChangeServiceStatus(ServiceControllerStatus.Running);
+        }
+
+        private void BeforeUninstallHandler(object sender, InstallEventArgs e)
+        {
+            ChangeServiceStatus(ServiceControllerStatus.Stopped);
+        }
+
+        private void ChangeServiceStatus(ServiceControllerStatus desiredStatus)
+        {
+            try
+            {
+                using (ServiceController sc = new ServiceController(serviceInstaller1.ServiceName))
+                {
+                    ServiceControllerStatus currentStatus = sc.Status;
+                    switch (currentStatus)
+                    {
+                        case ServiceControllerStatus.ContinuePending:
+                        case ServiceControllerStatus.StartPending:
+                        case ServiceControllerStatus.Running:
+                            if (desiredStatus == ServiceControllerStatus.Stopped)
+                                sc.Stop();
+                            if (desiredStatus == ServiceControllerStatus.Paused)
+                                sc.Pause();
+                            break;
+
+                        case ServiceControllerStatus.StopPending:
+                        case ServiceControllerStatus.Stopped:
+                            if (desiredStatus == ServiceControllerStatus.Running)
+                                sc.Start();
+                            break;
+
+                        case ServiceControllerStatus.PausePending:
+                        case ServiceControllerStatus.Paused:
+                            if (desiredStatus == ServiceControllerStatus.Stopped)
+                                sc.Stop();
+                            if (desiredStatus == ServiceControllerStatus.Running)
+                                sc.Start();
+                            break;
+
+                        default: break;
+                    }
+
+                    if (sc.Status != ServiceControllerStatus.Stopped)
+                    {
+                        sc.Stop();
+                        sc.WaitForStatus(ServiceControllerStatus.Stopped, new TimeSpan(0, 0, 0, 60));
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
 
         private System.ServiceProcess.ServiceProcessInstaller serviceProcessInstaller1;
         private System.ServiceProcess.ServiceInstaller serviceInstaller1;

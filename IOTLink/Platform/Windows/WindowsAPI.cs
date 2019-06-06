@@ -248,6 +248,28 @@ namespace IOTLink.Platform.Windows
             return null;
         }
 
+        public static void ShowMessage(string title, string message)
+        {
+            uint sessionId = Kernel32.WTSGetActiveConsoleSessionId();
+            if (sessionId == 0xFFFFFFFF)
+                return;
+
+            IntPtr server = GetServerPtr();
+            try
+            {
+                int response = 0;
+                int titleLen = title.Length * 2;
+                int messageLen = message.Length * 2;
+
+                WtsApi32.WTSSendMessage(server, (int)sessionId, title, titleLen, message, messageLen, 0, 0, out response, false);
+            }
+            finally
+            {
+                WtsApi32.WTSCloseServer(server);
+            }
+
+        }
+
         private static List<int> GetSessionIDs(IntPtr server, bool activeOnly = false)
         {
             List<int> sessionIds = new List<int>();
