@@ -4,8 +4,8 @@
 
 #define APP_NAME     "IOT Link"
 #define APP_DIR_NAME "IOTLink"
-#define APP_EXE_NAME "IOTLink.exe"
-#define APP_VERSION  "0.1"
+#define APP_EXE_NAME "IOTLinkService.exe"
+#define APP_VERSION  "1.0.0"
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
 #define APP_AUTHOR_URL  "https://alexslx.com"
@@ -15,6 +15,7 @@
 AppId={{CD785E2E-5102-4053-A1E1-208CA1D8DC98}
 AppName={#APP_NAME}
 AppVersion={#APP_VERSION}
+VersionInfoVersion={#APP_VERSION}
 ; Publisher Information
 AppPublisher={#APP_AUTHOR_NAME}
 AppPublisherURL={#APP_AUTHOR_URL}
@@ -39,31 +40,32 @@ SetupIconFile=Assets\icons\application.ico
 
 [Files]
 ; Main Files
-Source: "IOTLink\bin\Release\IOTLink.exe"; DestDir: "{app}"; DestName: "{#APP_EXE_NAME}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\MQTTnet.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\IOTLink.exe.config"; DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\YamlDotNet.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "IOTLink\bin\Release\IOTLinkService.exe";               DestDir: "{app}"; DestName: "{#APP_EXE_NAME}";        Flags: ignoreversion
+Source: "IOTLink\bin\Release\IOTLinkService.exe.config";        DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
+Source: "IOTLinkAPI\bin\Release\IOTLinkAPI.dll";                DestDir: "{app}"; Flags: ignoreversion
+Source: "IOTLinkAPI\bin\Release\MQTTnet.dll";                   DestDir: "{app}"; Flags: ignoreversion
+Source: "IOTLinkAPI\bin\Release\Newtonsoft.Json.dll";           DestDir: "{app}"; Flags: ignoreversion
+Source: "IOTLinkAPI\bin\Release\YamlDotNet.dll";                DestDir: "{app}"; Flags: ignoreversion
 ; Configuration Sample
-Source: "Assets\config.yaml-sample"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs; Permissions: everyone-full
+Source: "Assets\config.yaml-sample";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs; Permissions: everyone-full
 ; Application Icon
-Source: "Assets\icons\application.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\application.ico";                         DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Folder Icons
-Source: "Assets\icons\addons.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\configs.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\logs.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\addons.ico";                              DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\configs.ico";                             DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\logs.ico";                                DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Service Install/Uninstall
-Source: "Assets\icons\install_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\uninstall_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\install_service.ico";                     DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\uninstall_service.ico";                   DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Service Start/Stop
-Source: "Assets\icons\start_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\stop_service.ico"; DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\start_service.ico";                       DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\icons\stop_service.ico";                        DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Addon - Commands
-Source: "Addons\Commands\addon.yaml"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
-Source: "Addons\Commands\bin\Release\Commands.dll"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
+Source: "Addons\Commands\addon.yaml";                           DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
+Source: "Addons\Commands\bin\Release\Commands.dll";             DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
 ; Addon - Windows Monitor
-Source: "Addons\WindowsMonitor\addon.yaml"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
-Source: "Addons\WindowsMonitor\config.yaml"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\addon.yaml";                     DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\config.yaml";                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
 Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
 
 [Icons]
@@ -85,18 +87,18 @@ Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install";      WorkingDir: "{a
 Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--uninstall";    WorkingDir: "{app}"; Flags: runhidden
 
 [Dirs]
-Name: "{commonappdata}\{#APP_DIR_NAME}"; Permissions: everyone-full
-Name: "{commonappdata}\{#APP_DIR_NAME}\Configs"; Permissions: everyone-full
-Name: "{commonappdata}\{#APP_DIR_NAME}\Logs"; Permissions: everyone-full
-Name: "{commonappdata}\{#APP_DIR_NAME}\Addons"; Permissions: everyone-full
+Name: "{commonappdata}\{#APP_DIR_NAME}";            Permissions: everyone-full
+Name: "{commonappdata}\{#APP_DIR_NAME}\Configs";    Permissions: everyone-full
+Name: "{commonappdata}\{#APP_DIR_NAME}\Logs";       Permissions: everyone-full
+Name: "{commonappdata}\{#APP_DIR_NAME}\Addons";     Permissions: everyone-full
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
 
 [Tasks]
-Name: "Addons"; Description: "Install Addons"
-Name: "Addons\Commands"; Description: "Addon: Commands"
-Name: "Addons\WindowsMonitor"; Description: "Addon: Windows Monitor"
+Name: "Addons";                 Description: "Install Addons"
+Name: "Addons\Commands";        Description: "Addon: Commands"
+Name: "Addons\WindowsMonitor";  Description: "Addon: Windows Monitor"
 
 [Code]
 procedure SetElevationBit(Filename: string);

@@ -59,9 +59,9 @@
     <Folder Include=".vs\Addon_WindowsMonitor\v15\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\IOTLink\IOTLink.csproj">
-      <Project>{1a554933-0c12-4ce5-900c-0d8e21544dd0}</Project>
-      <Name>IOTLink</Name>
+    <ProjectReference Include="..\..\IOTLinkAPI\IOTLinkAPI.csproj">
+      <Project>{ccb5ff85-b16d-4a6a-aa53-993f6b86fea1}</Project>
+      <Name>IOTLinkAPI</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />

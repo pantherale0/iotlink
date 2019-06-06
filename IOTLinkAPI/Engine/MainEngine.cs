@@ -33,12 +33,12 @@ namespace IOTLink.Engine
             _configWatcher.EnableRaisingEvents = true;
         }
 
-        internal void StartApplication()
+        public void StartApplication()
         {
             SetupMQTTHandlers();
         }
 
-        internal void StopApplication()
+        public void StopApplication()
         {
             LoggerHelper.GetInstance().Flush();
         }
@@ -99,7 +99,7 @@ namespace IOTLink.Engine
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }
 
-        internal void OnSessionChange(string username, SessionChangeReason reason)
+        public void OnSessionChange(string username, SessionChangeReason reason)
         {
             SessionChangeEventArgs args = new SessionChangeEventArgs
             {

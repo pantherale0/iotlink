@@ -177,12 +177,12 @@ namespace IOTLink.Helpers
             GetInstance().WriteLog(LogLevel.TRACE, GetCallerInformation(), message, args);
         }
 
-        internal static void HelpMe(string message, params object[] args)
+        public static void HelpMe(string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.HELP_ME, GetCallerInformation(), message, args);
         }
 
-        internal static void EmptyLine()
+        public static void EmptyLine()
         {
             GetInstance().WriteFile();
         }
