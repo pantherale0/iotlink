@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using IOTLink.Platform;
 using IOTLink.Platform.Windows;
 
 namespace IOTLink.Helpers
 {
-    public static class WindowsHelper
+    public static class PlatformHelper
     {
         public static string GetFullMachineName()
         {
@@ -19,51 +21,69 @@ namespace IOTLink.Helpers
 
         public static string GetUsername(int sessionId)
         {
-            return WindowsAPI.GetUsername(sessionId);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return WindowsAPI.GetUsername(sessionId);
+
+            throw new PlatformNotSupportedException();
         }
 
         public static void Shutdown(bool force = false)
         {
-            if (force)
-            {
-                LoggerHelper.Debug("Executing forced system shutdown.");
-                Process.Start("shutdown", "/s /f /t 0");
-            }
-            else
-            {
-                LoggerHelper.Debug("Executing normal system shutdown.");
-                Process.Start("shutdown", "/s /t 0");
-            }
+            LoggerHelper.Debug("Executing {0} system shutdown.", force ? "forced" : "normal");
+            string filename = "shutdown";
+            string args = null;
+
+            // Windows
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                args = force ? "-s -f -t 0" : "-s -t 0";
+
+            // Linux or OSX
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                args = "-h now";
+
+            Process.Start(filename, args);
         }
 
         public static void Reboot(bool force = false)
         {
-            if (force)
-            {
-                LoggerHelper.Debug("Executing forced system reboot.");
-                Process.Start("shutdown", "/r /f /t 0");
-            }
-            else
-            {
-                LoggerHelper.Debug("Executing normal system reboot.");
-                Process.Start("shutdown", "/r /t 0");
-            }
+            LoggerHelper.Debug("Executing {0} system shutdown.", force ? "forced" : "normal");
+            string filename = "shutdown";
+            string args = null;
+
+            // Windows
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                args = force ? "-r -f -t 0" : "-r -t 0";
+
+            // Linux or OSX
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                args = "-r -h now";
+
+            Process.Start(filename, args);
         }
 
         public static void Hibernate()
         {
             LoggerHelper.Debug("Executing system hibernation.");
-            WindowsAPI.Hibernate();
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                WindowsAPI.Hibernate();
+
+            throw new PlatformNotSupportedException();
         }
 
         public static void Suspend()
         {
             LoggerHelper.Debug("Executing system suspend.");
-            WindowsAPI.Suspend();
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                WindowsAPI.Suspend();
+
+            throw new PlatformNotSupportedException();
         }
 
         public static void Logoff(string username)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
             if (string.IsNullOrWhiteSpace(username))
             {
                 LoggerHelper.Debug("Executing Logoff on all users");
@@ -78,6 +98,9 @@ namespace IOTLink.Helpers
 
         public static void Lock(string username)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
             if (string.IsNullOrWhiteSpace(username))
             {
                 LoggerHelper.Debug("Locking all users sessions");
@@ -95,12 +118,18 @@ namespace IOTLink.Helpers
             if (!string.IsNullOrWhiteSpace(args))
                 args = string.Format("{0} {1}", Path.GetFileName(command), args);
 
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
             LoggerHelper.Debug("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username);
             WindowsAPI.Run(command, args, path, username);
         }
 
-        public static WindowsAPI.MemoryInfo GetMemoryInformation()
+        public static MemoryInfo GetMemoryInformation()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
             return WindowsAPI.GetMemoryInformation();
         }
     }

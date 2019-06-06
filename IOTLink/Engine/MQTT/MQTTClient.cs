@@ -367,7 +367,7 @@ namespace IOTLink.Engine.MQTT
             if (name == null)
                 name = string.Empty;
 
-            string machineName = WindowsHelper.GetFullMachineName().Replace("\\", "/");
+            string machineName = PlatformHelper.GetFullMachineName().Replace("\\", "/");
             string topic = string.Format("{0}/{1}/{2}", _config.Prefix, machineName, name);
             return MQTTHelper.SanitizeTopic(topic);
         }

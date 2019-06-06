@@ -141,6 +141,7 @@
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\ConfigHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
+    <Compile Include="Platform\MemoryInfo.cs" />
     <Compile Include="Platform\Windows\WindowsAPI.cs" />
     <Compile Include="Platform\Windows\Native\WtsApi32.cs" />
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />

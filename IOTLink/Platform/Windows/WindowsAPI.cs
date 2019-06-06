@@ -8,17 +8,32 @@ namespace IOTLink.Platform.Windows
 {
     public static class WindowsAPI
     {
-        private const int MemoryDivisor = 1024 * 1024;
-        public class MemoryInfo
+        public enum DialogStyle
         {
-            public uint MemoryLoad { get; set; }
-            public ulong TotalPhysical { get; set; }
-            public ulong AvailPhysical { get; set; }
-            public ulong TotalPageFile { get; set; }
-            public ulong AvailPageFile { get; set; }
-            public ulong TotalVirtual { get; set; }
-            public ulong AvailVirtual { get; set; }
-            public ulong AvailExtendedVirtual { get; set; }
+            // Buttons
+            MB_OK = 0,
+            MB_OKCANCEL = 1,
+            MB_ABORTRETRYIGNORE = 2,
+            MB_YESNOCANCEL = 3,
+            MB_YESNO = 4,
+            MB_RETRYCANCEL = 5,
+            MB_CANCELTRYCONTINUE = 6,
+            MB_HELP = 16384,
+            // Icons
+            MB_ICONERROR = 16,
+            MB_ICONSTOP = 16,
+            MB_ICONHAND = 16,
+            MB_ICONQUESTION = 32,
+            MB_ICONEXCLAMATION = 48,
+            MB_ICONWARNING = 48,
+            MB_ICONASTERISK = 64,
+            MB_ICONINFORMATION = 64,
+            MB_ICONMASK = 240
+        }
+
+        public enum DialogIconStyle
+        {
+            
         }
 
         public static string GetUsername(int sessionId)
@@ -234,13 +249,13 @@ namespace IOTLink.Platform.Windows
                 MemoryInfo memoryInfo = new MemoryInfo
                 {
                     MemoryLoad = memoryStatusEx.dwMemoryLoad,
-                    AvailPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPhys / MemoryDivisor, 0),
-                    AvailVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailVirtual / MemoryDivisor),
-                    AvailExtendedVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailExtendedVirtual / MemoryDivisor),
-                    AvailPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPageFile / MemoryDivisor),
-                    TotalPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPhys / MemoryDivisor),
-                    TotalVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullTotalVirtual / MemoryDivisor),
-                    TotalPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPageFile / MemoryDivisor),
+                    AvailPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPhys / MemoryInfo.MEMORY_DIVISOR, 0),
+                    AvailVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailVirtual / MemoryInfo.MEMORY_DIVISOR),
+                    AvailExtendedVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailExtendedVirtual / MemoryInfo.MEMORY_DIVISOR),
+                    AvailPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPageFile / MemoryInfo.MEMORY_DIVISOR),
+                    TotalPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPhys / MemoryInfo.MEMORY_DIVISOR),
+                    TotalVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullTotalVirtual / MemoryInfo.MEMORY_DIVISOR),
+                    TotalPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPageFile / MemoryInfo.MEMORY_DIVISOR),
                 };
 
                 return memoryInfo;
@@ -260,8 +275,9 @@ namespace IOTLink.Platform.Windows
                 int response = 0;
                 int titleLen = title.Length * 2;
                 int messageLen = message.Length * 2;
+                int style = (int)(DialogStyle.MB_OK | DialogStyle.MB_ICONINFORMATION);
 
-                WtsApi32.WTSSendMessage(server, (int)sessionId, title, titleLen, message, messageLen, 0, 0, out response, false);
+                WtsApi32.WTSSendMessage(server, (int)sessionId, title, titleLen, message, messageLen, style, 0, out response, false);
             }
             finally
             {

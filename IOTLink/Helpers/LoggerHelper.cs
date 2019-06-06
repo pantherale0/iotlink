@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Timers;
 
 namespace IOTLink.Helpers
@@ -129,7 +130,7 @@ namespace IOTLink.Helpers
                 formatedMessage = string.Format(message, args);
 
             string datetime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss zzz");
-            string machineName = WindowsHelper.GetFullMachineName();
+            string machineName = PlatformHelper.GetFullMachineName();
             string finalMessage = string.Format("[{0}][{1}][{2}][{3}]: {4}", machineName, datetime, logLevel.ToString(), messageTag, formatedMessage);
 
             if (_lastMessage != null && _lastMessage.DayOfYear != DateTime.Now.DayOfYear)
@@ -199,7 +200,7 @@ namespace IOTLink.Helpers
             }
             while (declaringType.Module.Name.Equals("mscorlib.dll", StringComparison.OrdinalIgnoreCase));
 
-            return fullName;
+            return Regex.Replace(fullName, "(.*)\\+([A-Za-z0-9_<>]+)(.*)", "$1$3");
         }
 
         public static LoggerHelper GetInstance()

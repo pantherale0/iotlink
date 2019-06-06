@@ -4,8 +4,8 @@ using System.Timers;
 using IOTLink.API;
 using IOTLink.Engine.System;
 using IOTLink.Helpers;
+using IOTLink.Platform;
 using static IOTLink.Configs.ApplicationConfig;
-using static IOTLink.Platform.Windows.WindowsAPI;
 
 namespace IOTLink.Addons
 {
@@ -68,7 +68,7 @@ namespace IOTLink.Addons
 
             LoggerHelper.Debug("System monitor running");
 
-            MemoryInfo memoryInfo = WindowsHelper.GetMemoryInformation();
+            MemoryInfo memoryInfo = PlatformHelper.GetMemoryInformation();
             string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
             string memoryUsage = memoryInfo.MemoryLoad.ToString();
             string memoryTotal = memoryInfo.TotalPhysical.ToString();

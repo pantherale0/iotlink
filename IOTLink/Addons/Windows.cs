@@ -24,37 +24,37 @@ namespace IOTLink.Addons
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("OnShutdownMessage message received");
-            WindowsHelper.Shutdown();
+            PlatformHelper.Shutdown();
         }
 
         private void OnRebootMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("OnRebootMessage message received");
-            WindowsHelper.Reboot();
+            PlatformHelper.Reboot();
         }
 
         private void OnLogoffMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("OnLogoffMessage message received");
-            WindowsHelper.Logoff(e.Message.GetPayload());
+            PlatformHelper.Logoff(e.Message.GetPayload());
         }
 
         private void OnLockMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("OnLockMessage message received");
-            WindowsHelper.Lock(e.Message.GetPayload());
+            PlatformHelper.Lock(e.Message.GetPayload());
         }
 
         private void OnHibernateMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("OnHibernateMessage message received");
-            WindowsHelper.Hibernate();
+            PlatformHelper.Hibernate();
         }
 
         private void OnSuspendMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Info("OnSuspendMessage message received");
-            WindowsHelper.Suspend();
+            PlatformHelper.Suspend();
         }
 
         private void OnCommandRun(object sender, MQTTMessageEventEventArgs e)
@@ -72,7 +72,7 @@ namespace IOTLink.Addons
                 string path = json.path;
                 string user = json.user;
 
-                WindowsHelper.Run(command, args, path, user);
+                PlatformHelper.Run(command, args, path, user);
             }
             catch (Exception ex)
             {

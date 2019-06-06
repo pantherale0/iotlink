@@ -27,13 +27,13 @@ namespace IOTLink
                     switch (parameter)
                     {
                         case "--install":
-                            WindowsAPI.ShowMessage("Service Installer", "IOTLink Service is already installed.");
+                            WindowsAPI.ShowMessage("Service Installer", "Service is already installed.");
                             break;
                         case "--uninstall":
                             try
                             {
                                 ManagedInstallerClass.InstallHelper(new string[] { "/u", Assembly.GetExecutingAssembly().Location });
-                                WindowsAPI.ShowMessage("Service Installer", "IOTLink Service is uninstalled sucessfully.");
+                                WindowsAPI.ShowMessage("Service Installer", "Service is uninstalled sucessfully.");
                             }
                             catch (Exception)
                             {
@@ -41,7 +41,7 @@ namespace IOTLink
                             }
                             break;
                         default:
-                            WindowsAPI.ShowMessage("Service Installer", serviceExists ? "IOTLink Service is installed." : "IOTLink Service is NOT installed.");
+                            WindowsAPI.ShowMessage("Service Installer", serviceExists ? "Service is installed." : "IOTLink Service is NOT installed.");
                             break;
                     }
                 }
@@ -53,7 +53,7 @@ namespace IOTLink
                             try
                             {
                                 ManagedInstallerClass.InstallHelper(new string[] { Assembly.GetExecutingAssembly().Location });
-                                WindowsAPI.ShowMessage("Service Installer", "IOTLink Service is installed sucessfully.");
+                                WindowsAPI.ShowMessage("Service Installer", "Service is installed sucessfully.");
                             }
                             catch (Exception)
                             {
@@ -61,10 +61,10 @@ namespace IOTLink
                             }
                             break;
                         case "--uninstall":
-                            WindowsAPI.ShowMessage("Service Installer", "IOTLink Service not found.");
+                            WindowsAPI.ShowMessage("Service Installer", "Service not found.");
                             break;
                         default:
-                            WindowsAPI.ShowMessage("Service Installer", serviceExists ? "IOTLink Service is installed." : "IOTLink Service is NOT installed.");
+                            WindowsAPI.ShowMessage("Service Installer", serviceExists ? "Service is installed." : "IOTLink Service is NOT installed.");
                             break;
                     }
                 }
