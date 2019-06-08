@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Timers;
+using System.Windows.Forms;
 using IOTLink.API;
 using IOTLink.Engine.System;
 using IOTLink.Helpers;
@@ -21,7 +22,7 @@ namespace IOTLinkAddon
 
     public class WindowsMonitor : AddonScript
     {
-        private Timer _monitorTimer;
+        private System.Timers.Timer _monitorTimer;
         private MonitorConfig _config;
         private PerformanceCounter _cpuPerformanceCounter;
 
@@ -49,7 +50,7 @@ namespace IOTLinkAddon
 
             if (_monitorTimer == null)
             {
-                _monitorTimer = new Timer();
+                _monitorTimer = new System.Timers.Timer();
                 _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
             }
 
@@ -75,28 +76,39 @@ namespace IOTLinkAddon
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
             _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
+            LoggerHelper.Debug("OnMonitorTimerElapsed: Started");
 
-            LoggerHelper.Debug("System monitor running");
+
+            string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
 
             MemoryInfo memoryInfo = PlatformHelper.GetMemoryInformation();
-            string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
             string memoryUsage = memoryInfo.MemoryLoad.ToString();
             string memoryTotal = memoryInfo.TotalPhysical.ToString();
             string memoryAvailable = memoryInfo.AvailPhysical.ToString();
             string memoryUsed = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical).ToString();
 
-            LoggerHelper.Debug("Processor Used: {0} %", cpuUsage);
-            LoggerHelper.Debug("Memory Usage: {0} %", memoryUsage);
-            LoggerHelper.Debug("Physical Available: {0} MB", memoryAvailable);
-            LoggerHelper.Debug("Physical Used: {0} MB", memoryUsed);
-            LoggerHelper.Debug("Physical Total: {0} MB", memoryTotal);
+            PowerStatus powerStatus = SystemInformation.PowerStatus;
+            string powerLineStatus = powerStatus.PowerLineStatus.ToString();
+            string batteryChargeStatus = powerStatus.BatteryChargeStatus.ToString();
+            string batteryFullLifetime = powerStatus.BatteryFullLifetime.ToString();
+            string batteryLifePercent = (powerStatus.BatteryLifePercent * 100).ToString();
+            string batteryLifeRemaining = powerStatus.BatteryLifeRemaining.ToString();
 
             _manager.PublishMessage(this, "Stats/CPU", cpuUsage);
-            _manager.PublishMessage(this, "Stats/MemoryUsage", memoryUsage);
-            _manager.PublishMessage(this, "Stats/MemoryAvailable", memoryAvailable);
-            _manager.PublishMessage(this, "Stats/MemoryUsed", memoryUsed);
-            _manager.PublishMessage(this, "Stats/MemoryTotal", memoryTotal);
 
+            _manager.PublishMessage(this, "Stats/Memory/Usage", memoryUsage);
+            _manager.PublishMessage(this, "Stats/Memory/Available", memoryAvailable);
+            _manager.PublishMessage(this, "Stats/Memory/Used", memoryUsed);
+            _manager.PublishMessage(this, "Stats/Memory/Total", memoryTotal);
+
+            _manager.PublishMessage(this, "Stats/Power/Status", powerLineStatus);
+
+            _manager.PublishMessage(this, "Stats/Battery/Status", batteryChargeStatus);
+            _manager.PublishMessage(this, "Stats/Battery/FullLifetime", batteryFullLifetime);
+            _manager.PublishMessage(this, "Stats/Battery/RemainingTime", batteryLifeRemaining);
+            _manager.PublishMessage(this, "Stats/Battery/RemainingPercent", batteryLifePercent);
+
+            LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
             _monitorTimer.Start(); // After everything, start the timer again.
         }
     }
