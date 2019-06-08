@@ -1,4 +1,4 @@
-![](https://gitlab.com/iotlink/iotlink/raw/develop/Assets/icons/application.ico)
+![](https://gitlab.com/iotlink/iotlink/raw/develop/Assets/icons/logo_full.png)
 
 IOTLink is a full featured service for connecting devices with IOT enabled services using MQTT. 
 
