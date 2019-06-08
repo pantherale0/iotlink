@@ -1,254 +1,50 @@
 ########################################################################
-# MQTT Broker Settings
+# IOT Link - Engine Configuration File
+########################################################################
+# See https://gitlab.com/iotlink/iotlink/wikis/Configuration for details
 ########################################################################
 mqtt:
-  ########################################################################
-  # Credentials (Optional)
-  ########################################################################
   credentials:
-    ########################################################################
-    # Username
-    ########################################################################
-    # Broker Username
-    ########################################################################
-    # Type: String
-    # Default: Empty
-    ########################################################################
     username: 
-    ########################################################################
-    # Password
-    ########################################################################
-    # Broker Password
-    ########################################################################
-    # Type: String
-    # Default: Empty
-    ########################################################################
     password: 
-  
   ########################################################################
   # TCP Connection Settings
   ########################################################################
   tcp:
-    ########################################################################
-    # Enabled
-    ########################################################################
-    # This flag indicates whether the module is enabled or disabled.
-    ########################################################################
-    # Type: Boolean
-    # Default: false
-    ########################################################################
     enabled: true
-    ########################################################################
-    # Hostname
-    ########################################################################
-    # Broker Hostname or IP Address
-    ########################################################################
-    # Type: String
-    # Default: localhost
-    ########################################################################
-    hostname: localhost
-    ########################################################################
-    # Port
-    ########################################################################
-    # Broker Port
-    ########################################################################
-    # Type: Integer
-    # Default: 1883
-    ########################################################################
+    hostname: 
     port: 1883
-    ########################################################################
-    # Secure
-    ########################################################################
-    # This flag indicates whether it will use secure connenection
-    ########################################################################
-    # Type: Boolean
-    # Default: false
-    ########################################################################
     secure: false
-  
   ########################################################################
   # WebSocket Connection Settings
   ########################################################################
   websocket:
-    ########################################################################
-    # Enabled
-    ########################################################################
-    # This flag indicates whether the module is enabled or disabled.
-    ########################################################################
-    # Type: Boolean
-    # Default: false
-    ########################################################################
     enabled: false
-	########################################################################
-    # URI
-    ########################################################################
-    # MQTT Broker WebSocket URI
-    ########################################################################
-    # Type: String
-    ########################################################################
-    uri: mybroker.domain.com:9001/mqtt
-    ########################################################################
-    # Secure
-    ########################################################################
-    # This flag indicates whether it will use secure connenection
-    ########################################################################
-    # Type: Boolean
-    # Default: false
-    ########################################################################
+    uri: 
     secure: false
-  
   ########################################################################
   # General Message Settings
   ########################################################################
   messages:
-    ########################################################################
-    # Quality of Service
-    ########################################################################
-    # QoS 0 at most once: This service level guarantees a best-effort
-    # delivery. There is no guarantee of delivery.
-    #
-    # QoS 1 - at least once: This service level guarantees that a message
-    # is delivered at least one time to the receiver.
-    #
-    # QoS 2 - exactly once: This level guarantees that each message is
-    # received only once by the intended recipients. QoS 2 is the safest
-    # and slowest quality of service level.
-    ########################################################################
-    # Type: [0, 1 or 2]
-    # Default: 0
-    ########################################################################
     qos: 1
-    ########################################################################
-    # Retain Flag
-    ########################################################################
-    # A retained message is a normal MQTT message with the retained flag set
-    # to true. The broker stores the last retained message and the
-    # corresponding QoS for that topic. Each client that subscribes to a 
-    # topic pattern that matches the topic of the retained message receives
-    # the retained message immediately after they subscribe.
-    # The broker stores only one retained message per topic.
-    ########################################################################
-    # Type: Boolean
-    # Default: false
-    ########################################################################
     retain: false
-  
   ########################################################################
   # LWT Message Settings
   ########################################################################
   lwt:
-    ########################################################################
-    # Enabled
-    ########################################################################
-    # This flag indicates whether the module is enabled or disabled.
-    ########################################################################
-    # Type: Boolean
-    # Default: false
-    ########################################################################
     enabled: true
-    ########################################################################
-    # Quality of Service
-    ########################################################################
-    # QoS 0 at most once: This service level guarantees a best-effort
-    # delivery. There is no guarantee of delivery.
-    #
-    # QoS 1 - at least once: This service level guarantees that a message
-    # is delivered at least one time to the receiver.
-    #
-    # QoS 2 - exactly once: This level guarantees that each message is
-    # received only once by the intended recipients. QoS 2 is the safest
-    # and slowest quality of service level.
-    ########################################################################
-    # Type: [0, 1 or 2]
-    # Default: 0
-    ########################################################################
     qos: 1
-    ########################################################################
-    # Retain Flag
-    ########################################################################
-    # A retained message is a normal MQTT message with the retained flag set
-    # to true. The broker stores the last retained message and the
-    # corresponding QoS for that topic. Each client that subscribes to a 
-    # topic pattern that matches the topic of the retained message receives
-    # the retained message immediately after they subscribe.
-    # The broker stores only one retained message per topic.
-    ########################################################################
-    # Type: Boolean
-    # Default: false
-    ########################################################################
     retain: true
-    ########################################################################
-    # LWT - Connect Message
-    ########################################################################
-    # This message will be sent to the LWT topic when the client connect.
-    ########################################################################
-    # Type: String
-    # Default: ON
-    ########################################################################
     connectMsg: "ON"
-    ########################################################################
-    # LWT - Disconnect Message
-    ########################################################################
-    # This message is the message that the broker server will send to the
-    # topic when the client disconnect from it.
-    ########################################################################
-    # Type: String
-    # Default: OFF
-    ########################################################################
     disconnectMsg: "OFF"
-  
-  ########################################################################
-  # ClientID
-  ########################################################################
-  # The client identifier (ClientId) identifies each MQTT client
-  # that connects to an MQTT broker. The broker uses the ClientID
-  # to identify the client and the current state of the client.
-  # Therefore, this ID should be unique per client and broker.
-  ########################################################################
-  # Type: String
-  # Default: The client will use the machine name as the ClientID.
-  ########################################################################
   clientId: 
-  
-  ########################################################################
-  # Prefix
-  ########################################################################
-  # Every topic will be prefixed with this string.
-  ########################################################################
-  # Type: String
-  # Default: IOTLink
-  ########################################################################
   prefix: IOTLink
-  
-  ########################################################################
-  # CleanSession
-  ########################################################################
-  # The clean session flag tells the broker whether the client wants to
-  # establish a persistent session or not.
-  # In a persistent session (CleanSession = false), the broker stores
-  # all subscriptions for the client and all missed messages for the
-  # client that subscribed with a Quality of Service (QoS) level 1 or 2.
-  # If the session is not persistent (CleanSession = true), the broker
-  # does not store anything for the client and purges all information
-  # from any previous persistent session.
-  ########################################################################
-  # Type: Boolean
-  # Default: false
-  ########################################################################
   cleanSession: true
 
 ########################################################################
 # Logging Configuration
 ########################################################################
 logging:
-  ########################################################################
-  # Enabled
-  ########################################################################
-  # This flag indicates whether the module is enabled or disabled.
-  ########################################################################
-  # Type: Boolean
-  # Default: true
-  ########################################################################
   enabled: true
   ########################################################################
   # Level
@@ -268,34 +64,6 @@ logging:
 # General Addon Configuration
 ########################################################################
 addons:
-  ########################################################################
-  # Enabled
-  ########################################################################
-  # This flag indicates whether the engine will load external addons
-  ########################################################################
-  # Type: Boolean
-  # Default: true
-  ########################################################################
   enabled: true
-  ########################################################################
-  # Global Topics (NOT WORKING YET)
-  ########################################################################
-  # By default, addons can only listen and publish messages from theirs
-  # respective topics under the following schema:
-  #
-  # {prefix}/{machineDomain}/{machineName}/{addonId}
-  #
-  # However it is possible to allow addons to listen and publish messages
-  # to a more broad topics by specifying them below. Also, it is possible
-  # to use the following special marks which will be replaced by the
-  # engine:
-  # {prefix}        = Replaced by the 'prefix' configuration.
-  # {machineDomain} = Domain which the current machine is running on.
-  # {machineName}   = Current machine name
-  # {addonId}       = Unique Addon Identifier.
-  ########################################################################
-  # Type: List
-  # Default: Empty
-  ########################################################################
   globalTopics:
     - homeassistant/#

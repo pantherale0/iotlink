@@ -80,6 +80,12 @@ namespace IOTLink.Engine.MQTT
             // TCP Connection
             if (_config.TCP != null && _config.TCP.Enabled)
             {
+                if (string.IsNullOrWhiteSpace(_config.TCP.Hostname))
+                {
+                    LoggerHelper.Warn("MQTT TCP Hostname not configured yet.");
+                    return;
+                }
+
                 mqttOptionBuilder = mqttOptionBuilder.WithTcpServer(_config.TCP.Hostname, _config.TCP.Port);
                 if (_config.TCP.Secure)
                     mqttOptionBuilder = mqttOptionBuilder.WithTls();
@@ -88,6 +94,12 @@ namespace IOTLink.Engine.MQTT
             // WebSocket Connection
             if (_config.WebSocket != null && _config.WebSocket.Enabled)
             {
+                if (string.IsNullOrWhiteSpace(_config.WebSocket.URI))
+                {
+                    LoggerHelper.Warn("MQTT WebSocket URI not configured yet.");
+                    return;
+                }
+
                 mqttOptionBuilder = mqttOptionBuilder.WithWebSocketServer(_config.WebSocket.URI);
                 if (_config.TCP.Secure)
                     mqttOptionBuilder = mqttOptionBuilder.WithTls();
@@ -217,7 +229,7 @@ namespace IOTLink.Engine.MQTT
 
                     double waitTime = Math.Min(5 * tries, 60);
 
-                    LoggerHelper.Info("Waiting {0} seconds before trying again...", null, waitTime);
+                    LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
                     await Task.Delay(TimeSpan.FromSeconds(waitTime));
                 }
             } while (!_client.IsConnected);

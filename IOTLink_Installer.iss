@@ -42,10 +42,7 @@ SetupIconFile=Assets\images\icons\application.ico
 ; Main Files
 Source: "IOTLink\bin\Release\IOTLinkService.exe";               DestDir: "{app}"; DestName: "{#APP_EXE_NAME}";        Flags: ignoreversion
 Source: "IOTLink\bin\Release\IOTLinkService.exe.config";        DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
-Source: "IOTLinkAPI\bin\Release\IOTLinkAPI.dll";                DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLinkAPI\bin\Release\MQTTnet.dll";                   DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLinkAPI\bin\Release\Newtonsoft.Json.dll";           DestDir: "{app}"; Flags: ignoreversion
-Source: "IOTLinkAPI\bin\Release\YamlDotNet.dll";                DestDir: "{app}"; Flags: ignoreversion
+Source: "IOTLinkAPI\bin\Release\*.dll";                         DestDir: "{app}"; Flags: ignoreversion
 ; Configuration Sample
 Source: "Assets\config.yaml-sample";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs; Permissions: everyone-full
 ; Application Icon
@@ -81,7 +78,9 @@ Name: "{group}\Open Addons Folder";           Filename: "{commonappdata}\{#APP_D
 Name: "{group}\Open Logs Folder";             Filename: "{commonappdata}\{#APP_DIR_NAME}\Logs";                          IconFilename: "{app}\Icons\logs.ico";               WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Logs";      Flags: foldershortcut
 
 [Run]
-Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install";      WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
+Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install";                  WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
+Filename: "net.exe";               Parameters: "start {#APP_DIR_NAME}";      WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Start {#APP_NAME} Service";      StatusMsg: "Starting Windows Service"
+
 
 [UninstallRun]
 Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--uninstall";    WorkingDir: "{app}"; Flags: runhidden
