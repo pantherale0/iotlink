@@ -30,7 +30,7 @@ OutputDir=Setup
 OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}
 WizardStyle=modern
 AllowNoIcons=yes
-LicenseFile=LICENSE
+LicenseFile=LICENSE.md    
 ; Compression
 Compression=lzma2
 SolidCompression=no
