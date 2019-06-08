@@ -1,6 +1,6 @@
-![](https://gitlab.com/iotlink/iotlink/raw/develop/Assets/icons/logo_full.png)
+![](https://gitlab.com/iotlink/iotlink/raw/develop/Assets/images/logos/logo_full.png)
 
-IOTLink is a full featured service for connecting devices with IOT enabled services using MQTT. 
+IOT Link is a full featured service for connecting devices with IOT enabled services using MQTT. 
 
 ### Features
 
@@ -8,7 +8,7 @@ IOTLink is a full featured service for connecting devices with IOT enabled servi
 - Easy Installer provided.
 - Minimal configuration setup.
 - Changes to engine configuration will be reloaded **automatically**.
-- Widely customizable using [Addons](addons).
+- Widely customizable using [Addons](https://gitlab.com/iotlink/iotlink/wikis/Addons/Home).
 - Fully working as a **Windows Service** to provide reliable data as soon as the windows boot up, without having to wait for a windows user logon.
 
 ### Requirements

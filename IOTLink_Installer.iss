@@ -36,7 +36,7 @@ Compression=lzma2
 SolidCompression=no
 ; Privileges Settings
 PrivilegesRequired=admin
-SetupIconFile=Assets\icons\application.ico
+SetupIconFile=Assets\images\icons\application.ico
 
 [Files]
 ; Main Files
@@ -49,17 +49,17 @@ Source: "IOTLinkAPI\bin\Release\YamlDotNet.dll";                DestDir: "{app}"
 ; Configuration Sample
 Source: "Assets\config.yaml-sample";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs; Permissions: everyone-full
 ; Application Icon
-Source: "Assets\icons\application.ico";                         DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\application.ico";                  DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Folder Icons
-Source: "Assets\icons\addons.ico";                              DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\configs.ico";                             DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\logs.ico";                                DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\addons.ico";                       DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\configs.ico";                      DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\logs.ico";                         DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Service Install/Uninstall
-Source: "Assets\icons\install_service.ico";                     DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\uninstall_service.ico";                   DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\install_service.ico";              DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\uninstall_service.ico";            DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Service Start/Stop
-Source: "Assets\icons\start_service.ico";                       DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\icons\stop_service.ico";                        DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\start_service.ico";                DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\stop_service.ico";                 DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Addon - Commands
 Source: "Addons\Commands\addon.yaml";                           DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
 Source: "Addons\Commands\bin\Release\Commands.dll";             DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
