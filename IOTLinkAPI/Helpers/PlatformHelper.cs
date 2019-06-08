@@ -174,5 +174,58 @@ namespace IOTLink.Helpers
 
             return WindowsAPI.GetMemoryInformation();
         }
+
+        /// <summary>
+        /// Set primary audio device volume mute flag
+        /// </summary>
+        /// <param name="mute">Boolean indicating the desired mute flag</param>
+        /// <returns>Boolean</returns>
+        public static bool SetAudioMute(bool mute)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.SetAudioMute(mute);
+        }
+
+        /// <summary>
+        /// Toggle primary audio device volume mute flag
+        /// </summary>
+        /// <param name="mute">Boolean indicating the desired mute flag</param>
+        /// <returns>Boolean</returns>
+        public static bool ToggleAudioMute()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.ToggleAudioMute();
+        }
+
+        /// <summary>
+        /// Set the primary audio device volume level
+        /// </summary>
+        /// <param name="volume">Desired volume level (0-100)</param>
+        public static void SetAudioVolume(double volume)
+        {
+            if (volume < 0 || volume > 100)
+                throw new Exception("Volume level needs to be between 0 and 100");
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            WindowsAPI.SetAudioVolume(volume);
+        }
+
+        /// <summary>
+        /// Get current primary audio device volume level
+        /// </summary>
+        /// <returns>Double</returns>
+        public static double GetAudioVolume()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetAudioVolume();
+        }
     }
 }

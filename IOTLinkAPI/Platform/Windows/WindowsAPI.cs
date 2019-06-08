@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using AudioSwitcher.AudioApi.CoreAudio;
 using IOTLink.Platform.Windows.Native;
 
 namespace IOTLink.Platform.Windows
@@ -30,11 +31,6 @@ namespace IOTLink.Platform.Windows
             MB_ICONASTERISK = 64,
             MB_ICONINFORMATION = 64,
             MB_ICONMASK = 240
-        }
-
-        public enum DialogIconStyle
-        {
-            
         }
 
         public static string GetUsername(int sessionId)
@@ -285,6 +281,33 @@ namespace IOTLink.Platform.Windows
                 WtsApi32.WTSCloseServer(server);
             }
 
+        }
+
+        public static bool SetAudioMute(bool mute)
+        {
+            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
+            return defaultPlaybackDevice.Mute(mute);
+        }
+
+        public static bool ToggleAudioMute()
+        {
+            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
+            return defaultPlaybackDevice.ToggleMute();
+        }
+
+        public static void SetAudioVolume(double volume)
+        {
+            if (volume < 0 || volume > 100)
+                throw new Exception("Volume level needs to be between 0 and 100");
+
+            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
+            defaultPlaybackDevice.Volume = volume;
+        }
+
+        public static double GetAudioVolume()
+        {
+            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
+            return defaultPlaybackDevice.Volume;
         }
 
         private static List<int> GetSessionIDs(IntPtr server, bool activeOnly = false)
