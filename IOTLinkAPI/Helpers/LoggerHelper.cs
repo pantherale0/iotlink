@@ -125,7 +125,7 @@ namespace IOTLink.Helpers
                 return;
 
             ApplicationConfig config = ConfigHelper.GetEngineConfig();
-            if (config.Logging == null || !config.Logging.Enabled || config.Logging.Level < logLevel)
+            if (config == null || config.Logging == null || !config.Logging.Enabled || config.Logging.Level < logLevel)
                 return;
 
             string formatedMessage;

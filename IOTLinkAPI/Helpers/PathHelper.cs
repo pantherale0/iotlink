@@ -62,15 +62,22 @@ namespace IOTLink.Helpers
         /// <returns>String containing the file contents</returns>
         public static string GetFileText(string path)
         {
-            if (path == null || !File.Exists(path))
-                return null;
-
-            using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            try
             {
-                using (var textReader = new StreamReader(fileStream))
+                if (path == null || !File.Exists(path))
+                    return null;
+
+                using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    return textReader.ReadToEnd();
+                    using (var textReader = new StreamReader(fileStream))
+                    {
+                        return textReader.ReadToEnd();
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
     }

@@ -17,8 +17,11 @@ namespace IOTLink.Helpers
         /// <returns></returns>
         public static T GetConfig<T>(string path)
         {
-            string ConfigText = PathHelper.GetFileText(path);
-            StringReader Reader = new StringReader(ConfigText);
+            string configText = PathHelper.GetFileText(path);
+            if (string.IsNullOrWhiteSpace(configText))
+                return default(T);
+
+            StringReader Reader = new StringReader(configText);
             IDeserializer YAMLDeserializer = new DeserializerBuilder().Build();
 
             return YAMLDeserializer.Deserialize<T>(Reader);
@@ -26,8 +29,14 @@ namespace IOTLink.Helpers
 
         internal static ApplicationConfig GetEngineConfig(bool force = false)
         {
-            if (_config != null && !force)
-                return _config;
+            if (_config != null)
+            {
+                if (!force)
+                    return _config;
+
+                _config = null;
+            }
+
 
             string path = Path.Combine(PathHelper.ConfigPath(), "configuration.yaml");
             _config = GetConfig<ApplicationConfig>(path);
