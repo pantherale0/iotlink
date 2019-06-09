@@ -189,23 +189,31 @@ namespace IOTLink.Helpers
 
         private static string GetCallerInformation()
         {
-            string fullName;
-            Type declaringType;
-            int skipFrames = 2;
-            do
+            try
             {
-                MethodBase method = new StackFrame(skipFrames, false).GetMethod();
-                declaringType = method.DeclaringType;
-                if (declaringType == null)
+                string fullName;
+                Type declaringType;
+                int skipFrames = 2;
+                do
                 {
-                    return method.Name;
+                    StackFrame stackFrame = new StackFrame(skipFrames, false);
+                    MethodBase method = stackFrame?.GetMethod();
+                    declaringType = method?.DeclaringType;
+                    if (declaringType == null)
+                    {
+                        return method?.Name;
+                    }
+                    skipFrames++;
+                    fullName = declaringType?.FullName;
                 }
-                skipFrames++;
-                fullName = declaringType.FullName;
-            }
-            while (declaringType.Module.Name.Equals("mscorlib.dll", StringComparison.OrdinalIgnoreCase));
+                while (declaringType != null && declaringType.Module.Name.Equals("mscorlib.dll", StringComparison.OrdinalIgnoreCase));
 
-            return Regex.Replace(fullName, "(.*)\\+([A-Za-z0-9_<>]+)(.*)", "$1$3");
+                return Regex.Replace(fullName, "(.*)\\+([A-Za-z0-9_<>]+)(.*)", "$1$3");
+            }
+            catch (Exception)
+            {
+                return "GetCallerInformationError";
+            }
         }
 
         public static LoggerHelper GetInstance()

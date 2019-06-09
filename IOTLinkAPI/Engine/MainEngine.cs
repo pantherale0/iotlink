@@ -46,6 +46,12 @@ namespace IOTLink.Engine
         private void SetupMQTTHandlers()
         {
             ApplicationConfig config = ConfigHelper.GetEngineConfig(true);
+            if (config == null)
+            {
+                LoggerHelper.Error("Configuration not loaded. Check your configuration file for mistakes and re-save it.");
+                return;
+            }
+
             if (config.MQTT == null)
             {
                 LoggerHelper.Warn("MQTT is disabled or not configured yet.");
@@ -53,6 +59,12 @@ namespace IOTLink.Engine
             }
 
             MQTTClient client = MQTTClient.GetInstance();
+            if (client == null)
+            {
+                LoggerHelper.Error("Failed to obtain MQTTClient instance. Restart the service.");
+                return;
+            }
+
             if (client.IsConnected())
                 client.Disconnect();
 
