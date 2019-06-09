@@ -70,8 +70,8 @@ Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll"; DestDir: "{commo
 Name: "{group}\Install Windows Service";      Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\install_service.ico";    WorkingDir: "{app}"; Parameters: "--install";     AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
 Name: "{group}\Uninstall Windows Service";    Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\uninstall_service.ico";  WorkingDir: "{app}"; Parameters: "--uninstall";   AfterInstall: SetElevationBit('{group}\Uninstall Windows Service.lnk')
 ; Service Start/Stop
-Name: "{group}\Restart Windows Service";      Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\uninstall_service.ico";  WorkingDir: "{app}"; Parameters: "--restart";     AfterInstall: SetElevationBit('{group}\Restart Windows Service.lnk')
-Name: "{group}\Stop Windows Service";         Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\uninstall_service.ico";  WorkingDir: "{app}"; Parameters: "--stop";        AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
+Name: "{group}\Start Windows Service";        Filename: "net.exe";                  IconFilename: "{app}\Icons\start_service.ico";      WorkingDir: "{sys}"; Parameters: "start {#APP_DIR_NAME}";  AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
+Name: "{group}\Stop Windows Service";         Filename: "net.exe";                  IconFilename: "{app}\Icons\stop_service.ico";       WorkingDir: "{sys}"; Parameters: "stop {#APP_DIR_NAME}";   AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
 ; Open Folders
 Name: "{group}\Open Configuration File";      Filename: "{commonappdata}\{#APP_DIR_NAME}\Configs\configuration.yaml";    IconFilename: "{app}\Icons\configs.ico";            WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Configs";
 Name: "{group}\Open Addons Folder";           Filename: "{commonappdata}\{#APP_DIR_NAME}\Addons";                        IconFilename: "{app}\Icons\addons.ico";             WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Addons";    Flags: foldershortcut

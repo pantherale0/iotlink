@@ -100,9 +100,6 @@ namespace IOTLink
 
                         default: break;
                     }
-
-                    if (sc.Status != desiredStatus)
-                        sc.WaitForStatus(desiredStatus, new TimeSpan(0, 0, 0, 60));
                 }
             }
             catch (Exception)
