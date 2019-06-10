@@ -2,19 +2,17 @@
 using IOTLink.Platform.Windows;
 using System;
 using System.Collections.Generic;
-using System.Configuration.Install;
 using System.Linq;
-using System.Reflection;
 using System.ServiceProcess;
 
 namespace IOTLink
 {
-    static class Program
+    public static class Program
     {
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        static void Main(string[] args)
+        public static int Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
 
@@ -23,15 +21,19 @@ namespace IOTLink
             {
                 ServiceBase service = new IOTLinkService();
                 ServiceBase.Run(service);
-                return;
+                return 0;
             }
 
             if (args.Length == 0)
             {
                 WindowsAPI.ShowMessage("IOT Link", "Missing command-line parameters.");
-                return;
+                return 1;
             }
 
+            // Get Command Instances
+            Dictionary<string, ICommand> commands = GetCommands();
+
+            // Run through all arguments to find runnable commands
             Queue<string> argsQueue = new Queue<string>(args);
             while (argsQueue.Count > 0)
             {
@@ -40,109 +42,42 @@ namespace IOTLink
                 while (argsQueue.Count > 0 && !argsQueue.Peek().StartsWith("--"))
                     argsQueue.Dequeue();
 
-                string command = argsQueue.Dequeue().ToLowerInvariant();
+                string command = argsQueue.Dequeue().ToLowerInvariant().Remove(0, 2);
 
                 // Parse command line to get all commands arguments
-                List<string> arguments = new List<string>();
+                List<string> commandArgs = new List<string>();
                 while (argsQueue.Count > 0 && !argsQueue.Peek().StartsWith("--"))
-                    arguments.Add(argsQueue.Dequeue());
+                    commandArgs.Add(argsQueue.Dequeue());
 
-                OnCommand(command, arguments);
-            }
-        }
-
-        private static void OnCommand(string command, List<string> arguments)
-        {
-            switch (command)
-            {
-                case "--install":
-                    OnServiceInstallCommand();
-                    break;
-
-                case "--uninstall":
-                    OnServiceUninstallCommand();
-                    break;
-
-                case "--check":
-                    OnServiceCheckCommand();
-                    break;
-
-                case "--test":
-                    OnTestCommand(arguments);
-                    break;
-
-                default: break;
-            }
-        }
-
-        private static void OnTestCommand(List<string> arguments)
-        {
-            WindowsAPI.ShowMessage("IOT Link", string.Join(" ", arguments));
-        }
-
-        private static void OnServiceInstallCommand()
-        {
-            if (!Environment.UserInteractive)
-                return;
-
-            try
-            {
-                bool serviceExists = ServiceController.GetServices().Any(s => s.ServiceName == "IOTLink");
-                if (serviceExists)
+                // Run command if available
+                if (commands.ContainsKey(command))
                 {
-                    WindowsAPI.ShowMessage("Service Installer", "Service is already installed.");
-                    return;
+                    int result = commands[command].ExecuteCommand(commandArgs.ToArray());
+                    if (result != 0)
+                        return result;
                 }
+            }
 
-                ManagedInstallerClass.InstallHelper(new string[] { Assembly.GetExecutingAssembly().Location });
-                WindowsAPI.ShowMessage("Service Installer", "Service is installed sucessfully.");
-            }
-            catch (Exception)
-            {
-                WindowsAPI.ShowMessage("Service Installer", "Install failed. Please, run as an administrator.");
-            }
+            return 0;
         }
 
-        private static void OnServiceUninstallCommand()
+        private static Dictionary<string, ICommand> GetCommands()
         {
-            if (!Environment.UserInteractive)
-                return;
+            var commands = new Dictionary<string, ICommand>();
 
-            try
-            {
-                bool serviceExists = ServiceController.GetServices().Any(s => s.ServiceName == "IOTLink");
-                if (!serviceExists)
-                {
-                    WindowsAPI.ShowMessage("Service Installer", "Service is already not installed.");
-                    return;
-                }
+            var interfaceType = typeof(ICommand);
+            var interfaces = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(s => s.GetTypes())
+                .Where(p => interfaceType.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract && !p.IsInterface);
 
-                ManagedInstallerClass.InstallHelper(new string[] { "/u", Assembly.GetExecutingAssembly().Location });
-                WindowsAPI.ShowMessage("Service Installer", "Service is uninstalled sucessfully.");
-            }
-            catch (Exception)
+            foreach (Type type in interfaces)
             {
-                WindowsAPI.ShowMessage("Service Installer", "Install failed. Please, run as an administrator.");
+                ICommand command = (ICommand)Activator.CreateInstance(type);
+                string key = command.GetCommandLine().ToLowerInvariant();
+                commands.Add(key, command);
             }
-        }
 
-        private static void OnServiceCheckCommand()
-        {
-            if (!Environment.UserInteractive)
-                return;
-
-            try
-            {
-                bool serviceExists = ServiceController.GetServices().Any(s => s.ServiceName == "IOTLink");
-                if (serviceExists)
-                    WindowsAPI.ShowMessage("Service Installer", "Service is installed.");
-                else
-                    WindowsAPI.ShowMessage("Service Installer", "Service is not installed.");
-            }
-            catch (Exception)
-            {
-                WindowsAPI.ShowMessage("Service Installer", "Please, run as an administrator.");
-            }
+            return commands;
         }
 
         private static void CurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
