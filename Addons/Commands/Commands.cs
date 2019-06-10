@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using IOTLink.API;
+﻿using IOTLink.API;
 using IOTLink.Engine.MQTT;
 using IOTLink.Helpers;
+using Newtonsoft.Json;
+using System;
 
 namespace IOTLinkAddon
 {
@@ -103,6 +103,13 @@ namespace IOTLinkAddon
             LoggerHelper.Debug("OnVolumeMute: Message received");
             try
             {
+                if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
+                {
+                    PlatformHelper.ToggleAudioMute();
+                    LoggerHelper.Debug("OnVolumeMute: Toggling current audio mute flag.");
+                    return;
+                }
+
                 bool mute = Convert.ToBoolean(e.Message.GetPayload());
                 PlatformHelper.SetAudioMute(mute);
 

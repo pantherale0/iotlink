@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 namespace IOTLink.Helpers
 {
@@ -8,12 +9,30 @@ namespace IOTLink.Helpers
         public const string APP_FOLDER_NAME = "IOTLink";
 
         /// <summary>
+        /// Return the application full name (including path)
+        /// </summary>
+        /// <returns>String</returns>
+        public static string BaseAppFullName()
+        {
+            return Assembly.GetEntryAssembly().Location;
+        }
+
+        /// <summary>
         /// Return the base application path (where the application executable is).
         /// </summary>
         /// <returns>String</returns>
         public static string BaseAppPath()
         {
-            return AppDomain.CurrentDomain.BaseDirectory;
+            return Path.GetDirectoryName(BaseAppFullName());
+        }
+
+        /// <summary>
+        /// Return the application name
+        /// </summary>
+        /// <returns>String</returns>
+        public static string BaseAppName()
+        {
+            return Path.GetFileName(BaseAppFullName());
         }
 
         /// <summary>

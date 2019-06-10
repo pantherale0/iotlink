@@ -1,9 +1,9 @@
-﻿using System;
+﻿using IOTLink.Platform;
+using IOTLink.Platform.Windows;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using IOTLink.Platform;
-using IOTLink.Platform.Windows;
 
 namespace IOTLink.Helpers
 {
@@ -151,10 +151,12 @@ namespace IOTLink.Helpers
         /// <param name="args">String containing all arguments</param>
         /// <param name="path">String containing the work path</param>
         /// <param name="username">String containing the user which the application will be executed</param>
-        public static void Run(string command, string args, string path, string username)
+        public static void Run(string command, string args, string path, string username = null)
         {
             if (!string.IsNullOrWhiteSpace(args))
                 args = string.Format("{0} {1}", Path.GetFileName(command), args);
+            else
+                args = Path.GetFileName(command);
 
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();

@@ -68,6 +68,11 @@
     <Reference Include="System.ServiceProcess" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\ServiceCheck.cs" />
+    <Compile Include="Commands\ServiceUninstall.cs" />
+    <Compile Include="Commands\ServiceInstall.cs" />
+    <Compile Include="Commands\ShowMessage.cs" />
     <Compile Include="ProjectInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
