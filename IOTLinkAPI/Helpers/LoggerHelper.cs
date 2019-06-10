@@ -81,8 +81,9 @@ namespace IOTLink.Helpers
                 if (!Directory.Exists(logsPath))
                     Directory.CreateDirectory(logsPath);
 
+                string prefix = Environment.UserInteractive ? "ConsoleLog" : "ServiceLog";
                 string date = DateTime.Now.ToString("yyyy_MM_dd");
-                string filename = string.Format("ServiceLog_{0}.log", date);
+                string filename = string.Format("{0}_{1}.log", prefix, date);
                 string path = Path.Combine(logsPath, filename);
 
                 if (!File.Exists(path))
