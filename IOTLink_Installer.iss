@@ -5,7 +5,7 @@
 #define APP_NAME     "IOT Link"
 #define APP_DIR_NAME "IOTLink"
 #define APP_EXE_NAME "IOTLinkService.exe"
-#define APP_VERSION  "1.0.0"
+#define APP_VERSION  "1.0.1"
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
 #define APP_AUTHOR_URL  "https://alexslx.com"
