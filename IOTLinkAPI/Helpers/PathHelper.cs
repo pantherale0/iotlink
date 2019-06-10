@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 namespace IOTLink.Helpers
 {
@@ -13,7 +14,7 @@ namespace IOTLink.Helpers
         /// <returns>String</returns>
         public static string BaseAppFullName()
         {
-            return System.Reflection.Assembly.GetExecutingAssembly().Location;
+            return Assembly.GetEntryAssembly().Location;
         }
 
         /// <summary>

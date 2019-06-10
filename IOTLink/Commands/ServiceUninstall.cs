@@ -24,19 +24,19 @@ namespace IOTLink.Commands
             try
             {
                 bool serviceExists = ServiceController.GetServices().Any(s => s.ServiceName == "IOTLink");
-                if (serviceExists)
+                if (!serviceExists)
                 {
-                    WindowsAPI.ShowMessage("Service Installer", "Service is already installed.");
+                    WindowsAPI.ShowMessage("Service Installer", "Service is currently not installed.");
                     return -1;
                 }
 
-                ManagedInstallerClass.InstallHelper(new string[] { Assembly.GetExecutingAssembly().Location });
-                WindowsAPI.ShowMessage("Service Installer", "Service is installed sucessfully.");
+                ManagedInstallerClass.InstallHelper(new string[] { "/u", Assembly.GetExecutingAssembly().Location });
+                WindowsAPI.ShowMessage("Service Installer", "Service is uninstalled sucessfully.");
                 return 0;
             }
             catch (Exception)
             {
-                WindowsAPI.ShowMessage("Service Installer", "Install failed. Please, run as an administrator.");
+                WindowsAPI.ShowMessage("Service Installer", "Uninstall failed. Please, run as an administrator.");
             }
 
             return -1;

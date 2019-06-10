@@ -317,7 +317,7 @@ namespace IOTLink.Platform.Windows
             int count = 0;
             int retval = WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count);
             int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
-            Int64 current = (int)buffer;
+            Int64 current = (long)buffer;
 
             if (retval != 0)
             {
