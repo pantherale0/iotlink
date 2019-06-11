@@ -48,6 +48,18 @@ namespace IOTLink.Helpers
         }
 
         /// <summary>
+        /// Return the temp path
+        /// </summary>
+        /// <returns>String</returns>
+        public static string BaseTempPath()
+        {
+            return Path.Combine(
+                Path.GetTempPath(),
+                APP_FOLDER_NAME
+                );
+        }
+
+        /// <summary>
         /// Logs Path
         /// </summary>
         /// <returns>String</returns>

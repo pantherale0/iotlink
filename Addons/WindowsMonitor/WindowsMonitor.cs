@@ -1,12 +1,13 @@
-﻿using System;
+﻿using IOTLink.API;
+using IOTLink.Engine.System;
+using IOTLink.Helpers;
+using IOTLink.Platform;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Timers;
 using System.Windows.Forms;
-using IOTLink.API;
-using IOTLink.Engine.System;
-using IOTLink.Helpers;
-using IOTLink.Platform;
 using YamlDotNet.Serialization;
 
 namespace IOTLinkAddon
@@ -25,6 +26,7 @@ namespace IOTLinkAddon
         private System.Timers.Timer _monitorTimer;
         private MonitorConfig _config;
         private PerformanceCounter _cpuPerformanceCounter;
+        private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
         public override void Init()
         {
@@ -79,14 +81,37 @@ namespace IOTLinkAddon
             LoggerHelper.Debug("OnMonitorTimerElapsed: Started");
 
 
-            string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
+            SendCPUInfo();
+            SendMemoryInfo();
+            SendPowerInfo();
+            SendHardDriveInfo();
 
+            LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
+            _monitorTimer.Start(); // After everything, start the timer again.
+        }
+
+        private void SendCPUInfo()
+        {
+            string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
+            SendMonitorValue("Stats/CPU", cpuUsage);
+        }
+
+        private void SendMemoryInfo()
+        {
             MemoryInfo memoryInfo = PlatformHelper.GetMemoryInformation();
             string memoryUsage = memoryInfo.MemoryLoad.ToString();
             string memoryTotal = memoryInfo.TotalPhysical.ToString();
             string memoryAvailable = memoryInfo.AvailPhysical.ToString();
             string memoryUsed = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical).ToString();
 
+            SendMonitorValue("Stats/Memory/Usage", memoryUsage);
+            SendMonitorValue("Stats/Memory/Available", memoryAvailable);
+            SendMonitorValue("Stats/Memory/Used", memoryUsed);
+            SendMonitorValue("Stats/Memory/Total", memoryTotal);
+        }
+
+        private void SendPowerInfo()
+        {
             PowerStatus powerStatus = SystemInformation.PowerStatus;
             string powerLineStatus = powerStatus.PowerLineStatus.ToString();
             string batteryChargeStatus = powerStatus.BatteryChargeStatus.ToString();
@@ -94,22 +119,43 @@ namespace IOTLinkAddon
             string batteryLifePercent = (powerStatus.BatteryLifePercent * 100).ToString();
             string batteryLifeRemaining = powerStatus.BatteryLifeRemaining.ToString();
 
-            _manager.PublishMessage(this, "Stats/CPU", cpuUsage);
+            SendMonitorValue("Stats/Power/Status", powerLineStatus);
+            SendMonitorValue("Stats/Battery/Status", batteryChargeStatus);
+            SendMonitorValue("Stats/Battery/FullLifetime", batteryFullLifetime);
+            SendMonitorValue("Stats/Battery/RemainingTime", batteryLifeRemaining);
+            SendMonitorValue("Stats/Battery/RemainingPercent", batteryLifePercent);
+        }
 
-            _manager.PublishMessage(this, "Stats/Memory/Usage", memoryUsage);
-            _manager.PublishMessage(this, "Stats/Memory/Available", memoryAvailable);
-            _manager.PublishMessage(this, "Stats/Memory/Used", memoryUsed);
-            _manager.PublishMessage(this, "Stats/Memory/Total", memoryTotal);
+        private void SendHardDriveInfo()
+        {
+            foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
+            {
+                if (driveInfo.DriveType != DriveType.Fixed)
+                    continue;
 
-            _manager.PublishMessage(this, "Stats/Power/Status", powerLineStatus);
+                SendHardDriveInfo(driveInfo);
+            }
+        }
 
-            _manager.PublishMessage(this, "Stats/Battery/Status", batteryChargeStatus);
-            _manager.PublishMessage(this, "Stats/Battery/FullLifetime", batteryFullLifetime);
-            _manager.PublishMessage(this, "Stats/Battery/RemainingTime", batteryLifeRemaining);
-            _manager.PublishMessage(this, "Stats/Battery/RemainingPercent", batteryLifePercent);
+        private void SendHardDriveInfo(DriveInfo driveInfo)
+        {
+            string drive = driveInfo.Name.Remove(1, 2);
+            string topic = string.Format("Stats/HardDrive/{0}", drive);
 
-            LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
-            _monitorTimer.Start(); // After everything, start the timer again.
+            SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString());
+            SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString());
+            SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString());
+            SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat);
+            SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel);
+        }
+
+        private void SendMonitorValue(string topic, string value)
+        {
+            if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)
+                return;
+
+            _cache[topic] = value;
+            _manager.PublishMessage(this, topic, value);
         }
     }
 }

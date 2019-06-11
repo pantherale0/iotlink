@@ -317,13 +317,13 @@ namespace IOTLink.Platform.Windows
             int count = 0;
             int retval = WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count);
             int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
-            Int64 current = (long)buffer;
+            IntPtr current = buffer;
 
             if (retval != 0)
             {
                 for (int i = 0; i < count; i++)
                 {
-                    WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure((IntPtr)current, typeof(WtsApi32.WtsSessionInfo));
+                    WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
                     current += dataSize;
                     if (!activeOnly || si.State == WtsApi32.WtsConnectStateClass.WTSActive)
                         sessionIds.Add(si.SessionID);
