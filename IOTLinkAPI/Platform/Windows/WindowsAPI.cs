@@ -1,9 +1,10 @@
+using AudioSwitcher.AudioApi.CoreAudio;
+using IOTLink.Helpers;
+using IOTLink.Platform.Windows.Native;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using AudioSwitcher.AudioApi.CoreAudio;
-using IOTLink.Platform.Windows.Native;
 
 namespace IOTLink.Platform.Windows
 {
@@ -308,6 +309,25 @@ namespace IOTLink.Platform.Windows
         {
             CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
             return defaultPlaybackDevice.Volume;
+        }
+
+        public static uint GetIdleTime()
+        {
+            uint idleTime = 0;
+
+            User32.LastInputInfo lastInputInfo = new User32.LastInputInfo();
+            lastInputInfo.cbSize = User32.LastInputInfo.SizeOf;
+            lastInputInfo.dwTime = 0;
+
+            uint envTicks = (uint)(Environment.TickCount & int.MaxValue);
+
+            if (User32.GetLastInputInfo(ref lastInputInfo))
+            {
+                uint lastInputTick = lastInputInfo.dwTime & int.MaxValue;
+                idleTime = (envTicks - lastInputTick) & int.MaxValue;
+            }
+
+            return ((idleTime > 0) ? (idleTime / 1000) : 0);
         }
 
         private static List<int> GetSessionIDs(IntPtr server, bool activeOnly = false)

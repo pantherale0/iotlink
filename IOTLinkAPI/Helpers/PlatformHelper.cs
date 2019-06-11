@@ -229,5 +229,17 @@ namespace IOTLink.Helpers
 
             return WindowsAPI.GetAudioVolume();
         }
+
+        /// <summary>
+        /// Get User Idle Time
+        /// </summary>
+        /// <returns>Double</returns>
+        public static uint GetIdleTime()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetIdleTime();
+        }
     }
 }
