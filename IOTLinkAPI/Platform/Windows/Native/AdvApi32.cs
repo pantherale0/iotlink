@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IOTLink.Platform.Windows.Native.Internal;
+using System;
 using System.Runtime.InteropServices;
 
 namespace IOTLink.Platform.Windows.Native
@@ -6,52 +7,6 @@ namespace IOTLink.Platform.Windows.Native
 #pragma warning disable 1591
     public class AdvApi32
     {
-        public enum SecurityImpersonationLevel
-        {
-            SecurityAnonymous = 0,
-            SecurityIdentification = 1,
-            SecurityImpersonation = 2,
-            SecurityDelegation = 3,
-        }
-
-        public enum TokenType
-        {
-            TokenPrimary = 1,
-            TokenImpersonation = 2
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct StartupInfo
-        {
-            public Int32 cb;
-            public string lpReserved;
-            public string lpDesktop;
-            public string lpTitle;
-            public Int32 dwX;
-            public Int32 dwY;
-            public Int32 dwXSize;
-            public Int32 dwYSize;
-            public Int32 dwXCountChars;
-            public Int32 dwYCountChars;
-            public Int32 dwFillAttribute;
-            public Int32 dwFlags;
-            public Int16 wShowWindow;
-            public Int16 cbReserved2;
-            public IntPtr lpReserved2;
-            public IntPtr hStdInput;
-            public IntPtr hStdOutput;
-            public IntPtr hStdError;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct ProcessInformation
-        {
-            public IntPtr hProcess;
-            public IntPtr hThread;
-            public int dwProcessId;
-            public int dwThreadId;
-        }
-
         [DllImport("advapi32.dll", EntryPoint = "DuplicateTokenEx", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool DuplicateTokenEx(
             IntPtr ExistingTokenHandle,

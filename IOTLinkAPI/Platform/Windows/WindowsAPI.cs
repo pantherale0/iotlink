@@ -1,6 +1,6 @@
 using AudioSwitcher.AudioApi.CoreAudio;
-using IOTLink.Helpers;
 using IOTLink.Platform.Windows.Native;
+using IOTLink.Platform.Windows.Native.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +11,10 @@ namespace IOTLink.Platform.Windows
 #pragma warning disable 1591
     public static class WindowsAPI
     {
+        private static readonly int WM_SYSCOMMAND = 0x0112;
+        private static readonly uint SC_MONITORPOWER = 0xF170;
+        private static readonly uint MOUSEEVENTFMOVE = 0x0001;
+
         public enum DialogStyle
         {
             // Buttons
@@ -195,13 +199,13 @@ namespace IOTLink.Platform.Windows
                 IntPtr hImpersonationToken = IntPtr.Zero;
                 IntPtr hUserToken = IntPtr.Zero;
                 if (WtsApi32.WTSQueryUserToken(sessionId, out hImpersonationToken) &&
-                    AdvApi32.DuplicateTokenEx(hImpersonationToken, 0, IntPtr.Zero, (int)AdvApi32.SecurityImpersonationLevel.SecurityImpersonation, (int)AdvApi32.TokenType.TokenPrimary, ref hUserToken))
+                    AdvApi32.DuplicateTokenEx(hImpersonationToken, 0, IntPtr.Zero, (int)SecurityImpersonationLevel.SecurityImpersonation, (int)TokenType.TokenPrimary, ref hUserToken))
                 {
 
                     // Launch the child process interactively using the token of the logged user. 
-                    AdvApi32.ProcessInformation tProcessInfo;
-                    AdvApi32.StartupInfo tStartUpInfo = new AdvApi32.StartupInfo();
-                    tStartUpInfo.cb = Marshal.SizeOf(typeof(AdvApi32.StartupInfo));
+                    ProcessInformation tProcessInfo;
+                    StartupInfo tStartUpInfo = new StartupInfo();
+                    tStartUpInfo.cb = StartupInfo.SizeOf;
 
                     bool childProcStarted = AdvApi32.CreateProcessAsUser(
                                 hUserToken,         // Token of the logged-on user. 
@@ -241,7 +245,7 @@ namespace IOTLink.Platform.Windows
 
         public static MemoryInfo GetMemoryInformation()
         {
-            Kernel32.MemoryStatusEx memoryStatusEx = new Kernel32.MemoryStatusEx();
+            MemoryStatusEx memoryStatusEx = new MemoryStatusEx();
             if (Kernel32.GlobalMemoryStatusEx(memoryStatusEx))
             {
                 MemoryInfo memoryInfo = new MemoryInfo
@@ -315,8 +319,8 @@ namespace IOTLink.Platform.Windows
         {
             uint idleTime = 0;
 
-            User32.LastInputInfo lastInputInfo = new User32.LastInputInfo();
-            lastInputInfo.cbSize = User32.LastInputInfo.SizeOf;
+            LastInputInfo lastInputInfo = new LastInputInfo();
+            lastInputInfo.cbSize = LastInputInfo.SizeOf;
             lastInputInfo.dwTime = 0;
 
             uint envTicks = (uint)(Environment.TickCount & int.MaxValue);
@@ -328,6 +332,30 @@ namespace IOTLink.Platform.Windows
             }
 
             return ((idleTime > 0) ? (idleTime / 1000) : 0);
+        }
+
+        public static List<DisplayInfo> GetDisplays()
+        {
+            List<DisplayInfo> displays = new List<DisplayInfo>();
+            User32.EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, delegate (IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData)
+            {
+                MonitorInfoEx mi = new MonitorInfoEx();
+                mi.Size = MonitorInfoEx.SizeOf;
+                if (User32.GetMonitorInfo(hMonitor, ref mi))
+                {
+                    DisplayInfo di = new DisplayInfo();
+                    di.ScreenWidth = (mi.Monitor.Right - mi.Monitor.Left);
+                    di.ScreenHeight = (mi.Monitor.Bottom - mi.Monitor.Top);
+                    di.MonitorArea = mi.Monitor;
+                    di.WorkArea = mi.WorkArea;
+                    di.Availability = mi.Flags.ToString();
+                    di.DeviceName = mi.DeviceName;
+                    displays.Add(di);
+                }
+                return true;
+            }, IntPtr.Zero);
+
+            return displays;
         }
 
         private static List<int> GetSessionIDs(IntPtr server, bool activeOnly = false)

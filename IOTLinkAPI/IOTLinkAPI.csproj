@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -127,12 +127,21 @@
     <Compile Include="Helpers\PlatformHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Loaders\AssemblyLoader.cs" />
+    <Compile Include="Platform\DisplayInfo.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\LastInputInfo.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\MemoryStatusEx.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\ProcessInformation.cs" />
+    <Compile Include="Platform\Rect.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\SecurityImpersonationLevel.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\StartupInfo.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\TokenType.cs" />
     <Compile Include="Platform\Windows\Native\Kernel32.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\MonitorInfoEx.cs" />
     <Compile Include="Platform\Windows\Native\PowrProf.cs" />
     <Compile Include="Platform\Windows\Native\User32.cs" />
-    <Compile Include="Platform\Windows\Native\WM_MESSAGE.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\WM_MESSAGE.cs" />
     <Compile Include="Platform\Windows\Native\WtsApi32.cs" />
     <Compile Include="Platform\Windows\WindowsAPI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

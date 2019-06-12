@@ -1,6 +1,7 @@
 ﻿using IOTLink.Platform;
 using IOTLink.Platform.Windows;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -240,6 +241,14 @@ namespace IOTLink.Helpers
                 throw new PlatformNotSupportedException();
 
             return WindowsAPI.GetIdleTime();
+        }
+
+        public static List<DisplayInfo> GetDisplays()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetDisplays();
         }
     }
 }
