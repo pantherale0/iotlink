@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ServiceProcess;
-using IOTLink.Engine;
-using IOTLink.Helpers;
+using IOTLinkAPI.Helpers;
+using IOTLinkService.Engine;
 
 namespace IOTLink
 {

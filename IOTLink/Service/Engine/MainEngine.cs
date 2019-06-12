@@ -1,13 +1,14 @@
-﻿using System;
+﻿using IOTLinkAPI.Configs;
+using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Events;
+using IOTLinkAPI.Platform.Events.MQTT;
+using IOTLinkService.Engine.MQTT;
+using System;
 using System.IO;
 using System.ServiceProcess;
 using System.Threading;
-using IOTLink.Configs;
-using IOTLink.Engine.MQTT;
-using IOTLink.Engine.System;
-using IOTLink.Helpers;
 
-namespace IOTLink.Engine
+namespace IOTLinkService.Engine
 {
     public class MainEngine
     {

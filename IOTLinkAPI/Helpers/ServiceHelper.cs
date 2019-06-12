@@ -1,4 +1,4 @@
-﻿namespace IOTLink.Helpers
+﻿namespace IOTLinkAPI.Helpers
 {
     public class ServiceHelper
     {

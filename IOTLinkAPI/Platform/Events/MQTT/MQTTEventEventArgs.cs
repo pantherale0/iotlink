@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IOTLink.Engine.MQTT
+namespace IOTLinkAPI.Platform.Events.MQTT
 {
     public class MQTTEventEventArgs : EventArgs
     {

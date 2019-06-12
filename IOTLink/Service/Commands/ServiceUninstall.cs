@@ -1,11 +1,11 @@
-﻿using IOTLink.Platform.Windows;
+﻿using IOTLinkAPI.Platform.Windows;
 using System;
 using System.Configuration.Install;
 using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 
-namespace IOTLink.Service.Commands
+namespace IOTLinkService.Commands
 {
     class ServiceUninstall : ICommand
     {

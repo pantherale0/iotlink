@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace IOTLink.Engine.MQTT
+namespace IOTLinkAPI.Platform.Events.MQTT
 {
     public class MQTTMessage
     {

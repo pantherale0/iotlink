@@ -1,12 +1,12 @@
-﻿using IOTLink.Platform;
-using IOTLink.Platform.Windows;
+﻿using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.Windows;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
     public static class PlatformHelper
     {

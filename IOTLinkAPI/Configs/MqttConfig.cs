@@ -1,7 +1,6 @@
-﻿using System;
-using YamlDotNet.Serialization;
+﻿using YamlDotNet.Serialization;
 
-namespace IOTLink.Configs
+namespace IOTLinkAPI.Configs
 {
 #pragma warning disable 1591
     public class MqttConfig

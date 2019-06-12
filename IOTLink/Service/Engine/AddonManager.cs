@@ -1,18 +1,20 @@
-﻿using System;
+﻿using IOTLink.Addons;
+using IOTLinkAPI.Addons;
+using IOTLinkAPI.Configs;
+using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Events;
+using IOTLinkAPI.Platform.Events.MQTT;
+using IOTLinkService.Engine.MQTT;
+using IOTLinkService.Loaders;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IOTLink.API;
-using IOTLink.Configs;
-using IOTLink.Engine.MQTT;
-using IOTLink.Engine.System;
-using IOTLink.Helpers;
-using IOTLink.Loaders;
-using static IOTLink.Engine.MQTT.MQTTHandlers;
+using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
-namespace IOTLink.Engine
+namespace IOTLinkService.Engine
 {
-    public class AddonManager
+    public class AddonManager : IAddonManager
     {
         private static AddonManager _instance;
         private Dictionary<string, AddonInfo> _addons = new Dictionary<string, AddonInfo>();
@@ -138,7 +140,7 @@ namespace IOTLink.Engine
 
             id = id.Trim().ToLowerInvariant();
 
-            if (!this.AddonExists(id))
+            if (!AddonExists(id))
                 return null;
 
             return _addons[id];
@@ -150,7 +152,7 @@ namespace IOTLink.Engine
         /// <returns>A list containing all loaded <see cref="AddonInfo">addons</see>.</returns>
         public List<AddonInfo> GetAppList()
         {
-            return this._addons.Values.ToList();
+            return _addons.Values.ToList();
         }
 
         /// <summary>
@@ -173,11 +175,11 @@ namespace IOTLink.Engine
 		/// </summary>
 		internal void LoadAddons()
         {
-            this._addons.Clear();
-            this.LoadInternalAddons();
+            _addons.Clear();
+            LoadInternalAddons();
 
             if (ConfigHelper.GetEngineConfig().Addons?.Enabled == true)
-                this.LoadExternalAddons();
+                LoadExternalAddons();
         }
 
         /// <summary>
@@ -204,10 +206,10 @@ namespace IOTLink.Engine
                 {
                     addonInfo.ScriptClass.SetAddonInfo(addonInfo);
                     addonInfo.ScriptClass.SetCurrentPath(addonInfo.AddonPath);
-                    addonInfo.ScriptClass.Init();
+                    addonInfo.ScriptClass.Init(this);
                 }
 
-                this.AddAddon(addonInfo.AddonId, addonInfo);
+                AddAddon(addonInfo.AddonId, addonInfo);
             }
         }
 
@@ -233,7 +235,7 @@ namespace IOTLink.Engine
                 DirectoryInfo directoryInfo = new DirectoryInfo(dir);
                 AddonInfo addonInfo = new AddonInfo();
 
-                if (this.LoadAddonConfig(directoryInfo.Name, ref addonInfo) == true && addonInfo.Enabled == true)
+                if (LoadAddonConfig(directoryInfo.Name, ref addonInfo) == true && addonInfo.Enabled == true)
                 {
                     if (!AssemblyLoader.LoadAssemblyDLL(ref addonInfo))
                         continue;
@@ -242,10 +244,10 @@ namespace IOTLink.Engine
                     {
                         addonInfo.ScriptClass.SetAddonInfo(addonInfo);
                         addonInfo.ScriptClass.SetCurrentPath(addonInfo.AddonPath);
-                        addonInfo.ScriptClass.Init();
+                        addonInfo.ScriptClass.Init(this);
                     }
 
-                    this.AddAddon(addonInfo.AddonId, addonInfo);
+                    AddAddon(addonInfo.AddonId, addonInfo);
                 }
             }
         }
@@ -345,7 +347,7 @@ namespace IOTLink.Engine
         /// <param name="e"><see cref="EventArgs"/> (Always Empty)</param>
         internal void Raise_OnConfigReloadHandler(object sender, EventArgs e)
         {
-            List<AddonInfo> addons = this.GetAppList();
+            List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ScriptClass != null)
@@ -360,7 +362,7 @@ namespace IOTLink.Engine
         /// <param name="e"><see cref="SessionChangeEventArgs"/> object</param>
         internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            List<AddonInfo> addons = this.GetAppList();
+            List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ScriptClass != null)
@@ -375,7 +377,7 @@ namespace IOTLink.Engine
         /// <param name="e"><see cref="MQTTEventEventArgs"/> object</param>
         internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
-            List<AddonInfo> addons = this.GetAppList();
+            List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ScriptClass != null)
@@ -390,7 +392,7 @@ namespace IOTLink.Engine
         /// <param name="e"><see cref="MQTTEventEventArgs"/> object</param>
         internal void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
-            List<AddonInfo> addons = this.GetAppList();
+            List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ScriptClass != null)

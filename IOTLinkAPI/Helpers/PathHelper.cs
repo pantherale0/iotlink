@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
     public static class PathHelper
     {

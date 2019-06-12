@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace IOTLink.Platform
+namespace IOTLinkAPI.Platform
 {
     /// <summary>
     /// The RECT structure defines the coordinates of the upper-left and lower-right corners of a rectangle.

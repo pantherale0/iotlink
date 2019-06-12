@@ -1,7 +1,6 @@
-﻿using IOTLink.Configs;
-using IOTLink.Engine;
+﻿using IOTLinkAPI.Configs;
 
-namespace IOTLink.API
+namespace IOTLinkAPI.Addons
 {
     /// <summary>
 	/// Object containing all informations about an addon. Used by the <see cref="AddonManager"/>.
@@ -45,6 +44,6 @@ namespace IOTLink.API
         /// </summary>
         public AddonConfig Settings;
 
-        public AddonScript ScriptClass { get; internal set; }
+        public AddonScript ScriptClass { get; set; }
     }
 }

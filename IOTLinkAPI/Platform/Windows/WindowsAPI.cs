@@ -1,12 +1,12 @@
 using AudioSwitcher.AudioApi.CoreAudio;
-using IOTLink.Platform.Windows.Native;
-using IOTLink.Platform.Windows.Native.Internal;
+using IOTLinkAPI.Platform.Windows.Native;
+using IOTLinkAPI.Platform.Windows.Native.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace IOTLink.Platform.Windows
+namespace IOTLinkAPI.Platform.Windows
 {
 #pragma warning disable 1591
     public static class WindowsAPI

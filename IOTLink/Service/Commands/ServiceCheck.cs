@@ -1,9 +1,9 @@
-﻿using IOTLink.Platform.Windows;
+﻿using IOTLinkAPI.Platform.Windows;
 using System;
 using System.Linq;
 using System.ServiceProcess;
 
-namespace IOTLink.Service.Commands
+namespace IOTLinkService.Commands
 {
     class ServiceCheck : ICommand
     {

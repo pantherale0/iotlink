@@ -105,20 +105,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="API\AddonBase.cs" />
-    <Compile Include="API\AddonInfo.cs" />
-    <Compile Include="API\AddonScript.cs" />
+    <Compile Include="Addons\AddonBase.cs" />
+    <Compile Include="Addons\AddonInfo.cs" />
+    <Compile Include="Addons\AddonScript.cs" />
+    <Compile Include="Addons\IAddonManager.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Configs\MqttConfig.cs" />
-    <Compile Include="Engine\AddonManager.cs" />
-    <Compile Include="Engine\MainEngine.cs" />
-    <Compile Include="Engine\MQTT\MQTTClient.cs" />
-    <Compile Include="Engine\MQTT\MQTTEventEventArgs.cs" />
-    <Compile Include="Engine\MQTT\MQTTHandlers.cs" />
-    <Compile Include="Engine\MQTT\MQTTMessage.cs" />
-    <Compile Include="Engine\MQTT\MQTTMessageEventEventArgs.cs" />
-    <Compile Include="Engine\System\SessionChangeEventArgs.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTEventEventArgs.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTHandlers.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTMessage.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTMessageEventEventArgs.cs" />
+    <Compile Include="Platform\Events\SessionChangeEventArgs.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\ConfigHelper.cs" />
     <Compile Include="Helpers\LoggerHelper.cs" />
@@ -127,7 +125,6 @@
     <Compile Include="Helpers\PlatformHelper.cs" />
     <Compile Include="Helpers\ServiceHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
-    <Compile Include="Loaders\AssemblyLoader.cs" />
     <Compile Include="Platform\DisplayInfo.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />

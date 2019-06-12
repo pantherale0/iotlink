@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace IOTLink.Engine.MQTT
+namespace IOTLinkAPI.Platform.Events.MQTT
 {
     public abstract class MQTTHandlers
     {

@@ -1,6 +1,6 @@
-﻿using IOTLink.Helpers;
-using IOTLink.Platform.Windows;
-using IOTLink.Service.Commands;
+﻿using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Windows;
+using IOTLinkService.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;

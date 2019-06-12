@@ -1,4 +1,7 @@
-﻿using MQTTnet;
+﻿using IOTLinkAPI.Configs;
+using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Events.MQTT;
+using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
@@ -7,11 +10,9 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using IOTLink.Configs;
-using IOTLink.Helpers;
-using static IOTLink.Engine.MQTT.MQTTHandlers;
+using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
-namespace IOTLink.Engine.MQTT
+namespace IOTLinkService.Engine.MQTT
 {
     internal class MQTTClient
     {

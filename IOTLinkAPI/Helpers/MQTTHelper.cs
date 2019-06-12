@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
     public static class MQTTHelper
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ServiceProcess;
 
-namespace IOTLink.Engine.System
+namespace IOTLinkAPI.Platform.Events
 {
     public class SessionChangeEventArgs : EventArgs
     {

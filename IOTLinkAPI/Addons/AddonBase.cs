@@ -1,6 +1,6 @@
-﻿using IOTLink.Engine;
+﻿using IOTLink.Addons;
 
-namespace IOTLink.API
+namespace IOTLinkAPI.Addons
 {
     /// <summary>
 	/// Base application class used by both application interface and scripts.
@@ -20,7 +20,7 @@ namespace IOTLink.API
         /// <summary>
         /// AddonManager instance
         /// </summary>
-        protected AddonManager _manager = AddonManager.GetInstance();
+        protected IAddonManager _manager;
 
         /// <summary>
 		/// Addon constructor
@@ -33,9 +33,9 @@ namespace IOTLink.API
         /// <summary>
         /// Initialize the Addon
         /// </summary>
-        public virtual void Init()
+        public virtual void Init(IAddonManager addonManager)
         {
-
+            _manager = addonManager;
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace IOTLink.API
 		/// Set the current addon directory. Used internally.
 		/// </summary>
 		/// <param name="path">String containing the addon directory</param>
-		internal void SetCurrentPath(string path)
+		public void SetCurrentPath(string path)
         {
             _currentPath = path;
         }
@@ -59,7 +59,7 @@ namespace IOTLink.API
         /// <summary>
 		/// Get the current <see cref="AddonInfo"/>
 		/// </summary>
-		internal AddonInfo GetAppInfo()
+		public AddonInfo GetAppInfo()
         {
             return _addonInfo;
         }
@@ -68,7 +68,7 @@ namespace IOTLink.API
 		/// Set the current <see cref="AddonInfo"/>.
 		/// </summary>
 		/// <param name="addonInfo"></param>
-		internal void SetAddonInfo(AddonInfo addonInfo)
+		public void SetAddonInfo(AddonInfo addonInfo)
         {
             _addonInfo = addonInfo;
         }

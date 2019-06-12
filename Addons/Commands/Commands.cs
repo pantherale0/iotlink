@@ -1,6 +1,7 @@
-﻿using IOTLink.API;
-using IOTLink.Engine.MQTT;
-using IOTLink.Helpers;
+﻿using IOTLink.Addons;
+using IOTLinkAPI.Addons;
+using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Events.MQTT;
 using Newtonsoft.Json;
 using System;
 
@@ -8,9 +9,9 @@ namespace IOTLinkAddon
 {
     public class Commands : AddonScript
     {
-        public override void Init()
+        public override void Init(IAddonManager addonManager)
         {
-            base.Init();
+            base.Init(addonManager);
 
             _manager.SubscribeTopic(this, "shutdown", OnShutdownMessage);
             _manager.SubscribeTopic(this, "reboot", OnRebootMessage);

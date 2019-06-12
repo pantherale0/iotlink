@@ -1,13 +1,13 @@
-﻿using System;
+﻿using IOTLinkAPI.Addons;
+using IOTLinkAPI.Helpers;
+using IOTLinkService.Engine;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using IOTLink.API;
-using IOTLink.Engine;
-using IOTLink.Helpers;
 
-namespace IOTLink.Loaders
+namespace IOTLinkService.Loaders
 {
     internal class AssemblyLoader
     {

@@ -1,9 +1,8 @@
-﻿using System;
+﻿using IOTLinkAPI.Configs;
 using System.IO;
-using IOTLink.Configs;
 using YamlDotNet.Serialization;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
     public static class ConfigHelper
     {
@@ -27,7 +26,7 @@ namespace IOTLink.Helpers
             return YAMLDeserializer.Deserialize<T>(Reader);
         }
 
-        internal static ApplicationConfig GetEngineConfig(bool force = false)
+        public static ApplicationConfig GetEngineConfig(bool force = false)
         {
             if (_config != null)
             {

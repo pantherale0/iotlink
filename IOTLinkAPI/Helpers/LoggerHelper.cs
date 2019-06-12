@@ -1,4 +1,4 @@
-﻿using IOTLink.Configs;
+﻿using IOTLinkAPI.Configs;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Timers;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
 #pragma warning disable 1591
     public class LoggerHelper

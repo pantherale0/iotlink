@@ -1,7 +1,8 @@
-﻿using IOTLink.API;
-using IOTLink.Engine.System;
-using IOTLink.Helpers;
-using IOTLink.Platform;
+﻿using IOTLink.Addons;
+using IOTLinkAPI.Addons;
+using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,9 +29,9 @@ namespace IOTLinkAddon
         private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
-        public override void Init()
+        public override void Init(IAddonManager addonManager)
         {
-            base.Init();
+            base.Init(addonManager);
 
             _config = ConfigHelper.GetConfig<MonitorConfig>(Path.Combine(this._currentPath, "config.yaml"));
             _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");

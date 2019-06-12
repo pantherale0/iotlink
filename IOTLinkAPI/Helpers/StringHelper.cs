@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
     /// <summary>
 	/// General converter for strings.

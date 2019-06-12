@@ -1,9 +1,9 @@
-﻿using System;
-using IOTLink.Engine.MQTT;
-using IOTLink.Engine.System;
-using static IOTLink.Engine.MQTT.MQTTHandlers;
+﻿using IOTLinkAPI.Platform.Events;
+using IOTLinkAPI.Platform.Events.MQTT;
+using System;
+using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
-namespace IOTLink.API
+namespace IOTLinkAPI.Addons
 {
     /// <summary>
 	/// Base Addon class.
@@ -21,31 +21,31 @@ namespace IOTLink.API
         public delegate void SessionChangeHandler(Object sender, SessionChangeEventArgs e);
         public delegate void ConfigReloadedHandler(Object sender, EventArgs e);
 
-        internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
+        public void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
             if (OnSessionChangeHandler != null)
                 OnSessionChangeHandler(this, e);
         }
 
-        internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
+        public void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
             if (OnMQTTConnectedHandler != null)
                 OnMQTTConnectedHandler(sender, e);
         }
 
-        internal void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
+        public void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
             if (OnMQTTDisconnectedHandler != null)
                 OnMQTTDisconnectedHandler(sender, e);
         }
 
-        internal void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
+        public void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
             if (OnMQTTMessageReceivedHandler != null)
                 OnMQTTMessageReceivedHandler(sender, e);
         }
 
-        internal void Raise_OnConfigReloadHandler(object sender, EventArgs e)
+        public void Raise_OnConfigReloadHandler(object sender, EventArgs e)
         {
             if (OnConfigReloadHandler != null)
                 OnConfigReloadHandler(sender, e);
