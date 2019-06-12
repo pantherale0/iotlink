@@ -85,6 +85,8 @@ namespace IOTLinkAddon
             SendMemoryInfo();
             SendPowerInfo();
             SendHardDriveInfo();
+            SendIdleTimeInfo();
+            SendDisplaysInfo();
 
             LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
             _monitorTimer.Start(); // After everything, start the timer again.
@@ -147,6 +149,26 @@ namespace IOTLinkAddon
             SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString());
             SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat);
             SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel);
+        }
+
+        private void SendIdleTimeInfo()
+        {
+            uint idleTime = PlatformHelper.GetIdleTime();
+            SendMonitorValue("Stats/IdleTime", idleTime.ToString());
+        }
+
+        private void SendDisplaysInfo()
+        {
+            List<DisplayInfo> displays = PlatformHelper.GetDisplays();
+            for (int i = 0; i < displays.Count; i++)
+            {
+                string topic = string.Format("Stats/Displays/{0}", i);
+
+                SendMonitorValue(topic + "/DeviceName", displays[i].DeviceName.ToString());
+                SendMonitorValue(topic + "/ScreenHeight", displays[i].ScreenHeight.ToString());
+                SendMonitorValue(topic + "/ScreenWidth", displays[i].ScreenWidth.ToString());
+                SendMonitorValue(topic + "/Availability", displays[i].Availability.ToString());
+            }
         }
 
         private void SendMonitorValue(string topic, string value)

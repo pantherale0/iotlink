@@ -1,12 +1,11 @@
-﻿using IOTLink.Helpers;
+﻿using IOTLink.Agent.Commands;
+using IOTLink.Helpers;
 using IOTLink.Platform.Windows;
-using IOTLink.Service.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceProcess;
 
-namespace IOTLink
+namespace IOTLinkAgent
 {
     public static class Program
     {
@@ -19,11 +18,7 @@ namespace IOTLink
 
             // Service Run
             if (!Environment.UserInteractive)
-            {
-                ServiceBase service = new IOTLinkService();
-                ServiceBase.Run(service);
-                return 0;
-            }
+                return -1;
 
             if (args.Length == 0)
             {

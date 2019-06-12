@@ -1,7 +1,7 @@
 ﻿using IOTLink.Platform.Windows;
 using System;
 
-namespace IOTLink.Commands
+namespace IOTLink.Agent.Commands
 {
     class ShowMessage : ICommand
     {
