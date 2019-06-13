@@ -28,12 +28,12 @@ namespace IOTLinkAgent.Agent.WSClient
 
         }
 
-        internal void Init()
+        internal void Init(string uri)
         {
             if (_client != null)
                 Disconnect();
 
-            _client = new WebSocket("ws://localhost:9799/");
+            _client = new WebSocket(uri);
             _client.OnMessage += OnMessageReceived;
             _client.Connect();
 

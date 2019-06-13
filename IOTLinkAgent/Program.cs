@@ -15,16 +15,25 @@ namespace IOTLinkAgent
         public static int Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
+            LoggerHelper.Debug("Agent Initialized");
 
             // Service Run
             if (!Environment.UserInteractive)
+            {
+                LoggerHelper.Error("Agent has been initialized in a non-interactive environment. Finishing.");
                 return -1;
+            }
 
-            // Parse commands
-            Dictionary<string, List<string>> commands = ParseCommandLine(args);
+            Task myTask = new Task(() =>
+            {
+                // Parse commands
+                Dictionary<string, List<string>> commands = ParseCommandLine(args);
 
-            // Init
-            new Task(() => MainAgent.GetInstance().Init(commands)).Start();
+                // Init
+                MainAgent.GetInstance().Init(commands);
+            });
+
+            myTask.Start();
 
             new ManualResetEvent(false).WaitOne();
             return 0;

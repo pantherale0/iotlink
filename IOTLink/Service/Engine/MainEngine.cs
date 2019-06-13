@@ -1,6 +1,7 @@
 ﻿using IOTLink.Service.WSServer;
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkService.Engine.MQTT;
@@ -54,26 +55,11 @@ namespace IOTLinkService.Engine
             _processStopWatcher.Start();
         }
 
-        private void OnProcessStarted(object sender, EventArrivedEventArgs e)
-        {
-            string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
-            int sessionId = (int)e.NewEvent.Properties["SessionID"].Value;
-
-            LoggerHelper.Debug("Process Started - SessionId: {0} ProcessName: {1}", processName);
-        }
-
-        private void OnProcessStopped(object sender, EventArrivedEventArgs e)
-        {
-            string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
-            int sessionId = (int)e.NewEvent.Properties["SessionID"].Value;
-
-            LoggerHelper.Debug("Process Stopped - SessionId: {0} ProcessName: {1}", processName);
-        }
-
         public void StartApplication()
         {
             SetupMQTTHandlers();
             SetupWebSocket();
+            SetupAgents();
         }
 
         public void StopApplication()
@@ -134,6 +120,27 @@ namespace IOTLinkService.Engine
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
         }
 
+        private void SetupAgents()
+        {
+
+        }
+
+        private void OnProcessStarted(object sender, EventArrivedEventArgs e)
+        {
+            string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
+            int sessionId = (int)e.NewEvent.Properties["SessionID"].Value;
+
+            LoggerHelper.Debug("Process Started - SessionId: {0} ProcessName: {1}", processName);
+        }
+
+        private void OnProcessStopped(object sender, EventArrivedEventArgs e)
+        {
+            string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
+            int sessionId = (int)e.NewEvent.Properties["SessionID"].Value;
+
+            LoggerHelper.Debug("Process Stopped - SessionId: {0} ProcessName: {1}", processName);
+        }
+
         private void OnConfigChanged(object sender, FileSystemEventArgs e)
         {
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
@@ -172,16 +179,52 @@ namespace IOTLinkService.Engine
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }
 
-        public void OnSessionChange(string username, SessionChangeReason reason)
+        public void OnSessionChange(string username, int sessionId, SessionChangeReason reason)
         {
             SessionChangeEventArgs args = new SessionChangeEventArgs
             {
                 Username = username,
+                SessionId = sessionId,
                 Reason = reason
             };
 
+            if (reason == SessionChangeReason.SessionLogon || reason == SessionChangeReason.SessionUnlock || reason == SessionChangeReason.RemoteConnect)
+                StartAgent(username, sessionId);
+
             AddonManager addonsManager = AddonManager.GetInstance();
             addonsManager.Raise_OnSessionChange(this, args);
+        }
+
+        private void StartAgent(string username, int sessionId)
+        {
+            string wmiQuery = string.Format("SELECT SessionId, ProcessID, CommandLine FROM Win32_Process WHERE Name='{0}.exe'", PathHelper.APP_AGENT_NAME);
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
+            ManagementObjectCollection objCollection = searcher.Get();
+
+            LoggerHelper.Debug("StartAgent - Found {0} agent instances...", objCollection.Count);
+            foreach (ManagementObject processInfo in objCollection)
+            {
+                int agentSessionId = (int)processInfo["SessionId"];
+                string agentCommandLine = (string)processInfo["CommandLine"];
+
+                if (agentSessionId == sessionId && agentCommandLine.Contains("--agent"))
+                {
+                    LoggerHelper.Debug("StartAgent - Agent instance is already running for this user. Skipping.");
+                    return;
+                }
+            }
+
+            RunInfo runInfo = new RunInfo
+            {
+                Application = Path.Combine(PathHelper.BaseAppPath(), PathHelper.APP_AGENT_NAME),
+                CommandLine = "--agent " + WebSocketServerManager.WEBSOCKET_URI,
+                WorkingDir = PathHelper.BaseAppPath(),
+                UserName = username,
+                Visible = false,
+                FallbackToFirstActiveUser = false
+            };
+
+            PlatformHelper.Run(runInfo);
         }
     }
 }

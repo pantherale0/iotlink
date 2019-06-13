@@ -7,6 +7,8 @@ namespace IOTLinkAPI.Helpers
     public static class PathHelper
     {
         public const string APP_FOLDER_NAME = "IOTLink";
+        public const string APP_AGENT_NAME = "IOTLinkAgent";
+        public const string APP_SERVICE_NAME = "IOTLinkService";
 
         /// <summary>
         /// Return the application full name (including path)

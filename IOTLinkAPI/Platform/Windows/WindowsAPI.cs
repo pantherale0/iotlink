@@ -1,4 +1,5 @@
 using AudioSwitcher.AudioApi.CoreAudio;
+using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Windows.Native;
 using IOTLinkAPI.Platform.Windows.Native.Internal;
 using System;
@@ -51,7 +52,7 @@ namespace IOTLinkAPI.Platform.Windows
             try
             {
                 WtsApi32.WTSQuerySessionInformation(server, sessionId, WtsApi32.WtsInfoClass.WTSUserName, out buffer, out uint count);
-                username = Marshal.PtrToStringAnsi(buffer).ToUpper().Trim();
+                username = Marshal.PtrToStringAnsi(buffer).ToLowerInvariant().Trim();
             }
             finally
             {
@@ -171,9 +172,14 @@ namespace IOTLinkAPI.Platform.Windows
         public static bool Run(RunInfo runInfo)
         {
             if (string.IsNullOrWhiteSpace(runInfo.Application))
+            {
+                LoggerHelper.Debug("WindowsAPI::Run() - Empty Application parameter. Returning.");
                 return false;
+            }
+
             if (string.IsNullOrWhiteSpace(runInfo.CommandLine))
                 runInfo.CommandLine = null;
+
             if (string.IsNullOrWhiteSpace(runInfo.WorkingDir))
                 runInfo.WorkingDir = null;
 
@@ -185,16 +191,28 @@ namespace IOTLinkAPI.Platform.Windows
             {
                 WindowsSessionInfo sessionInfo = GetUserActiveSession(server, runInfo.UserName);
                 if (sessionInfo == null && runInfo.FallbackToFirstActiveUser)
+                {
+                    LoggerHelper.Debug("WindowsAPI::Run() - User session not found, trying to get first active session.");
                     sessionInfo = GetFirstActiveSession(server);
+                }
 
                 if (sessionInfo == null)
+                {
+                    LoggerHelper.Warn("WindowsAPI::Run() - No User/Active session found. Returning.");
                     return false;
+                }
 
                 if (!GetSessionUserToken(server, sessionInfo, ref hUserToken))
+                {
+                    LoggerHelper.Error("WindowsAPI::Run() - Cannot get session user token.");
                     return false;
+                }
 
                 if (!UserEnv.CreateEnvironmentBlock(ref pEnv, hUserToken, false))
+                {
+                    LoggerHelper.Error("WindowsAPI::Run() - Cannot create environment block.");
                     return false;
+                }
 
                 // Launch the child process interactively using the token of the logged user. 
                 ProcessInformation tProcessInfo;
@@ -224,11 +242,17 @@ namespace IOTLinkAPI.Platform.Windows
 
                 if (childProcStarted)
                 {
+                    LoggerHelper.Debug("WindowsAPI::Run() - Process seems to be started.");
                     Kernel32.CloseHandle(tProcessInfo.hThread);
                     Kernel32.CloseHandle(tProcessInfo.hProcess);
                 }
 
                 return childProcStarted;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("WindowsAPI::Run() - Exception: {0}", ex.ToString());
+                return false;
             }
             finally
             {
@@ -369,17 +393,17 @@ namespace IOTLinkAPI.Platform.Windows
 
         private static List<WindowsSessionInfo> GetWindowsSessions(IntPtr server)
         {
-            int count = 0;
-            int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
-            IntPtr buffer = IntPtr.Zero;
-            IntPtr current = buffer;
+            int sessionCount = 0;
+            IntPtr pSessionInfo = IntPtr.Zero;
             List<WindowsSessionInfo> sessionInfos = new List<WindowsSessionInfo>();
 
             try
             {
-                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count) != 0)
+                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref pSessionInfo, ref sessionCount) != 0)
                 {
-                    for (int i = 0; i < count; i++)
+                    int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
+                    IntPtr current = pSessionInfo;
+                    for (int i = 0; i < sessionCount; i++)
                     {
                         WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
                         current += dataSize;
@@ -395,7 +419,7 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(buffer);
+                WtsApi32.WTSFreeMemory(pSessionInfo);
             }
 
             return sessionInfos;
@@ -403,16 +427,17 @@ namespace IOTLinkAPI.Platform.Windows
 
         private static WindowsSessionInfo GetFirstActiveSession(IntPtr server)
         {
-            int count = 0;
-            int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
-            IntPtr buffer = IntPtr.Zero;
-            IntPtr current = buffer;
+            int sessionCount = 0;
+            IntPtr pSessionInfo = IntPtr.Zero;
 
             try
             {
-                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count) != 0)
+                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref pSessionInfo, ref sessionCount) != 0)
                 {
-                    for (int i = 0; i < count; i++)
+                    int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
+                    IntPtr current = pSessionInfo;
+
+                    for (int i = 0; i < sessionCount; i++)
                     {
                         WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
                         current += dataSize;
@@ -431,7 +456,7 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(buffer);
+                WtsApi32.WTSFreeMemory(pSessionInfo);
             }
 
             return null;
@@ -442,16 +467,17 @@ namespace IOTLinkAPI.Platform.Windows
             if (string.IsNullOrWhiteSpace(username))
                 return null;
 
-            int count = 0;
-            int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
-            IntPtr buffer = IntPtr.Zero;
-            IntPtr current = buffer;
+            int sessionCount = 0;
+            IntPtr pSessionInfo = IntPtr.Zero;
 
             try
             {
-                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count) != 0)
+                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref pSessionInfo, ref sessionCount) != 0)
                 {
-                    for (int i = 0; i < count; i++)
+                    int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
+                    IntPtr current = pSessionInfo;
+
+                    for (int i = 0; i < sessionCount; i++)
                     {
                         WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
                         current += dataSize;
@@ -474,7 +500,7 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(buffer);
+                WtsApi32.WTSFreeMemory(pSessionInfo);
             }
 
             return null;

@@ -1,4 +1,5 @@
 ﻿using IOTLinkAgent.Agent.WSClient;
+using IOTLinkAPI.Helpers;
 using System.Collections.Generic;
 
 namespace IOTLinkAgent.Agent
@@ -21,7 +22,15 @@ namespace IOTLinkAgent.Agent
 
         internal void Init(Dictionary<string, List<string>> commands)
         {
-            WebSocketClient.GetInstance().Init();
+            if (commands.ContainsKey("agent"))
+            {
+                string uri = string.Concat(commands["agent"]);
+                if (!string.IsNullOrWhiteSpace(uri))
+                {
+                    LoggerHelper.Debug("Initializing WebSocketClient - Server URI: {0}", uri);
+                    WebSocketClient.GetInstance().Init(uri);
+                }
+            }
         }
     }
 }

@@ -14,6 +14,7 @@ namespace IOTLink.Service.WSServer
 {
     internal class WebSocketServerManager : WebSocketBehavior
     {
+        public const string WEBSOCKET_URI = "ws://localhost:9799";
         private static WebSocketServerManager _instance;
 
         private WebSocketServer _server;
@@ -36,7 +37,7 @@ namespace IOTLink.Service.WSServer
             if (_server != null)
                 Disconnect();
 
-            _server = new WebSocketServer("ws://localhost:9799");
+            _server = new WebSocketServer(WEBSOCKET_URI);
             _server.KeepClean = true;
             _server.AddWebSocketService("/", () => this);
             _server.Start();

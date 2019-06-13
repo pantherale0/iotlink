@@ -29,8 +29,8 @@ namespace IOTLink
 
         protected override void OnSessionChange(SessionChangeDescription changeDescription)
         {
-            String username = PlatformHelper.GetUsername(changeDescription.SessionId);
-            MainEngine.GetInstance().OnSessionChange(username, changeDescription.Reason);
+            string username = PlatformHelper.GetUsername(changeDescription.SessionId);
+            MainEngine.GetInstance().OnSessionChange(username, changeDescription.SessionId, changeDescription.Reason);
         }
     }
 }
