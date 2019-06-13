@@ -156,7 +156,7 @@ namespace IOTLinkService.Engine.MQTT
 
                 topic = GetFullTopicName(topic);
 
-                LoggerHelper.Debug("Publishing to {0}: {1}", topic, message);
+                LoggerHelper.Trace("Publishing to {0}: {1}", topic, message);
 
                 MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
                 await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
@@ -181,7 +181,7 @@ namespace IOTLinkService.Engine.MQTT
 
                 topic = GetFullTopicName(topic);
 
-                LoggerHelper.Debug("Publishing to {0}: ({1} bytes)", topic, message?.Length);
+                LoggerHelper.Trace("Publishing to {0}: ({1} bytes)", topic, message?.Length);
 
                 MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
                 await _client.PublishAsync(mqttMsg).ConfigureAwait(false);

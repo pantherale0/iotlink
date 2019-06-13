@@ -1,6 +1,6 @@
 ﻿namespace IOTLinkAPI.Platform.Windows
 {
-    internal class WindowsSessionInfo
+    public class WindowsSessionInfo
     {
         public int SessionID { get; set; }
 

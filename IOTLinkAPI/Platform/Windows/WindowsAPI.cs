@@ -246,6 +246,11 @@ namespace IOTLinkAPI.Platform.Windows
                     Kernel32.CloseHandle(tProcessInfo.hThread);
                     Kernel32.CloseHandle(tProcessInfo.hProcess);
                 }
+                else
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    LoggerHelper.Error("WindowsAPI::Run() - CreateProcessAsUser failed. Error Code: {0}", errorCode);
+                }
 
                 return childProcStarted;
             }
@@ -308,7 +313,6 @@ namespace IOTLinkAPI.Platform.Windows
             {
                 WtsApi32.WTSCloseServer(server);
             }
-
         }
 
         public static bool SetAudioMute(bool mute)
@@ -376,6 +380,19 @@ namespace IOTLinkAPI.Platform.Windows
             }, IntPtr.Zero);
 
             return displays;
+        }
+
+        public static List<WindowsSessionInfo> GetWindowsSessions()
+        {
+            IntPtr server = GetServerPtr();
+            try
+            {
+                return GetWindowsSessions(server);
+            }
+            finally
+            {
+                WtsApi32.WTSCloseServer(server);
+            }
         }
 
         private static bool GetSessionUserToken(IntPtr server, WindowsSessionInfo sessionInfo, ref IntPtr phUserToken)
