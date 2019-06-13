@@ -1,9 +1,9 @@
-﻿using IOTLinkAgent.Commands;
+﻿using IOTLinkAgent.Agent;
 using IOTLinkAPI.Helpers;
-using IOTLinkAPI.Platform.Windows;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IOTLinkAgent
 {
@@ -20,14 +20,21 @@ namespace IOTLinkAgent
             if (!Environment.UserInteractive)
                 return -1;
 
-            if (args.Length == 0)
-            {
-                WindowsAPI.ShowMessage("IOT Link", "Missing command-line parameters.");
-                return 1;
-            }
+            // Parse commands
+            Dictionary<string, List<string>> commands = ParseCommandLine(args);
 
-            // Get Command Instances
-            Dictionary<string, ICommand> commands = GetCommands();
+            // Init
+            new Task(() => MainAgent.GetInstance().Init(commands)).Start();
+
+            new ManualResetEvent(false).WaitOne();
+            return 0;
+        }
+
+        private static Dictionary<string, List<string>> ParseCommandLine(string[] args)
+        {
+            Dictionary<string, List<string>> commands = new Dictionary<string, List<string>>();
+            if (args == null || args.Length == 0)
+                return commands;
 
             // Run through all arguments to find runnable commands
             Queue<string> argsQueue = new Queue<string>(args);
@@ -45,32 +52,7 @@ namespace IOTLinkAgent
                 while (argsQueue.Count > 0 && !argsQueue.Peek().StartsWith("--"))
                     commandArgs.Add(argsQueue.Dequeue());
 
-                // Run command if available
-                if (commands.ContainsKey(command))
-                {
-                    int result = commands[command].ExecuteCommand(commandArgs.ToArray());
-                    if (result != 0)
-                        return result;
-                }
-            }
-
-            return 0;
-        }
-
-        private static Dictionary<string, ICommand> GetCommands()
-        {
-            var commands = new Dictionary<string, ICommand>();
-
-            var interfaceType = typeof(ICommand);
-            var interfaces = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => s.GetTypes())
-                .Where(p => interfaceType.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract && !p.IsInterface);
-
-            foreach (Type type in interfaces)
-            {
-                ICommand command = (ICommand)Activator.CreateInstance(type);
-                string key = command.GetCommandLine().ToLowerInvariant();
-                commands.Add(key, command);
+                commands.Add(command, commandArgs);
             }
 
             return commands;

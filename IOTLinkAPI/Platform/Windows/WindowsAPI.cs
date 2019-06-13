@@ -3,7 +3,6 @@ using IOTLinkAPI.Platform.Windows.Native;
 using IOTLinkAPI.Platform.Windows.Native.Internal;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace IOTLinkAPI.Platform.Windows
@@ -11,9 +10,15 @@ namespace IOTLinkAPI.Platform.Windows
 #pragma warning disable 1591
     public static class WindowsAPI
     {
-        private static readonly int WM_SYSCOMMAND = 0x0112;
-        private static readonly uint SC_MONITORPOWER = 0xF170;
-        private static readonly uint MOUSEEVENTFMOVE = 0x0001;
+        private const int WM_SYSCOMMAND = 0x0112;
+        private const int SC_MONITORPOWER = 0xF170;
+        private const int MOUSEEVENTFMOVE = 0x0001;
+
+        private const int CREATE_UNICODE_ENVIRONMENT = 0x00000400;
+        private const int CREATE_NO_WINDOW = 0x08000000;
+        private const int CREATE_NEW_CONSOLE = 0x00000010;
+
+        private const uint INVALID_SESSION_ID = 0xFFFFFFFF;
 
         public enum DialogStyle
         {
@@ -80,14 +85,10 @@ namespace IOTLinkAPI.Platform.Windows
             IntPtr server = GetServerPtr();
             try
             {
-                List<int> sessions = GetSessionIDs(server);
-                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
-                foreach (KeyValuePair<string, int> entry in userSessionDictionary)
+                List<WindowsSessionInfo> sessionInfos = GetWindowsSessions(server);
+                foreach (var sessionInfo in sessionInfos)
                 {
-                    if (entry.Value != 0)
-                    {
-                        WtsApi32.WTSDisconnectSession(server, entry.Value, true);
-                    }
+                    WtsApi32.WTSDisconnectSession(server, sessionInfo.SessionID, true);
                 }
             }
             finally
@@ -101,15 +102,16 @@ namespace IOTLinkAPI.Platform.Windows
             IntPtr server = GetServerPtr();
             try
             {
-                username = username.Trim().ToUpper();
+                WindowsSessionInfo sessionInfo = GetWindowsSessions(server)
+                    .Find(
+                        p => p.UserName != null &&
+                        string.Compare(p.UserName.Trim().ToLowerInvariant(), username.Trim().ToLowerInvariant()) == 0
+                    );
 
-                List<int> sessions = GetSessionIDs(server);
-                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
+                if (sessionInfo != null)
+                    return WtsApi32.WTSDisconnectSession(server, sessionInfo.SessionID, true);
 
-                if (userSessionDictionary.ContainsKey(username))
-                    return WtsApi32.WTSDisconnectSession(server, userSessionDictionary[username], true);
-                else
-                    return false;
+                return false;
             }
             finally
             {
@@ -122,14 +124,10 @@ namespace IOTLinkAPI.Platform.Windows
             IntPtr server = GetServerPtr();
             try
             {
-                List<int> sessions = GetSessionIDs(server);
-                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
-                foreach (KeyValuePair<string, int> entry in userSessionDictionary)
+                List<WindowsSessionInfo> sessionInfos = GetWindowsSessions(server);
+                foreach (var sessionInfo in sessionInfos)
                 {
-                    if (entry.Value != 0)
-                    {
-                        WtsApi32.WTSLogoffSession(server, entry.Value, true);
-                    }
+                    WtsApi32.WTSLogoffSession(server, sessionInfo.SessionID, true);
                 }
             }
             finally
@@ -143,14 +141,16 @@ namespace IOTLinkAPI.Platform.Windows
             IntPtr server = GetServerPtr();
             try
             {
-                username = username.Trim().ToUpper();
+                WindowsSessionInfo sessionInfo = GetWindowsSessions(server)
+                    .Find(
+                        p => p.UserName != null &&
+                        string.Compare(p.UserName.Trim().ToLowerInvariant(), username.Trim().ToLowerInvariant()) == 0
+                    );
 
-                List<int> sessions = GetSessionIDs(server);
-                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
-                if (userSessionDictionary.ContainsKey(username))
-                    return WtsApi32.WTSLogoffSession(server, userSessionDictionary[username], true);
-                else
-                    return false;
+                if (sessionInfo != null)
+                    return WtsApi32.WTSLogoffSession(server, sessionInfo.SessionID, true);
+
+                return false;
             }
             finally
             {
@@ -168,79 +168,78 @@ namespace IOTLinkAPI.Platform.Windows
             return PowrProf.SetSuspendState(false, true, true);
         }
 
-        public static bool Run(string command, string args = null, string workDir = null, string username = null)
+        public static bool Run(RunInfo runInfo)
         {
-            if (string.IsNullOrWhiteSpace(command))
+            if (string.IsNullOrWhiteSpace(runInfo.Application))
                 return false;
-            if (string.IsNullOrWhiteSpace(args))
-                args = null;
-            if (string.IsNullOrWhiteSpace(workDir))
-                workDir = null;
+            if (string.IsNullOrWhiteSpace(runInfo.CommandLine))
+                runInfo.CommandLine = null;
+            if (string.IsNullOrWhiteSpace(runInfo.WorkingDir))
+                runInfo.WorkingDir = null;
 
             IntPtr server = GetServerPtr();
+            IntPtr hUserToken = IntPtr.Zero;
+            IntPtr pEnv = IntPtr.Zero;
+
             try
             {
+                WindowsSessionInfo sessionInfo = GetUserActiveSession(server, runInfo.UserName);
+                if (sessionInfo == null && runInfo.FallbackToFirstActiveUser)
+                    sessionInfo = GetFirstActiveSession(server);
 
-                List<int> sessions = GetSessionIDs(server, true);
-                Dictionary<string, int> userSessionDictionary = GetUserSessionDictionary(sessions, server);
-                if (userSessionDictionary.Keys.Count == 0)
+                if (sessionInfo == null)
                     return false;
 
-                int sessionId = userSessionDictionary.First().Value;
-                if (!string.IsNullOrWhiteSpace(username))
-                {
-                    username = username.Trim().ToUpper();
-                    if (!userSessionDictionary.ContainsKey(username))
-                        return false;
+                if (!GetSessionUserToken(server, sessionInfo, ref hUserToken))
+                    return false;
 
-                    sessionId = userSessionDictionary[username];
+                if (!UserEnv.CreateEnvironmentBlock(ref pEnv, hUserToken, false))
+                    return false;
+
+                // Launch the child process interactively using the token of the logged user. 
+                ProcessInformation tProcessInfo;
+
+                // Startup flags
+                StartupInfo tStartUpInfo = new StartupInfo();
+                tStartUpInfo.wShowWindow = (short)(runInfo.Visible ? SW.SW_SHOW : SW.SW_HIDE);
+                tStartUpInfo.cb = StartupInfo.SizeOf;
+                tStartUpInfo.lpDesktop = "winsta0\\default";
+
+                // Creation Flags
+                uint dwCreationFlags = CREATE_UNICODE_ENVIRONMENT | (uint)(runInfo.Visible ? CREATE_NEW_CONSOLE : CREATE_NO_WINDOW);
+
+                bool childProcStarted = AdvApi32.CreateProcessAsUser(
+                            hUserToken,                    // Token of the logged-on user. 
+                            runInfo.Application,           // Name of the process to be started. 
+                            runInfo.CommandLine,           // Any command line arguments to be passed. 
+                            IntPtr.Zero,                   // Default Process' attributes. 
+                            IntPtr.Zero,                   // Default Thread's attributes. 
+                            false,                         // Does NOT inherit parent's handles. 
+                            dwCreationFlags,               // No any specific creation flag. 
+                            pEnv,                          // Default environment path. 
+                            runInfo.WorkingDir,            // Default current directory. 
+                            ref tStartUpInfo,              // Process Startup Info.  
+                            out tProcessInfo               // Process information to be returned. 
+                            );
+
+                if (childProcStarted)
+                {
+                    Kernel32.CloseHandle(tProcessInfo.hThread);
+                    Kernel32.CloseHandle(tProcessInfo.hProcess);
                 }
 
-                IntPtr hImpersonationToken = IntPtr.Zero;
-                IntPtr hUserToken = IntPtr.Zero;
-                if (WtsApi32.WTSQueryUserToken(sessionId, out hImpersonationToken) &&
-                    AdvApi32.DuplicateTokenEx(hImpersonationToken, 0, IntPtr.Zero, (int)SecurityImpersonationLevel.SecurityImpersonation, (int)TokenType.TokenPrimary, ref hUserToken))
-                {
-
-                    // Launch the child process interactively using the token of the logged user. 
-                    ProcessInformation tProcessInfo;
-                    StartupInfo tStartUpInfo = new StartupInfo();
-                    tStartUpInfo.cb = StartupInfo.SizeOf;
-
-                    bool childProcStarted = AdvApi32.CreateProcessAsUser(
-                                hUserToken,         // Token of the logged-on user. 
-                                command,            // Name of the process to be started. 
-                                args,               // Any command line arguments to be passed. 
-                                IntPtr.Zero,        // Default Process' attributes. 
-                                IntPtr.Zero,        // Default Thread's attributes. 
-                                false,              // Does NOT inherit parent's handles. 
-                                0,                  // No any specific creation flag. 
-                                IntPtr.Zero,        // Default environment path. 
-                                workDir,            // Default current directory. 
-                                ref tStartUpInfo,   // Process Startup Info.  
-                                out tProcessInfo    // Process information to be returned. 
-                                );
-
-                    if (childProcStarted)
-                    {
-                        // If the child process is created, it can be controlled via the out  
-                        // param "tProcessInfo". For now, as we don't want to do any thing  
-                        // with the child process, closing the child process' handles  
-                        // to prevent the handle leak. 
-                        Kernel32.CloseHandle(tProcessInfo.hThread);
-                        Kernel32.CloseHandle(tProcessInfo.hProcess);
-                    }
-                    Kernel32.CloseHandle(hImpersonationToken);
-                    Kernel32.CloseHandle(hUserToken);
-
-                    return childProcStarted;
-                }
+                return childProcStarted;
             }
             finally
             {
+                if (pEnv != IntPtr.Zero)
+                    UserEnv.DestroyEnvironmentBlock(pEnv);
+
+                if (hUserToken != IntPtr.Zero)
+                    Kernel32.CloseHandle(hUserToken);
+
                 WtsApi32.WTSCloseServer(server);
             }
-            return false;
         }
 
         public static MemoryInfo GetMemoryInformation()
@@ -346,10 +345,7 @@ namespace IOTLinkAPI.Platform.Windows
                     DisplayInfo di = new DisplayInfo();
                     di.ScreenWidth = (mi.Monitor.Right - mi.Monitor.Left);
                     di.ScreenHeight = (mi.Monitor.Bottom - mi.Monitor.Top);
-                    di.MonitorArea = mi.Monitor;
-                    di.WorkArea = mi.WorkArea;
                     di.Availability = mi.Flags.ToString();
-                    di.DeviceName = mi.DeviceName;
                     displays.Add(di);
                 }
                 return true;
@@ -358,40 +354,130 @@ namespace IOTLinkAPI.Platform.Windows
             return displays;
         }
 
-        private static List<int> GetSessionIDs(IntPtr server, bool activeOnly = false)
+        private static bool GetSessionUserToken(IntPtr server, WindowsSessionInfo sessionInfo, ref IntPtr phUserToken)
         {
-            List<int> sessionIds = new List<int>();
-            IntPtr buffer = IntPtr.Zero;
-            int count = 0;
-            int retval = WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count);
-            int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
-            IntPtr current = buffer;
-
-            if (retval != 0)
+            var hImpersonationToken = IntPtr.Zero;
+            bool bResult = false;
+            if (WtsApi32.WTSQueryUserToken(sessionInfo.SessionID, out hImpersonationToken))
             {
-                for (int i = 0; i < count; i++)
-                {
-                    WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
-                    current += dataSize;
-                    if (!activeOnly || si.State == WtsApi32.WtsConnectStateClass.WTSActive)
-                        sessionIds.Add(si.SessionID);
-                }
-                WtsApi32.WTSFreeMemory(buffer);
+                bResult = AdvApi32.DuplicateTokenEx(hImpersonationToken, 0, IntPtr.Zero, (int)SecurityImpersonationLevel.SecurityImpersonation, (int)TokenType.TokenPrimary, ref phUserToken);
+                Kernel32.CloseHandle(hImpersonationToken);
             }
-            return sessionIds;
+
+            return bResult;
         }
 
-        private static Dictionary<string, int> GetUserSessionDictionary(List<int> sessions, IntPtr server)
+        private static List<WindowsSessionInfo> GetWindowsSessions(IntPtr server)
         {
-            Dictionary<string, int> userSession = new Dictionary<string, int>();
+            int count = 0;
+            int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
+            IntPtr buffer = IntPtr.Zero;
+            IntPtr current = buffer;
+            List<WindowsSessionInfo> sessionInfos = new List<WindowsSessionInfo>();
 
-            foreach (var sessionId in sessions)
+            try
             {
-                string uName = GetUsername(sessionId);
-                if (!string.IsNullOrWhiteSpace(uName))
-                    userSession.Add(uName, sessionId);
+                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count) != 0)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
+                        current += dataSize;
+                        WindowsSessionInfo sessionInfo = new WindowsSessionInfo();
+                        sessionInfo.SessionID = si.SessionID;
+                        sessionInfo.StationName = si.pWinStationName;
+                        sessionInfo.IsActive = si.State == WtsApi32.WtsConnectStateClass.WTSActive;
+                        sessionInfo.UserName = GetUsername(sessionInfo.SessionID);
+
+                        sessionInfos.Add(sessionInfo);
+                    }
+                }
             }
-            return userSession;
+            finally
+            {
+                WtsApi32.WTSFreeMemory(buffer);
+            }
+
+            return sessionInfos;
+        }
+
+        private static WindowsSessionInfo GetFirstActiveSession(IntPtr server)
+        {
+            int count = 0;
+            int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
+            IntPtr buffer = IntPtr.Zero;
+            IntPtr current = buffer;
+
+            try
+            {
+                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count) != 0)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
+                        current += dataSize;
+                        if (si.State != WtsApi32.WtsConnectStateClass.WTSActive)
+                            continue;
+
+                        WindowsSessionInfo sessionInfo = new WindowsSessionInfo();
+                        sessionInfo.SessionID = si.SessionID;
+                        sessionInfo.StationName = si.pWinStationName;
+                        sessionInfo.IsActive = si.State == WtsApi32.WtsConnectStateClass.WTSActive;
+                        sessionInfo.UserName = GetUsername(sessionInfo.SessionID);
+
+                        return sessionInfo;
+                    }
+                }
+            }
+            finally
+            {
+                WtsApi32.WTSFreeMemory(buffer);
+            }
+
+            return null;
+        }
+
+        private static WindowsSessionInfo GetUserActiveSession(IntPtr server, string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return null;
+
+            int count = 0;
+            int dataSize = Marshal.SizeOf(typeof(WtsApi32.WtsSessionInfo));
+            IntPtr buffer = IntPtr.Zero;
+            IntPtr current = buffer;
+
+            try
+            {
+                if (WtsApi32.WTSEnumerateSessions(server, 0, 1, ref buffer, ref count) != 0)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        WtsApi32.WtsSessionInfo si = (WtsApi32.WtsSessionInfo)Marshal.PtrToStructure(current, typeof(WtsApi32.WtsSessionInfo));
+                        current += dataSize;
+                        if (si.State != WtsApi32.WtsConnectStateClass.WTSActive)
+                            continue;
+
+                        string sessionUser = GetUsername(si.SessionID);
+                        if (string.IsNullOrWhiteSpace(sessionUser) || string.Compare(username.Trim().ToLowerInvariant(), sessionUser.Trim().ToLowerInvariant()) != 0)
+                            continue;
+
+                        WindowsSessionInfo sessionInfo = new WindowsSessionInfo();
+                        sessionInfo.SessionID = si.SessionID;
+                        sessionInfo.StationName = si.pWinStationName;
+                        sessionInfo.IsActive = si.State == WtsApi32.WtsConnectStateClass.WTSActive;
+                        sessionInfo.UserName = sessionUser;
+
+                        return sessionInfo;
+                    }
+                }
+            }
+            finally
+            {
+                WtsApi32.WTSFreeMemory(buffer);
+            }
+
+            return null;
         }
 
         private static IntPtr GetServerPtr()

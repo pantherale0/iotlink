@@ -7,7 +7,7 @@
     <ProjectGuid>{CCB5FF85-B16D-4A6A-AA53-993F6B86FEA1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IOTLink</RootNamespace>
+    <RootNamespace>IOTLinkAPI</RootNamespace>
     <AssemblyName>IOTLinkAPI</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -123,24 +123,32 @@
     <Compile Include="Helpers\MQTTHelper.cs" />
     <Compile Include="Helpers\PathHelper.cs" />
     <Compile Include="Helpers\PlatformHelper.cs" />
-    <Compile Include="Helpers\ServiceHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Platform\DisplayInfo.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
+    <Compile Include="Platform\RunInfo.cs" />
+    <Compile Include="Platform\WebSocket\RequestTypeClient.cs" />
+    <Compile Include="Platform\WebSocket\MessageType.cs" />
+    <Compile Include="Platform\WebSocket\RequestTypeServer.cs" />
+    <Compile Include="Platform\WebSocket\ResponseTypeClient.cs" />
+    <Compile Include="Platform\WebSocket\ResponseTypeServer.cs" />
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />
     <Compile Include="Platform\Windows\Native\Internal\LastInputInfo.cs" />
     <Compile Include="Platform\Windows\Native\Internal\MemoryStatusEx.cs" />
     <Compile Include="Platform\Windows\Native\Internal\ProcessInformation.cs" />
-    <Compile Include="Platform\Rect.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\Rect.cs" />
     <Compile Include="Platform\Windows\Native\Internal\SecurityImpersonationLevel.cs" />
     <Compile Include="Platform\Windows\Native\Internal\StartupInfo.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\SW.cs" />
     <Compile Include="Platform\Windows\Native\Internal\TokenType.cs" />
     <Compile Include="Platform\Windows\Native\Kernel32.cs" />
     <Compile Include="Platform\Windows\Native\Internal\MonitorInfoEx.cs" />
     <Compile Include="Platform\Windows\Native\PowrProf.cs" />
     <Compile Include="Platform\Windows\Native\User32.cs" />
     <Compile Include="Platform\Windows\Native\Internal\WM_MESSAGE.cs" />
+    <Compile Include="Platform\Windows\Native\UserEnv.cs" />
     <Compile Include="Platform\Windows\Native\WtsApi32.cs" />
+    <Compile Include="Platform\Windows\WindowsSessionInfo.cs" />
     <Compile Include="Platform\Windows\WindowsAPI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

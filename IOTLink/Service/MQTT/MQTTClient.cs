@@ -45,7 +45,7 @@ namespace IOTLinkService.Engine.MQTT
         /// Initialize the MQTT Client based on the current configurations.
         /// </summary>
         /// <param name="MQTT"><see cref="MqttConfig">MQTT</see> configuration</param>
-        public void Init(MqttConfig MQTT)
+        internal void Init(MqttConfig MQTT)
         {
             // Configuration not found
             if (MQTT == null)
@@ -147,7 +147,7 @@ namespace IOTLinkService.Engine.MQTT
         /// </summary>
         /// <param name="topic">String containg the topic</param>
         /// <param name="message">String containg the message</param>
-        public async void PublishMessage(string topic, string message)
+        internal async void PublishMessage(string topic, string message)
         {
             try
             {
@@ -172,7 +172,7 @@ namespace IOTLinkService.Engine.MQTT
         /// </summary>
         /// <param name="topic">String containg the topic</param>
         /// <param name="message">Message bytes[]</param>
-        public async void PublishMessage(string topic, byte[] message)
+        internal async void PublishMessage(string topic, byte[] message)
         {
             try
             {
@@ -309,7 +309,7 @@ namespace IOTLinkService.Engine.MQTT
         /// <returns></returns>
         private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
         {
-            LoggerHelper.Debug("MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
+            LoggerHelper.Trace("MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
 
             // Fire event
             MQTTMessage message = GetMQTTMessage(arg);

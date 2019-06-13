@@ -165,10 +165,8 @@ namespace IOTLinkAddon
             {
                 string topic = string.Format("Stats/Displays/{0}", i);
 
-                SendMonitorValue(topic + "/DeviceName", displays[i].DeviceName.ToString());
                 SendMonitorValue(topic + "/ScreenHeight", displays[i].ScreenHeight.ToString());
                 SendMonitorValue(topic + "/ScreenWidth", displays[i].ScreenWidth.ToString());
-                SendMonitorValue(topic + "/Availability", displays[i].Availability.ToString());
             }
         }
 

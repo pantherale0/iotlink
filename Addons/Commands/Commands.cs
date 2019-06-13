@@ -1,6 +1,7 @@
 ﻿using IOTLink.Addons;
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events.MQTT;
 using Newtonsoft.Json;
 using System;
@@ -70,12 +71,18 @@ namespace IOTLinkAddon
             try
             {
                 dynamic json = JsonConvert.DeserializeObject(value);
-                string command = json.command;
-                string args = json.args;
-                string path = json.path;
-                string user = json.user;
 
-                PlatformHelper.Run(command, args, path, user);
+                RunInfo runInfo = new RunInfo
+                {
+                    Application = json.command,
+                    CommandLine = json.args,
+                    WorkingDir = json.path,
+                    UserName = json.user,
+                    Visible = json.visible,
+                    FallbackToFirstActiveUser = json.fallback
+                };
+
+                PlatformHelper.Run(runInfo);
             }
             catch (Exception ex)
             {

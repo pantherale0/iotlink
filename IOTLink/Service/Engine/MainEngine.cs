@@ -1,9 +1,11 @@
-﻿using IOTLinkAPI.Configs;
+﻿using IOTLink.Service.WSServer;
+using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkService.Engine.MQTT;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.ServiceProcess;
 using System.Threading;
@@ -17,6 +19,8 @@ namespace IOTLinkService.Engine
 
         private FileSystemWatcher _configWatcher;
         private DateTime _lastConfigChange;
+
+        private Dictionary<string, object> _globals = new Dictionary<string, object>();
 
         public static MainEngine GetInstance()
         {
@@ -38,11 +42,34 @@ namespace IOTLinkService.Engine
         public void StartApplication()
         {
             SetupMQTTHandlers();
+            SetupWebSocket();
         }
 
         public void StopApplication()
         {
             LoggerHelper.GetInstance().Flush();
+        }
+
+        public object GetGlobal(string key, object def = null)
+        {
+            if (!_globals.ContainsKey(key))
+                return def;
+
+            return _globals[key];
+        }
+
+        public void SetGlobal(string key, object value)
+        {
+            if (_globals.ContainsKey(key))
+                _globals.Remove(key);
+
+            _globals.Add(key, value);
+        }
+
+        private void SetupWebSocket()
+        {
+            WebSocketServerManager webSocketManager = WebSocketServerManager.GetInstance();
+            webSocketManager.Init();
         }
 
         private void SetupMQTTHandlers()
