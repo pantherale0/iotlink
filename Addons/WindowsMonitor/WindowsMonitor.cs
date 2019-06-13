@@ -163,7 +163,7 @@ namespace IOTLinkAddon
             List<DisplayInfo> displays = PlatformHelper.GetDisplays();
             for (int i = 0; i < displays.Count; i++)
             {
-                string topic = string.Format("Stats/Displays/{0}", i);
+                string topic = string.Format("Stats/Display/{0}", i);
 
                 SendMonitorValue(topic + "/ScreenHeight", displays[i].ScreenHeight.ToString());
                 SendMonitorValue(topic + "/ScreenWidth", displays[i].ScreenWidth.ToString());

@@ -30,7 +30,7 @@ namespace IOTLinkService.Commands
                     return -1;
                 }
 
-                ManagedInstallerClass.InstallHelper(new string[] { Assembly.GetExecutingAssembly().Location });
+                ManagedInstallerClass.InstallHelper(new string[] { "/LogFile=", "/LogToConsole=false", Assembly.GetExecutingAssembly().Location });
                 WindowsAPI.ShowMessage("Service Installer", "Service is installed sucessfully.");
                 return 0;
             }

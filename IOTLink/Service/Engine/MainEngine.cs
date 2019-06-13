@@ -7,6 +7,7 @@ using IOTLinkService.Engine.MQTT;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Management;
 using System.ServiceProcess;
 using System.Threading;
 
@@ -20,6 +21,9 @@ namespace IOTLinkService.Engine
         private FileSystemWatcher _configWatcher;
         private DateTime _lastConfigChange;
 
+        private ManagementEventWatcher _processStartWatcher;
+        private ManagementEventWatcher _processStopWatcher;
+
         private Dictionary<string, object> _globals = new Dictionary<string, object>();
 
         public static MainEngine GetInstance()
@@ -32,11 +36,38 @@ namespace IOTLinkService.Engine
 
         private MainEngine()
         {
+            // Configuration Watcher
             _configWatcher = new FileSystemWatcher(PathHelper.ConfigPath(), "configuration.yaml");
             _configWatcher.NotifyFilter = NotifyFilters.LastWrite;
             _configWatcher.Changed += OnConfigChanged;
             _configWatcher.Created += OnConfigChanged;
             _configWatcher.EnableRaisingEvents = true;
+
+            // Process Start Watcher
+            _processStartWatcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
+            _processStartWatcher.EventArrived += OnProcessStarted;
+            _processStartWatcher.Start();
+
+            // Process Stop Watcher
+            _processStopWatcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStopTrace"));
+            _processStopWatcher.EventArrived += OnProcessStopped;
+            _processStopWatcher.Start();
+        }
+
+        private void OnProcessStarted(object sender, EventArrivedEventArgs e)
+        {
+            string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
+            int sessionId = (int)e.NewEvent.Properties["SessionID"].Value;
+
+            LoggerHelper.Debug("Process Started - SessionId: {0} ProcessName: {1}", processName);
+        }
+
+        private void OnProcessStopped(object sender, EventArrivedEventArgs e)
+        {
+            string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
+            int sessionId = (int)e.NewEvent.Properties["SessionID"].Value;
+
+            LoggerHelper.Debug("Process Stopped - SessionId: {0} ProcessName: {1}", processName);
         }
 
         public void StartApplication()
