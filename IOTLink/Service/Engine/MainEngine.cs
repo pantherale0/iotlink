@@ -8,9 +8,7 @@ using IOTLinkAPI.Platform.Windows;
 using IOTLinkService.Engine.MQTT;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.ServiceProcess;
-using System.Threading;
 
 namespace IOTLinkService.Engine
 {
@@ -116,15 +114,14 @@ namespace IOTLinkService.Engine
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
         }
 
-        private void OnConfigChanged(object sender, FileSystemEventArgs e)
+        private void OnConfigChanged(object sender, ConfigReloadEventArgs e)
         {
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
             {
                 LoggerHelper.Info("Changes to configuration.yaml detected. Reloading.");
-                Thread.Sleep(2500);
 
                 SetupMQTTHandlers();
-                AddonManager.GetInstance().Raise_OnConfigReloadHandler(this, EventArgs.Empty);
+                AddonManager.GetInstance().Raise_OnConfigReloadHandler(this, e);
 
                 _lastConfigChange = DateTime.Now;
             }

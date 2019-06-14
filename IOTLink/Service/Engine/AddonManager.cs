@@ -39,7 +39,7 @@ namespace IOTLinkService.Engine
         /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
         /// <param name="topic">MQTT Topic</param>
         /// <param name="msgHandler"><see cref="MQTTMessageEventHandler">Event Handler</see></param>
-        public void SubscribeTopic(AddonScript sender, string topic, MQTTMessageEventHandler msgHandler)
+        public void SubscribeTopic(ServiceAddon sender, string topic, MQTTMessageEventHandler msgHandler)
         {
             if (sender == null || string.IsNullOrWhiteSpace(topic) || HasSubscription(sender, topic))
                 return;
@@ -55,7 +55,7 @@ namespace IOTLinkService.Engine
         /// </summary>
         /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
         /// <param name="topic">MQTT Topic</param>
-        public bool HasSubscription(AddonScript sender, string topic)
+        public bool HasSubscription(ServiceAddon sender, string topic)
         {
             if (sender == null)
                 return false;
@@ -69,7 +69,7 @@ namespace IOTLinkService.Engine
         /// </summary>
         /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
         /// <param name="topic">MQTT Topic</param>
-        public void RemoveSubscription(AddonScript sender, string topic)
+        public void RemoveSubscription(ServiceAddon sender, string topic)
         {
             if (sender == null || !HasSubscription(sender, topic))
                 return;
@@ -86,7 +86,7 @@ namespace IOTLinkService.Engine
         /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
         /// <param name="topic">MQTT Topic</param>
         /// <param name="message">String containing the message</param>
-        public void PublishMessage(AddonScript sender, string topic, string message)
+        public void PublishMessage(ServiceAddon sender, string topic, string message)
         {
             if (sender == null || string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(message))
                 return;
@@ -101,7 +101,7 @@ namespace IOTLinkService.Engine
         /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
         /// <param name="topic">MQTT Topic</param>
         /// <param name="message">Message (byte[])</param>
-        public void PublishMessage(AddonScript sender, string topic, byte[] message)
+        public void PublishMessage(ServiceAddon sender, string topic, byte[] message)
         {
             if (sender == null || string.IsNullOrWhiteSpace(topic))
                 return;
@@ -187,12 +187,12 @@ namespace IOTLinkService.Engine
 		/// </summary>
 		private void LoadInternalAddons()
         {
-            AddonScript[] internalAddons = new AddonScript[] { };
+            ServiceAddon[] internalAddons = new ServiceAddon[] { };
             if (internalAddons.Length == 0)
                 return;
 
             LoggerHelper.Info("Loading {0} internal addons", internalAddons.Length);
-            foreach (AddonScript addon in internalAddons)
+            foreach (ServiceAddon addon in internalAddons)
             {
                 AddonInfo addonInfo = new AddonInfo();
                 addonInfo.AddonName = addon.GetType().Name;
@@ -200,13 +200,13 @@ namespace IOTLinkService.Engine
                 addonInfo.AddonFile = String.Empty;
                 addonInfo.Internal = true;
                 addonInfo.AddonId = addon.GetType().Name;
-                addonInfo.ScriptClass = addon;
+                addonInfo.ServiceAddon = addon;
 
-                if (addonInfo.ScriptClass != null)
+                if (addonInfo.ServiceAddon != null)
                 {
-                    addonInfo.ScriptClass.SetAddonInfo(addonInfo);
-                    addonInfo.ScriptClass.SetCurrentPath(addonInfo.AddonPath);
-                    addonInfo.ScriptClass.Init(this);
+                    addonInfo.ServiceAddon.SetAddonInfo(addonInfo);
+                    addonInfo.ServiceAddon.SetCurrentPath(addonInfo.AddonPath);
+                    addonInfo.ServiceAddon.Init(this);
                 }
 
                 AddAddon(addonInfo.AddonId, addonInfo);
@@ -242,11 +242,11 @@ namespace IOTLinkService.Engine
 
                     try
                     {
-                        if (addonInfo.ScriptClass != null)
+                        if (addonInfo.ServiceAddon != null)
                         {
-                            addonInfo.ScriptClass.SetAddonInfo(addonInfo);
-                            addonInfo.ScriptClass.SetCurrentPath(addonInfo.AddonPath);
-                            addonInfo.ScriptClass.Init(this);
+                            addonInfo.ServiceAddon.SetAddonInfo(addonInfo);
+                            addonInfo.ServiceAddon.SetCurrentPath(addonInfo.AddonPath);
+                            addonInfo.ServiceAddon.Init(this);
                         }
 
                         AddAddon(addonInfo.AddonId, addonInfo);
@@ -334,10 +334,10 @@ namespace IOTLinkService.Engine
         /// <summary>
         /// Build the topic name including the origin addon information.
         /// </summary>
-        /// <param name="addon">Origin <see cref="AddonScript"/> object</param>
+        /// <param name="addon">Origin <see cref="ServiceAddon"/> object</param>
         /// <param name="topic">String containing the desired topic</param>
         /// <returns></returns>
-        internal string BuildTopicName(AddonScript addon, string topic)
+        internal string BuildTopicName(ServiceAddon addon, string topic)
         {
             if (addon == null)
                 return string.Empty;
@@ -351,14 +351,14 @@ namespace IOTLinkService.Engine
         /// Broadcast system configuration change to all addons.
         /// </summary>
         /// <param name="sender">Sender object</param>
-        /// <param name="e"><see cref="EventArgs"/> (Always Empty)</param>
-        internal void Raise_OnConfigReloadHandler(object sender, EventArgs e)
+        /// <param name="e"><see cref="ConfigReloadEventArgs"/></param>
+        internal void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
         {
             List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
-                if (addonInfo.ScriptClass != null)
-                    addonInfo.ScriptClass.Raise_OnConfigReloadHandler(sender, e);
+                if (addonInfo.ServiceAddon != null)
+                    addonInfo.ServiceAddon.Raise_OnConfigReloadHandler(sender, e);
             }
         }
 
@@ -372,8 +372,8 @@ namespace IOTLinkService.Engine
             List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
-                if (addonInfo.ScriptClass != null)
-                    addonInfo.ScriptClass.Raise_OnSessionChange(sender, e);
+                if (addonInfo.ServiceAddon != null)
+                    addonInfo.ServiceAddon.Raise_OnSessionChange(sender, e);
             }
         }
 
@@ -387,8 +387,8 @@ namespace IOTLinkService.Engine
             List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
-                if (addonInfo.ScriptClass != null)
-                    addonInfo.ScriptClass.Raise_OnMQTTConnected(sender, e);
+                if (addonInfo.ServiceAddon != null)
+                    addonInfo.ServiceAddon.Raise_OnMQTTConnected(sender, e);
             }
         }
 
@@ -402,8 +402,8 @@ namespace IOTLinkService.Engine
             List<AddonInfo> addons = GetAppList();
             foreach (AddonInfo addonInfo in addons)
             {
-                if (addonInfo.ScriptClass != null)
-                    addonInfo.ScriptClass.Raise_OnMQTTDisconnected(sender, e);
+                if (addonInfo.ServiceAddon != null)
+                    addonInfo.ServiceAddon.Raise_OnMQTTDisconnected(sender, e);
             }
         }
 

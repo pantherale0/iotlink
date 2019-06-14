@@ -44,6 +44,6 @@ namespace IOTLinkAPI.Addons
         /// </summary>
         public AddonConfig Settings;
 
-        public AddonScript ScriptClass { get; set; }
+        public ServiceAddon ServiceAddon { get; set; }
     }
 }

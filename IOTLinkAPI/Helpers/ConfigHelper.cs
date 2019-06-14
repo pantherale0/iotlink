@@ -1,4 +1,6 @@
 ﻿using IOTLinkAPI.Configs;
+using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,11 +11,9 @@ namespace IOTLinkAPI.Helpers
 {
     public static class ConfigHelper
     {
-        private static ApplicationConfig _config;
-
         private static Dictionary<string, ConfigInfo> _configs = new Dictionary<string, ConfigInfo>();
 
-        public delegate void ConfigReloadedHandler(object sender, FileSystemEventArgs e);
+        public delegate void ConfigReloadedHandler(object sender, ConfigReloadEventArgs e);
 
         private class ConfigInfo
         {
@@ -21,9 +21,11 @@ namespace IOTLinkAPI.Helpers
 
             public FileSystemWatcher FileSystemWatcher { get; set; }
 
+            public ConfigType ConfigType { get; set; }
+
             public event ConfigReloadedHandler OnConfigReloadHandler;
 
-            public void Raise_OnConfigReloadHandler(object sender, FileSystemEventArgs e)
+            public void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
             {
                 OnConfigReloadHandler?.Invoke(sender, e);
             }
@@ -32,14 +34,13 @@ namespace IOTLinkAPI.Helpers
         public static ApplicationConfig GetEngineConfig()
         {
             string path = Path.Combine(PathHelper.ConfigPath(), "configuration.yaml");
-            _config = GetConfiguration<ApplicationConfig>(path);
-            return _config;
+            return GetConfiguration<ApplicationConfig>(path);
         }
 
         public static void SetEngineConfigReloadHandler(ConfigReloadedHandler configReloadedHandler)
         {
             string path = Path.Combine(PathHelper.ConfigPath(), "configuration.yaml");
-            SetReloadHandler<ApplicationConfig>(path, configReloadedHandler);
+            SetReloadHandler<ApplicationConfig>(path, configReloadedHandler, ConfigType.CONFIGURATION_ENGINE);
         }
 
         public static T GetConfiguration<T>(string path)
@@ -79,6 +80,11 @@ namespace IOTLinkAPI.Helpers
 
         public static void SetReloadHandler<T>(string path, ConfigReloadedHandler configReloadedHandler)
         {
+            SetReloadHandler<T>(path, configReloadedHandler, ConfigType.CONFIGURATION_ADDON);
+        }
+
+        private static void SetReloadHandler<T>(string path, ConfigReloadedHandler configReloadedHandler, ConfigType configType)
+        {
             if (string.IsNullOrWhiteSpace(path))
                 return;
 
@@ -89,6 +95,7 @@ namespace IOTLinkAPI.Helpers
                 _configs.Add(path, new ConfigInfo());
 
             configInfo = _configs[path];
+            configInfo.ConfigType = configType;
             configInfo.OnConfigReloadHandler += configReloadedHandler;
 
             if (configInfo.FileSystemWatcher == null)
@@ -157,7 +164,12 @@ namespace IOTLinkAPI.Helpers
                 LoggerHelper.Debug("Firing events for reloaded configuration file {0}", path);
                 ConfigInfo configInfo = _configs[path];
                 configInfo.Config = config;
-                configInfo.Raise_OnConfigReloadHandler(sender, e);
+
+                configInfo.Raise_OnConfigReloadHandler(sender, new ConfigReloadEventArgs
+                {
+                    FilePath = path,
+                    ConfigType = configInfo.ConfigType
+                });
             }
             finally
             {

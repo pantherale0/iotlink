@@ -26,7 +26,7 @@ namespace IOTLinkService.Loaders
                     AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                     AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += CurrentDomain_ReflectionOnlyAssemblyResolve;
 
-                    IEnumerable<Type> scriptTypeList = asb.GetExportedTypes().Where(w => w.IsSubclassOf(typeof(AddonScript)));
+                    IEnumerable<Type> scriptTypeList = asb.GetExportedTypes().Where(w => w.IsSubclassOf(typeof(ServiceAddon)));
 
                     AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= CurrentDomain_ReflectionOnlyAssemblyResolve;
                     AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
@@ -38,7 +38,7 @@ namespace IOTLinkService.Loaders
                     if (scriptType != null)
                     {
                         LoggerHelper.Debug("Found AddonScript!");
-                        addonInfo.ScriptClass = (AddonScript)Activator.CreateInstance(scriptType);
+                        addonInfo.ServiceAddon = (ServiceAddon)Activator.CreateInstance(scriptType);
                         return true;
                     }
 

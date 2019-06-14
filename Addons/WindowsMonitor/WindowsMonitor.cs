@@ -22,7 +22,7 @@ namespace IOTLinkAddon
         public int Interval { get; set; }
     }
 
-    public class WindowsMonitor : AddonScript
+    public class WindowsMonitor : ServiceAddon
     {
         private System.Timers.Timer _monitorTimer;
         private MonitorConfig _config;
@@ -70,10 +70,12 @@ namespace IOTLinkAddon
             LoggerHelper.Info("System monitor is set to an interval of {0} seconds.", _config.Interval);
         }
 
-        private void OnConfigReload(object sender, EventArgs e)
+        private void OnConfigReload(object sender, ConfigReloadEventArgs e)
         {
-            _config = ConfigHelper.GetConfiguration<MonitorConfig>(_configPath);
+            if (e.ConfigType != ConfigType.CONFIGURATION_ADDON)
+                return;
 
+            _config = ConfigHelper.GetConfiguration<MonitorConfig>(_configPath);
             SetupTimers();
         }
 

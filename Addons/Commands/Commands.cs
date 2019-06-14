@@ -8,7 +8,7 @@ using System;
 
 namespace IOTLinkAddon
 {
-    public class Commands : AddonScript
+    public class Commands : ServiceAddon
     {
         public override void Init(IAddonManager addonManager)
         {

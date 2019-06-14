@@ -112,6 +112,8 @@
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Configs\MqttConfig.cs" />
+    <Compile Include="Platform\ConfigType.cs" />
+    <Compile Include="Platform\Events\ConfigReloadEventArgs.cs" />
     <Compile Include="Platform\Events\MQTT\MQTTEventEventArgs.cs" />
     <Compile Include="Platform\Events\MQTT\MQTTHandlers.cs" />
     <Compile Include="Platform\Events\MQTT\MQTTMessage.cs" />

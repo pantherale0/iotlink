@@ -5,15 +5,15 @@ namespace IOTLink.Addons
 {
     public interface IAddonManager
     {
-        void SubscribeTopic(AddonScript sender, string topic, MQTTMessageEventHandler msgHandler);
+        void SubscribeTopic(ServiceAddon sender, string topic, MQTTMessageEventHandler msgHandler);
 
-        bool HasSubscription(AddonScript sender, string topic);
+        bool HasSubscription(ServiceAddon sender, string topic);
 
-        void RemoveSubscription(AddonScript sender, string topic);
+        void RemoveSubscription(ServiceAddon sender, string topic);
 
-        void PublishMessage(AddonScript sender, string topic, string message);
+        void PublishMessage(ServiceAddon sender, string topic, string message);
 
-        void PublishMessage(AddonScript sender, string topic, byte[] message);
+        void PublishMessage(ServiceAddon sender, string topic, byte[] message);
 
     }
 }
