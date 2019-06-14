@@ -4,7 +4,7 @@
     {
         public int SessionID { get; set; }
 
-        public string UserName { get; set; }
+        public string Username { get; set; }
 
         public string StationName { get; set; }
 
@@ -12,7 +12,7 @@
 
         public bool IsUser(string user)
         {
-            return UserName != null && user != null && string.Compare(UserName.Trim().ToLowerInvariant(), user.Trim().ToLowerInvariant()) == 0;
+            return Username != null && user != null && string.Compare(Username.Trim().ToLowerInvariant(), user.Trim().ToLowerInvariant()) == 0;
         }
     }
 }

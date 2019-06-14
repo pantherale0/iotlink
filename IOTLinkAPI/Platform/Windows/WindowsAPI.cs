@@ -105,8 +105,8 @@ namespace IOTLinkAPI.Platform.Windows
             {
                 WindowsSessionInfo sessionInfo = GetWindowsSessions(server)
                     .Find(
-                        p => p.UserName != null &&
-                        string.Compare(p.UserName.Trim().ToLowerInvariant(), username.Trim().ToLowerInvariant()) == 0
+                        p => p.Username != null &&
+                        string.Compare(p.Username.Trim().ToLowerInvariant(), username.Trim().ToLowerInvariant()) == 0
                     );
 
                 if (sessionInfo != null)
@@ -144,8 +144,8 @@ namespace IOTLinkAPI.Platform.Windows
             {
                 WindowsSessionInfo sessionInfo = GetWindowsSessions(server)
                     .Find(
-                        p => p.UserName != null &&
-                        string.Compare(p.UserName.Trim().ToLowerInvariant(), username.Trim().ToLowerInvariant()) == 0
+                        p => p.Username != null &&
+                        string.Compare(p.Username.Trim().ToLowerInvariant(), username.Trim().ToLowerInvariant()) == 0
                     );
 
                 if (sessionInfo != null)
@@ -189,8 +189,8 @@ namespace IOTLinkAPI.Platform.Windows
 
             try
             {
-                WindowsSessionInfo sessionInfo = GetUserActiveSession(server, runInfo.UserName);
-                if (sessionInfo == null && runInfo.FallbackToFirstActiveUser)
+                WindowsSessionInfo sessionInfo = GetUserActiveSession(server, runInfo.Username);
+                if (sessionInfo == null && runInfo.Fallback)
                 {
                     LoggerHelper.Debug("WindowsAPI::Run() - User session not found, trying to get first active session.");
                     sessionInfo = GetFirstActiveSession(server);
@@ -428,7 +428,7 @@ namespace IOTLinkAPI.Platform.Windows
                         sessionInfo.SessionID = si.SessionID;
                         sessionInfo.StationName = si.pWinStationName;
                         sessionInfo.IsActive = si.State == WtsApi32.WtsConnectStateClass.WTSActive;
-                        sessionInfo.UserName = GetUsername(sessionInfo.SessionID);
+                        sessionInfo.Username = GetUsername(sessionInfo.SessionID);
 
                         sessionInfos.Add(sessionInfo);
                     }
@@ -465,7 +465,7 @@ namespace IOTLinkAPI.Platform.Windows
                         sessionInfo.SessionID = si.SessionID;
                         sessionInfo.StationName = si.pWinStationName;
                         sessionInfo.IsActive = si.State == WtsApi32.WtsConnectStateClass.WTSActive;
-                        sessionInfo.UserName = GetUsername(sessionInfo.SessionID);
+                        sessionInfo.Username = GetUsername(sessionInfo.SessionID);
 
                         return sessionInfo;
                     }
@@ -509,7 +509,7 @@ namespace IOTLinkAPI.Platform.Windows
                         sessionInfo.SessionID = si.SessionID;
                         sessionInfo.StationName = si.pWinStationName;
                         sessionInfo.IsActive = si.State == WtsApi32.WtsConnectStateClass.WTSActive;
-                        sessionInfo.UserName = sessionUser;
+                        sessionInfo.Username = sessionUser;
 
                         return sessionInfo;
                     }

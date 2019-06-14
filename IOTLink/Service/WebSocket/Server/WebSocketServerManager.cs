@@ -1,12 +1,13 @@
 ﻿using IOTLink.Platform.WebSocket;
 using IOTLinkAPI.Helpers;
-using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.WebSocket;
 using IOTLinkService.Engine.MQTT;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Net;
+using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
@@ -18,6 +19,8 @@ namespace IOTLink.Service.WSServer
         private static WebSocketServerManager _instance;
 
         private WebSocketServer _server;
+
+        private Dictionary<string, string> _clients = new Dictionary<string, string>();
 
         public static WebSocketServerManager GetInstance()
         {
@@ -37,8 +40,7 @@ namespace IOTLink.Service.WSServer
             if (_server != null)
                 Disconnect();
 
-            _server = new WebSocketServer(WEBSOCKET_URI);
-            _server.KeepClean = true;
+            _server = new WebSocketServer(IPAddress.Loopback, 9799);
             _server.AddWebSocketService("/", () => this);
             _server.Start();
         }
@@ -59,17 +61,21 @@ namespace IOTLink.Service.WSServer
             return _server != null && _server.IsListening;
         }
 
-        protected override void OnMessage(MessageEventArgs e)
+        protected override async Task OnMessage(MessageEventArgs e)
         {
-            if (e.RawData == null || e.RawData.Length == 0 || string.IsNullOrWhiteSpace(e.Data))
+            if (e.Data == null || e.Data.Length == 0)
                 return;
 
-            if (e.IsPing || !e.IsText)
+            if (e.Opcode != Opcode.Text)
+                return;
+
+            string data = e.Text.ReadToEnd();
+            if (string.IsNullOrWhiteSpace(data))
                 return;
 
             try
             {
-                dynamic json = JsonConvert.DeserializeObject<dynamic>(e.Data);
+                dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
                 MessageType messageType = json.messageType;
                 switch (messageType)
                 {
@@ -105,20 +111,37 @@ namespace IOTLink.Service.WSServer
             switch (type)
             {
                 case RequestTypeClient.REQUEST_CONNECTED:
-                    SendRequest(RequestTypeServer.REQUEST_DISPLAY_INFO);
-                    SendRequest(RequestTypeServer.REQUEST_IDLE_TIME);
+                    ParseClientConnected(data);
                     break;
 
                 case RequestTypeClient.REQUEST_PUBLISH_MESSAGE:
-                    string topic = data.topic;
-                    byte[] payload = data.payload;
-                    MQTTClient.GetInstance().PublishMessage(topic, payload);
+                    ParsePublishMessage(data);
                     break;
 
                 default:
                     LoggerHelper.Warn("ParseClientRequest - Invalid Request Type: {0}", type);
                     break;
             }
+        }
+
+        internal void ParseClientConnected(dynamic data)
+        {
+            if (!string.IsNullOrWhiteSpace(data.username))
+            {
+                string username = ((string)data.username).Trim().ToLowerInvariant();
+                _clients[username] = Id;
+            }
+        }
+
+        internal void ParsePublishMessage(dynamic data)
+        {
+            string topic = data.topic;
+            byte[] payload = data.payload;
+
+            if (string.IsNullOrWhiteSpace(topic) || payload == null || payload.Length == 0)
+                return;
+
+            MQTTClient.GetInstance().PublishMessage(topic, payload);
         }
 
         internal void ParseClientResponse(dynamic content)
@@ -129,9 +152,8 @@ namespace IOTLink.Service.WSServer
             LoggerHelper.Debug("ParseClientRequest - Request Type: {0} | Data: {1}", type, data);
             switch (type)
             {
-                case ResponseTypeClient.RESPONSE_DISPLAY_INFO:
-                    List<DisplayInfo> displays = content;
-                    LoggerHelper.Debug("ParseClientResponse - Display Infos: {0}", displays);
+                case ResponseTypeClient.RESPONSE_ADDON:
+                    ParseAddonResponse(data);
                     break;
 
                 default:
@@ -140,15 +162,31 @@ namespace IOTLink.Service.WSServer
             }
         }
 
+        private void ParseAddonResponse(dynamic data)
+        {
+            string addonId = data.addonId;
+            dynamic addonData = data.addonData;
+
+            if (string.IsNullOrWhiteSpace(addonId))
+                return;
+
+            LoggerHelper.Trace("ParseAddonRequest - AddonId: {0} AddonData: {1}", addonId, addonData);
+        }
+
         internal void ParseAPIMessage(dynamic content)
         {
             LoggerHelper.Debug("ParseAPIMessage: {0}", content);
         }
 
-        internal void SendRequest(RequestTypeServer type, dynamic data = null)
+        internal void SendRequest(RequestTypeServer type, dynamic data = null, string username = null)
         {
             if (!IsConnected())
                 return;
+
+            if (string.IsNullOrWhiteSpace(username))
+                username = null;
+            else
+                username = username.Trim().ToLowerInvariant();
 
             dynamic msg = new ExpandoObject();
             msg.messageType = MessageType.SERVER_REQUEST;
@@ -156,7 +194,14 @@ namespace IOTLink.Service.WSServer
             msg.content.type = type;
             msg.content.data = data;
 
-            Sessions.Broadcast(JsonConvert.SerializeObject(msg));
+            string payload = JsonConvert.SerializeObject(msg);
+
+            if (username == null)
+                Sessions.Broadcast(payload);
+            else if (_clients.ContainsKey(username))
+                Sessions.SendTo(_clients[username], payload);
+            else
+                LoggerHelper.Error("WebSocketServer - Agent from {0} not found.", username);
         }
     }
 }

@@ -8,10 +8,10 @@
 
         public string WorkingDir { get; set; }
 
-        public string UserName { get; set; }
+        public string Username { get; set; }
 
         public bool Visible { get; set; } = true;
 
-        public bool FallbackToFirstActiveUser { get; set; } = false;
+        public bool Fallback { get; set; } = false;
     }
 }

@@ -161,7 +161,7 @@ namespace IOTLinkAPI.Helpers
 
             LoggerHelper.Debug(
                 "Run - Command: {0} Args: {1} WorkingDir: {2} User: {3} Visible: {4} FallBack: {5}",
-                runInfo.Application, runInfo.CommandLine, runInfo.WorkingDir, runInfo.UserName, runInfo.Visible, runInfo.FallbackToFirstActiveUser
+                runInfo.Application, runInfo.CommandLine, runInfo.WorkingDir, runInfo.Username, runInfo.Visible, runInfo.Fallback
             );
 
             WindowsAPI.Run(runInfo);

@@ -77,9 +77,9 @@ namespace IOTLinkAddon
                     Application = json.command,
                     CommandLine = json.args,
                     WorkingDir = json.path,
-                    UserName = json.user,
+                    Username = json.user,
                     Visible = json.visible,
-                    FallbackToFirstActiveUser = json.fallback
+                    Fallback = json.fallback
                 };
 
                 PlatformHelper.Run(runInfo);

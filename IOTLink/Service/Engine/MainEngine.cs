@@ -1,16 +1,14 @@
-﻿using IOTLink.Service.WSServer;
+﻿using IOTLink.Service.Engine;
+using IOTLink.Service.WSServer;
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
-using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.Windows;
 using IOTLinkService.Engine.MQTT;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Management;
 using System.ServiceProcess;
 using System.Threading;
 
@@ -47,7 +45,7 @@ namespace IOTLinkService.Engine
 
             // Agent Monitor
             _processMonitorTimer = new System.Timers.Timer();
-            _processMonitorTimer.Interval = 10 * 1000;
+            _processMonitorTimer.Interval = 5 * 1000;
             _processMonitorTimer.Elapsed += OnProcessMonitorTimerElapsed;
             _processMonitorTimer.Start();
         }
@@ -66,7 +64,7 @@ namespace IOTLinkService.Engine
 
         public void StopApplication()
         {
-            StopAgents();
+            AgentManager.GetInstance().StopAgents();
             LoggerHelper.GetInstance().Flush();
         }
 
@@ -171,80 +169,22 @@ namespace IOTLinkService.Engine
             };
 
             if (reason == SessionChangeReason.SessionLogon || reason == SessionChangeReason.SessionUnlock || reason == SessionChangeReason.RemoteConnect)
-                StartAgent(username, sessionId);
+            {
+                AgentManager agentManager = AgentManager.GetInstance();
+                agentManager.StartAgent(sessionId, username);
+            }
 
             AddonManager addonsManager = AddonManager.GetInstance();
             addonsManager.Raise_OnSessionChange(this, args);
         }
 
-        private void StartAgent(string username, int sessionId)
-        {
-            string wmiQuery = string.Format("SELECT SessionId, ProcessID, CommandLine FROM Win32_Process WHERE Name='{0}.exe'", PathHelper.APP_AGENT_NAME);
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
-            ManagementObjectCollection objCollection = searcher.Get();
-
-            LoggerHelper.Trace("StartAgent - Found {0} agent instances...", objCollection.Count);
-            foreach (ManagementObject processInfo in objCollection)
-            {
-                int agentSessionId = Convert.ToInt32(processInfo.Properties["SessionId"].Value);
-                string agentCommandLine = (string)processInfo.Properties["CommandLine"].Value;
-
-                if (agentSessionId == sessionId && agentCommandLine.Contains("--agent"))
-                {
-                    LoggerHelper.Trace("StartAgent - Agent instance is already running for this user. Skipping.");
-                    return;
-                }
-            }
-
-            RunInfo runInfo = new RunInfo
-            {
-                Application = Path.Combine(PathHelper.BaseAppPath(), PathHelper.APP_AGENT_NAME + ".exe"),
-                CommandLine = "--agent " + WebSocketServerManager.WEBSOCKET_URI,
-                WorkingDir = PathHelper.BaseAppPath(),
-                UserName = username,
-                Visible = false,
-                FallbackToFirstActiveUser = false
-            };
-
-            PlatformHelper.Run(runInfo);
-        }
-
         private void StartAgents()
         {
+            AgentManager agentManager = AgentManager.GetInstance();
             List<WindowsSessionInfo> winSessions = WindowsAPI.GetWindowsSessions().FindAll(s => s.IsActive);
             foreach (WindowsSessionInfo sessionInfo in winSessions)
             {
-                StartAgent(sessionInfo.UserName, sessionInfo.SessionID);
-            }
-        }
-
-        private void StopAgents()
-        {
-            string wmiQuery = string.Format("SELECT SessionId, ProcessID, CommandLine FROM Win32_Process WHERE Name='{0}.exe'", PathHelper.APP_AGENT_NAME);
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
-            ManagementObjectCollection objCollection = searcher.Get();
-
-            LoggerHelper.Trace("StopAgents - Found {0} agent instances...", objCollection.Count);
-            foreach (ManagementObject processInfo in objCollection)
-            {
-                int agentSessionId = Convert.ToInt32(processInfo.Properties["SessionId"].Value);
-                int agentProcessId = Convert.ToInt32(processInfo.Properties["ProcessID"].Value);
-                string agentCommandLine = (string)processInfo.Properties["CommandLine"].Value;
-
-                if (agentCommandLine.Contains("--agent"))
-                {
-                    LoggerHelper.Trace("StopAgents - Killing Session {0} Agent (PID: {1})", agentSessionId, agentProcessId);
-                    try
-                    {
-                        Process process = Process.GetProcessById(agentProcessId);
-                        if (process != null)
-                            process.Kill();
-                    }
-                    catch (Exception ex)
-                    {
-                        LoggerHelper.Error("StopAgents - Failed to Kill PID {0}: {1}", agentProcessId, ex.ToString());
-                    }
-                }
+                agentManager.StartAgent(sessionInfo.SessionID, sessionInfo.Username);
             }
         }
     }

@@ -4,7 +4,9 @@ using IOTLinkAPI.Platform.WebSocket;
 using IOTLinkAPI.Platform.Windows;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
+using System.Threading.Tasks;
 using WebSocketSharp;
 
 namespace IOTLinkAgent.Agent.WSClient
@@ -33,11 +35,8 @@ namespace IOTLinkAgent.Agent.WSClient
             if (_client != null)
                 Disconnect();
 
-            _client = new WebSocket(uri);
-            _client.OnMessage += OnMessageReceived;
-            _client.Connect();
-
-            SendRequest(RequestTypeClient.REQUEST_CONNECTED);
+            _client = new WebSocket(uri, onOpen: OnOpen, onClose: OnClose, onError: OnError, onMessage: OnMessageReceived);
+            _client.Connect().ConfigureAwait(false);
         }
 
         internal void Disconnect()
@@ -45,7 +44,7 @@ namespace IOTLinkAgent.Agent.WSClient
             if (_client == null)
                 return;
 
-            if (_client.IsAlive)
+            if (_client.IsAlive().Result)
                 _client.Close();
 
             _client = null;
@@ -53,7 +52,8 @@ namespace IOTLinkAgent.Agent.WSClient
 
         internal bool IsConnected()
         {
-            return _client != null && _client.IsAlive;
+            bool isAlive = _client.IsAlive().Result;
+            return _client != null && isAlive;
         }
 
         internal void SendRequest(RequestTypeClient type, dynamic data = null)
@@ -66,17 +66,39 @@ namespace IOTLinkAgent.Agent.WSClient
             SendMessage(MessageType.CLIENT_RESPONSE, type, data);
         }
 
-        private void OnMessageReceived(object sender, MessageEventArgs e)
+        private async Task OnOpen()
         {
-            if (e.RawData == null || e.RawData.Length == 0 || string.IsNullOrWhiteSpace(e.Data))
+            Dictionary<string, object> keyValuePairs = new Dictionary<string, object>();
+            keyValuePairs.Add("username", Environment.UserName);
+
+            SendRequest(RequestTypeClient.REQUEST_CONNECTED, keyValuePairs);
+        }
+
+        private async Task OnClose(CloseEventArgs arg)
+        {
+            LoggerHelper.Debug("WebSocketClient - Connection Closed (Clean: {0}).", arg.WasClean);
+        }
+
+        private async Task OnError(ErrorEventArgs arg)
+        {
+            LoggerHelper.Error("WebSocketClient - Error: {0}", arg.Message);
+        }
+
+        private async Task OnMessageReceived(MessageEventArgs e)
+        {
+            if (e.Data == null || e.Data.Length == 0)
                 return;
 
-            if (e.IsPing || !e.IsText)
+            if (e.Opcode != Opcode.Text)
+                return;
+
+            string data = e.Text.ReadToEnd();
+            if (string.IsNullOrWhiteSpace(data))
                 return;
 
             try
             {
-                dynamic json = JsonConvert.DeserializeObject<dynamic>(e.Data);
+                dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
                 MessageType messageType = json.messageType;
                 switch (messageType)
                 {
@@ -99,6 +121,11 @@ namespace IOTLinkAgent.Agent.WSClient
             }
         }
 
+        private void ParseServerResponse(dynamic content)
+        {
+            LoggerHelper.Trace("ParseShowNotification - Content: {0]", content);
+        }
+
         private void ParseServerRequest(dynamic content)
         {
             RequestTypeServer type = content.type;
@@ -108,17 +135,15 @@ namespace IOTLinkAgent.Agent.WSClient
             switch (type)
             {
                 case RequestTypeServer.REQUEST_SHOW_MESSAGE:
-                    string title = data.title;
-                    string message = data.message;
-                    WindowsAPI.ShowMessage(title, message);
+                    ParseShowMessage(data);
                     break;
 
-                case RequestTypeServer.REQUEST_DISPLAY_INFO:
-                    SendResponse(ResponseTypeClient.RESPONSE_DISPLAY_INFO, WindowsAPI.GetDisplays());
+                case RequestTypeServer.REQUEST_SHOW_NOTIFICATION:
+                    ParseShowNotification(data);
                     break;
 
-                case RequestTypeServer.REQUEST_DISPLAY_SCREENSHOT:
-                    SendResponse(ResponseTypeClient.RESPONSE_DISPLAY_INFO, WindowsAPI.GetDisplays());
+                case RequestTypeServer.REQUEST_ADDON:
+                    ParseAddonRequest(data);
                     break;
 
                 default:
@@ -127,9 +152,29 @@ namespace IOTLinkAgent.Agent.WSClient
             }
         }
 
-        private void ParseServerResponse(dynamic content)
+        private void ParseShowMessage(dynamic data)
         {
-            throw new NotImplementedException();
+            string title = data.title;
+            string message = data.message;
+
+            LoggerHelper.Trace("ParseShowMessage - Title: {0} Message: {1}", title, message);
+            WindowsAPI.ShowMessage(title, message);
+        }
+
+        private void ParseShowNotification(dynamic data)
+        {
+            LoggerHelper.Trace("ParseShowNotification - Data: {0]", data);
+        }
+
+        private void ParseAddonRequest(dynamic data)
+        {
+            string addonId = data.addonId;
+            dynamic addonData = data.addonData;
+
+            if (string.IsNullOrWhiteSpace(addonId))
+                return;
+
+            LoggerHelper.Trace("ParseAddonRequest - AddonId: {0} AddonData: {1}", addonId, addonData);
         }
 
         private void SendMessage(MessageType messageType, dynamic contentType, dynamic data = null)
