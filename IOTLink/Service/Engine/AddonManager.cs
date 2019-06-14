@@ -240,14 +240,21 @@ namespace IOTLinkService.Engine
                     if (!AssemblyLoader.LoadAssemblyDLL(ref addonInfo))
                         continue;
 
-                    if (addonInfo.ScriptClass != null)
+                    try
                     {
-                        addonInfo.ScriptClass.SetAddonInfo(addonInfo);
-                        addonInfo.ScriptClass.SetCurrentPath(addonInfo.AddonPath);
-                        addonInfo.ScriptClass.Init(this);
-                    }
+                        if (addonInfo.ScriptClass != null)
+                        {
+                            addonInfo.ScriptClass.SetAddonInfo(addonInfo);
+                            addonInfo.ScriptClass.SetCurrentPath(addonInfo.AddonPath);
+                            addonInfo.ScriptClass.Init(this);
+                        }
 
-                    AddAddon(addonInfo.AddonId, addonInfo);
+                        AddAddon(addonInfo.AddonId, addonInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Error("Error while loading addon {0}: {1}", addonInfo.AddonId, ex.ToString());
+                    }
                 }
             }
         }

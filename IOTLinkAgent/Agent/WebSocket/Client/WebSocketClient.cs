@@ -68,6 +68,8 @@ namespace IOTLinkAgent.Agent.WSClient
 
         private async Task OnOpen()
         {
+            LoggerHelper.Debug("WebSocketClient - Connection Opened.");
+
             Dictionary<string, object> keyValuePairs = new Dictionary<string, object>();
             keyValuePairs.Add("username", Environment.UserName);
 

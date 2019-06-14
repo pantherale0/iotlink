@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace IOTLinkAgent
 {
@@ -35,6 +36,7 @@ namespace IOTLinkAgent
 
             myTask.Start();
 
+            Application.Run();
             new ManualResetEvent(false).WaitOne();
             return 0;
         }

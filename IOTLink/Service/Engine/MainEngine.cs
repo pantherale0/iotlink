@@ -19,7 +19,6 @@ namespace IOTLinkService.Engine
         private static MainEngine _instance;
         private bool _addonsLoaded;
 
-        private FileSystemWatcher _configWatcher;
         private DateTime _lastConfigChange;
 
         private System.Timers.Timer _processMonitorTimer;
@@ -36,18 +35,14 @@ namespace IOTLinkService.Engine
 
         private MainEngine()
         {
-            // Configuration Watcher
-            _configWatcher = new FileSystemWatcher(PathHelper.ConfigPath(), "configuration.yaml");
-            _configWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            _configWatcher.Changed += OnConfigChanged;
-            _configWatcher.Created += OnConfigChanged;
-            _configWatcher.EnableRaisingEvents = true;
-
             // Agent Monitor
             _processMonitorTimer = new System.Timers.Timer();
             _processMonitorTimer.Interval = 5 * 1000;
             _processMonitorTimer.Elapsed += OnProcessMonitorTimerElapsed;
             _processMonitorTimer.Start();
+
+            // Configuration Handling
+            ConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
         }
 
         private void OnProcessMonitorTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -92,7 +87,7 @@ namespace IOTLinkService.Engine
 
         private void SetupMQTTHandlers()
         {
-            ApplicationConfig config = ConfigHelper.GetEngineConfig(true);
+            ApplicationConfig config = ConfigHelper.GetEngineConfig();
             if (config == null)
             {
                 LoggerHelper.Error("Configuration not loaded. Check your configuration file for mistakes and re-save it.");

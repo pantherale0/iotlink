@@ -28,12 +28,18 @@ namespace IOTLinkAddon
         private MonitorConfig _config;
         private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
+        private string _configPath;
 
         public override void Init(IAddonManager addonManager)
         {
             base.Init(addonManager);
 
-            _config = ConfigHelper.GetConfig<MonitorConfig>(Path.Combine(this._currentPath, "config.yaml"));
+
+            _configPath = Path.Combine(this._currentPath, "config.yaml");
+            ConfigHelper.SetReloadHandler<MonitorConfig>(_configPath, OnConfigReload);
+
+            _config = ConfigHelper.GetConfiguration<MonitorConfig>(_configPath);
+
             _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             _cpuPerformanceCounter.NextValue();
 
@@ -66,6 +72,8 @@ namespace IOTLinkAddon
 
         private void OnConfigReload(object sender, EventArgs e)
         {
+            _config = ConfigHelper.GetConfiguration<MonitorConfig>(_configPath);
+
             SetupTimers();
         }
 
