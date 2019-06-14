@@ -54,7 +54,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WindowsMonitor.cs" />
+    <Compile Include="Agent\WindowsMonitorAgent.cs" />
+    <Compile Include="Common\AddonRequestType.cs" />
+    <Compile Include="Common\MonitorConfig.cs" />
+    <Compile Include="Service\WindowsMonitorService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include=".vs\Addon_WindowsMonitor\v15\" />

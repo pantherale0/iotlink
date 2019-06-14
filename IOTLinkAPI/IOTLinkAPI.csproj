@@ -107,12 +107,17 @@
   <ItemGroup>
     <Compile Include="Addons\AddonBase.cs" />
     <Compile Include="Addons\AddonInfo.cs" />
-    <Compile Include="Addons\AddonScript.cs" />
+    <Compile Include="Addons\AgentAddon.cs" />
+    <Compile Include="Addons\IAddonAgentManager.cs" />
+    <Compile Include="Addons\IAddonServiceManager.cs" />
+    <Compile Include="Addons\ServiceAddon.cs" />
     <Compile Include="Addons\IAddonManager.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Configs\MqttConfig.cs" />
     <Compile Include="Platform\ConfigType.cs" />
+    <Compile Include="Platform\Events\AgentAddonRequestEventArgs.cs" />
+    <Compile Include="Platform\Events\AgentAddonResponseEventArgs.cs" />
     <Compile Include="Platform\Events\ConfigReloadEventArgs.cs" />
     <Compile Include="Platform\Events\MQTT\MQTTEventEventArgs.cs" />
     <Compile Include="Platform\Events\MQTT\MQTTHandlers.cs" />

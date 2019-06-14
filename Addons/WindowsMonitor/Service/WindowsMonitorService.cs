@@ -1,4 +1,4 @@
-﻿using IOTLink.Addons;
+﻿using IOTLinkAddon.Common;
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
@@ -6,23 +6,14 @@ using IOTLinkAPI.Platform.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.Timers;
 using System.Windows.Forms;
-using YamlDotNet.Serialization;
 
-namespace IOTLinkAddon
+namespace IOTLinkAddon.Service
 {
-    public class MonitorConfig
-    {
-        [YamlMember(Alias = "enabled")]
-        public bool Enabled { get; set; }
-
-        [YamlMember(Alias = "interval")]
-        public int Interval { get; set; }
-    }
-
-    public class WindowsMonitor : ServiceAddon
+    public class WindowsMonitorService : ServiceAddon
     {
         private System.Timers.Timer _monitorTimer;
         private MonitorConfig _config;
@@ -45,6 +36,7 @@ namespace IOTLinkAddon
 
             OnSessionChangeHandler += OnSessionChange;
             OnConfigReloadHandler += OnConfigReload;
+            OnAgentResponseHandler += OnAgentResponse;
 
             SetupTimers();
         }
@@ -83,7 +75,7 @@ namespace IOTLinkAddon
         {
             LoggerHelper.Debug("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
-            _manager.PublishMessage(this, e.Reason.ToString(), e.Username);
+            GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
@@ -96,8 +88,8 @@ namespace IOTLinkAddon
             SendMemoryInfo();
             SendPowerInfo();
             SendHardDriveInfo();
-            SendIdleTimeInfo();
-            SendDisplaysInfo();
+            RequestAgentIdleTime();
+            RequestAgentDisplayInfo();
 
             LoggerHelper.Trace("OnMonitorTimerElapsed: Completed");
             _monitorTimer.Start(); // After everything, start the timer again.
@@ -162,21 +154,37 @@ namespace IOTLinkAddon
             SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel);
         }
 
-        private void SendIdleTimeInfo()
+        private void RequestAgentIdleTime()
         {
-            uint idleTime = PlatformHelper.GetIdleTime();
-            SendMonitorValue("Stats/IdleTime", idleTime.ToString());
+            dynamic addonData = new ExpandoObject();
+            addonData.requestType = AddonRequestType.REQUEST_IDLE_TIME;
+
+            GetManager().SendAgentRequest(this, addonData);
         }
 
-        private void SendDisplaysInfo()
+        private void RequestAgentDisplayInfo()
         {
-            List<DisplayInfo> displays = PlatformHelper.GetDisplays();
-            for (int i = 0; i < displays.Count; i++)
-            {
-                string topic = string.Format("Stats/Display/{0}", i);
+            dynamic addonData = new ExpandoObject();
+            addonData.requestType = AddonRequestType.REQUEST_DISPLAY_INFORMATION;
 
-                SendMonitorValue(topic + "/ScreenHeight", displays[i].ScreenHeight.ToString());
-                SendMonitorValue(topic + "/ScreenWidth", displays[i].ScreenWidth.ToString());
+            GetManager().SendAgentRequest(this, addonData);
+        }
+
+        private void OnAgentResponse(object sender, AgentAddonResponseEventArgs e)
+        {
+            AddonRequestType requestType = e.Data.requestType;
+            switch (requestType)
+            {
+                case AddonRequestType.REQUEST_IDLE_TIME:
+                    break;
+
+                case AddonRequestType.REQUEST_DISPLAY_INFORMATION:
+                    break;
+
+                case AddonRequestType.REQUEST_DISPLAY_SCREENSHOT:
+                    break;
+
+                default: break;
             }
         }
 
@@ -186,7 +194,7 @@ namespace IOTLinkAddon
                 return;
 
             _cache[topic] = value;
-            _manager.PublishMessage(this, topic, value);
+            GetManager().PublishMessage(this, topic, value);
         }
     }
 }

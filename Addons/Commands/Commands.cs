@@ -1,5 +1,4 @@
-﻿using IOTLink.Addons;
-using IOTLinkAPI.Addons;
+﻿using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events.MQTT;
@@ -14,15 +13,15 @@ namespace IOTLinkAddon
         {
             base.Init(addonManager);
 
-            _manager.SubscribeTopic(this, "shutdown", OnShutdownMessage);
-            _manager.SubscribeTopic(this, "reboot", OnRebootMessage);
-            _manager.SubscribeTopic(this, "logoff", OnLogoffMessage);
-            _manager.SubscribeTopic(this, "lock", OnLockMessage);
-            _manager.SubscribeTopic(this, "hibernate", OnHibernateMessage);
-            _manager.SubscribeTopic(this, "suspend", OnSuspendMessage);
-            _manager.SubscribeTopic(this, "run", OnRunMessage);
-            _manager.SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
-            _manager.SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
+            GetManager().SubscribeTopic(this, "shutdown", OnShutdownMessage);
+            GetManager().SubscribeTopic(this, "reboot", OnRebootMessage);
+            GetManager().SubscribeTopic(this, "logoff", OnLogoffMessage);
+            GetManager().SubscribeTopic(this, "lock", OnLockMessage);
+            GetManager().SubscribeTopic(this, "hibernate", OnHibernateMessage);
+            GetManager().SubscribeTopic(this, "suspend", OnSuspendMessage);
+            GetManager().SubscribeTopic(this, "run", OnRunMessage);
+            GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
+            GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
         }
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)

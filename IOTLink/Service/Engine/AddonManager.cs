@@ -1,4 +1,4 @@
-﻿using IOTLink.Addons;
+﻿using IOTLink.Service.WSServer;
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
@@ -8,13 +8,14 @@ using IOTLinkService.Engine.MQTT;
 using IOTLinkService.Loaders;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
 namespace IOTLinkService.Engine
 {
-    public class AddonManager : IAddonManager
+    public class AddonManager : IAddonServiceManager
     {
         private static AddonManager _instance;
         private Dictionary<string, AddonInfo> _addons = new Dictionary<string, AddonInfo>();
@@ -111,11 +112,34 @@ namespace IOTLinkService.Engine
         }
 
         /// <summary>
-		/// Check if any addon exists with the given ID.
-		/// </summary>
-		/// <param name="id">String containing the addon ID.</param>
-		/// <returns>True if the addon exists, false otherwise.</returns>
-		public bool AddonExists(string id)
+        /// Send a request to the agent(s) connected.
+        /// If username is null, then the message will be broadcasted to all available agents.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="addonData"></param>
+        /// <param name="username"></param>
+        public void SendAgentRequest(ServiceAddon sender, dynamic addonData, string username = null)
+        {
+            if (sender == null || addonData == null)
+                return;
+
+            WebSocketServerManager webSocketServerManager = WebSocketServerManager.GetInstance();
+            if (webSocketServerManager == null || !webSocketServerManager.IsConnected())
+                return;
+
+            dynamic data = new ExpandoObject();
+            data.addonId = sender.GetAppInfo().AddonId;
+            data.addonData = addonData;
+
+            webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_ADDON, data, username);
+        }
+
+        /// <summary>
+        /// Check if any addon exists with the given ID.
+        /// </summary>
+        /// <param name="id">String containing the addon ID.</param>
+        /// <returns>True if the addon exists, false otherwise.</returns>
+        public bool AddonExists(string id)
         {
             if (id == null)
                 return false;
@@ -133,7 +157,7 @@ namespace IOTLinkService.Engine
         /// </summary>
         /// <param name="id">String containing the addon ID</param>
         /// <returns><see cref="AddonInfo"/> if found. Blank structure otherwise.</returns>
-        public AddonInfo GetAppById(string id)
+        public AddonInfo GetAddonById(string id)
         {
             if (id == null)
                 return null;
@@ -150,7 +174,7 @@ namespace IOTLinkService.Engine
         /// Get a list of all loaded addons.
         /// </summary>
         /// <returns>A list containing all loaded <see cref="AddonInfo">addons</see>.</returns>
-        public List<AddonInfo> GetAppList()
+        public List<AddonInfo> GetAddonsList()
         {
             return _addons.Values.ToList();
         }
@@ -354,7 +378,7 @@ namespace IOTLinkService.Engine
         /// <param name="e"><see cref="ConfigReloadEventArgs"/></param>
         internal void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
         {
-            List<AddonInfo> addons = GetAppList();
+            List<AddonInfo> addons = GetAddonsList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ServiceAddon != null)
@@ -369,7 +393,7 @@ namespace IOTLinkService.Engine
         /// <param name="e"><see cref="SessionChangeEventArgs"/> object</param>
         internal void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            List<AddonInfo> addons = GetAppList();
+            List<AddonInfo> addons = GetAddonsList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ServiceAddon != null)
@@ -384,7 +408,7 @@ namespace IOTLinkService.Engine
         /// <param name="e"><see cref="MQTTEventEventArgs"/> object</param>
         internal void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
-            List<AddonInfo> addons = GetAppList();
+            List<AddonInfo> addons = GetAddonsList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ServiceAddon != null)
@@ -399,7 +423,7 @@ namespace IOTLinkService.Engine
         /// <param name="e"><see cref="MQTTEventEventArgs"/> object</param>
         internal void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
-            List<AddonInfo> addons = GetAppList();
+            List<AddonInfo> addons = GetAddonsList();
             foreach (AddonInfo addonInfo in addons)
             {
                 if (addonInfo.ServiceAddon != null)
@@ -417,6 +441,25 @@ namespace IOTLinkService.Engine
         {
             if (_topics.ContainsKey(e.Message.Topic))
                 _topics[e.Message.Topic](sender, e);
+        }
+
+        /// <summary>
+        /// Dispatch Agent Response
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="addonId"></param>
+        /// <param name="addonData"></param>
+        internal void Raise_OnAgentResponse(string username, string addonId, dynamic addonData)
+        {
+            AddonInfo addonInfo = GetAddonById(addonId);
+            if (addonInfo == null)
+                return;
+
+            addonInfo.ServiceAddon.Raise_OnAgentResponse(this, new AgentAddonResponseEventArgs
+            {
+                Username = username,
+                Data = addonData
+            });
         }
     }
 }

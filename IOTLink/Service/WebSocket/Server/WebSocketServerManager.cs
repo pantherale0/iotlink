@@ -1,11 +1,13 @@
 ﻿using IOTLink.Platform.WebSocket;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.WebSocket;
+using IOTLinkService.Engine;
 using IOTLinkService.Engine.MQTT;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using WebSocketSharp;
@@ -170,7 +172,13 @@ namespace IOTLink.Service.WSServer
             if (string.IsNullOrWhiteSpace(addonId))
                 return;
 
-            LoggerHelper.Trace("ParseAddonRequest - AddonId: {0} AddonData: {1}", addonId, addonData);
+            if (!_clients.ContainsValue(Id))
+                return;
+
+            string username = _clients.First(x => x.Value == Id).Key;
+
+            LoggerHelper.Trace("ParseAddonRequest - AgentId: {0} Username: {1} AddonId: {2} AddonData: {3}", Id, username, addonId, addonData);
+            AddonManager.GetInstance().Raise_OnAgentResponse(username, addonId, addonData);
         }
 
         internal void ParseAPIMessage(dynamic content)
@@ -195,6 +203,7 @@ namespace IOTLink.Service.WSServer
             msg.content.data = data;
 
             string payload = JsonConvert.SerializeObject(msg);
+            LoggerHelper.Trace("Sending agent message: {0}", payload);
 
             if (username == null)
                 Sessions.Broadcast(payload);

@@ -1,6 +1,5 @@
 ﻿using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
-using System;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
 namespace IOTLinkAPI.Addons
@@ -18,9 +17,16 @@ namespace IOTLinkAPI.Addons
         public event MQTTMessageEventHandler OnMQTTMessageReceivedHandler;
         public event SessionChangeHandler OnSessionChangeHandler;
         public event ConfigReloadedHandler OnConfigReloadHandler;
+        public event AgentResponseHandler OnAgentResponseHandler;
 
         public delegate void SessionChangeHandler(object sender, SessionChangeEventArgs e);
         public delegate void ConfigReloadedHandler(object sender, ConfigReloadEventArgs e);
+        public delegate void AgentResponseHandler(object sender, AgentAddonResponseEventArgs e);
+
+        public IAddonServiceManager GetManager()
+        {
+            return (IAddonServiceManager)_manager;
+        }
 
         public void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
@@ -45,6 +51,11 @@ namespace IOTLinkAPI.Addons
         public void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
         {
             OnConfigReloadHandler?.Invoke(sender, e);
+        }
+
+        public void Raise_OnAgentResponse(object sender, AgentAddonResponseEventArgs e)
+        {
+            OnAgentResponseHandler?.Invoke(sender, e);
         }
     }
 }

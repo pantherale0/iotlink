@@ -1,6 +1,4 @@
-﻿using IOTLink.Addons;
-
-namespace IOTLinkAPI.Addons
+﻿namespace IOTLinkAPI.Addons
 {
     /// <summary>
 	/// Base application class used by both application interface and scripts.
