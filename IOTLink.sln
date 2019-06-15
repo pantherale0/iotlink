@@ -3,13 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.645
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTLink", "IOTLink\IOTLink.csproj", "{1A554933-0C12-4CE5-900C-0D8E21544DD0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTLinkService", "IOTLink\IOTLinkService.csproj", "{1A554933-0C12-4CE5-900C-0D8E21544DD0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0} = {DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Addon_Commands", "Addons\Commands\Addon_Commands.csproj", "{6A293A6C-F546-4687-A5B3-5A008F3898D9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Addon_WindowsMonitor", "Addons\WindowsMonitor\Addon_WindowsMonitor.csproj", "{B3B05E33-8F6E-440D-A6F5-260079B1EB42}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTLinkAPI", "IOTLinkAPI\IOTLinkAPI.csproj", "{CCB5FF85-B16D-4A6A-AA53-993F6B86FEA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTLinkAgent", "IOTLinkAgent\IOTLinkAgent.csproj", "{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +38,10 @@ Global
 		{CCB5FF85-B16D-4A6A-AA53-993F6B86FEA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CCB5FF85-B16D-4A6A-AA53-993F6B86FEA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CCB5FF85-B16D-4A6A-AA53-993F6B86FEA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

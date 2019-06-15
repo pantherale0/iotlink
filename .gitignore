@@ -349,7 +349,5 @@ healthchecksdb
 MigrationBackup/
 *.InstallLog
 
-config.yaml
 *.bat
-
 *.exe

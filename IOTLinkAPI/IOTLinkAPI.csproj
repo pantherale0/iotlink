@@ -7,7 +7,7 @@
     <ProjectGuid>{CCB5FF85-B16D-4A6A-AA53-993F6B86FEA1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IOTLink</RootNamespace>
+    <RootNamespace>IOTLinkAPI</RootNamespace>
     <AssemblyName>IOTLinkAPI</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -19,7 +19,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Builds\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -27,7 +27,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\Builds\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -105,20 +105,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="API\AddonBase.cs" />
-    <Compile Include="API\AddonInfo.cs" />
-    <Compile Include="API\AddonScript.cs" />
+    <Compile Include="Addons\AddonBase.cs" />
+    <Compile Include="Addons\AddonInfo.cs" />
+    <Compile Include="Addons\AgentAddon.cs" />
+    <Compile Include="Addons\IAddonAgentManager.cs" />
+    <Compile Include="Addons\IAddonServiceManager.cs" />
+    <Compile Include="Addons\ServiceAddon.cs" />
+    <Compile Include="Addons\IAddonManager.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Configs\MqttConfig.cs" />
-    <Compile Include="Engine\AddonManager.cs" />
-    <Compile Include="Engine\MainEngine.cs" />
-    <Compile Include="Engine\MQTT\MQTTClient.cs" />
-    <Compile Include="Engine\MQTT\MQTTEventEventArgs.cs" />
-    <Compile Include="Engine\MQTT\MQTTHandlers.cs" />
-    <Compile Include="Engine\MQTT\MQTTMessage.cs" />
-    <Compile Include="Engine\MQTT\MQTTMessageEventEventArgs.cs" />
-    <Compile Include="Engine\System\SessionChangeEventArgs.cs" />
+    <Compile Include="Platform\ConfigType.cs" />
+    <Compile Include="Platform\Events\AgentAddonRequestEventArgs.cs" />
+    <Compile Include="Platform\Events\AgentAddonResponseEventArgs.cs" />
+    <Compile Include="Platform\Events\ConfigReloadEventArgs.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTEventEventArgs.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTHandlers.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTMessage.cs" />
+    <Compile Include="Platform\Events\MQTT\MQTTMessageEventEventArgs.cs" />
+    <Compile Include="Platform\Events\SessionChangeEventArgs.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\ConfigHelper.cs" />
     <Compile Include="Helpers\LoggerHelper.cs" />
@@ -126,14 +131,31 @@
     <Compile Include="Helpers\PathHelper.cs" />
     <Compile Include="Helpers\PlatformHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
-    <Compile Include="Loaders\AssemblyLoader.cs" />
+    <Compile Include="Platform\DisplayInfo.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
+    <Compile Include="Platform\RunInfo.cs" />
+    <Compile Include="Platform\WebSocket\RequestTypeClient.cs" />
+    <Compile Include="Platform\WebSocket\MessageType.cs" />
+    <Compile Include="Platform\WebSocket\RequestTypeServer.cs" />
+    <Compile Include="Platform\WebSocket\ResponseTypeClient.cs" />
+    <Compile Include="Platform\WebSocket\ResponseTypeServer.cs" />
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\LastInputInfo.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\MemoryStatusEx.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\ProcessInformation.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\Rect.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\SecurityImpersonationLevel.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\StartupInfo.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\SW.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\TokenType.cs" />
     <Compile Include="Platform\Windows\Native\Kernel32.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\MonitorInfoEx.cs" />
     <Compile Include="Platform\Windows\Native\PowrProf.cs" />
     <Compile Include="Platform\Windows\Native\User32.cs" />
-    <Compile Include="Platform\Windows\Native\WM_MESSAGE.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\WM_MESSAGE.cs" />
+    <Compile Include="Platform\Windows\Native\UserEnv.cs" />
     <Compile Include="Platform\Windows\Native\WtsApi32.cs" />
+    <Compile Include="Platform\Windows\WindowsSessionInfo.cs" />
     <Compile Include="Platform\Windows\WindowsAPI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

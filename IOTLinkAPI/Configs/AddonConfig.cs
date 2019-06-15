@@ -1,10 +1,10 @@
-﻿using System;
+﻿using IOTLinkAPI.Helpers;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using IOTLink.Helpers;
 using YamlDotNet.RepresentationModel;
 
-namespace IOTLink.Configs
+namespace IOTLinkAPI.Configs
 {
     /// <summary>
 	/// Handle the configurations of an App.

@@ -2,11 +2,13 @@
 using System.IO;
 using System.Reflection;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
     public static class PathHelper
     {
         public const string APP_FOLDER_NAME = "IOTLink";
+        public const string APP_AGENT_NAME = "IOTLinkAgent";
+        public const string APP_SERVICE_NAME = "IOTLinkService";
 
         /// <summary>
         /// Return the application full name (including path)
@@ -44,6 +46,18 @@ namespace IOTLink.Helpers
             return Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                     APP_FOLDER_NAME
+                );
+        }
+
+        /// <summary>
+        /// Return the temp path
+        /// </summary>
+        /// <returns>String</returns>
+        public static string BaseTempPath()
+        {
+            return Path.Combine(
+                Path.GetTempPath(),
+                APP_FOLDER_NAME
                 );
         }
 

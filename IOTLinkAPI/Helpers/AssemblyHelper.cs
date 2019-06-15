@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Reflection;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
-    internal class AssemblyHelper
+    public class AssemblyHelper
     {
 
-        internal static string GetCurrentVersion()
+        public static string GetCurrentVersion()
         {
             return Assembly.GetExecutingAssembly().GetName().Version.ToString();
         }
 
-        internal static bool CheckAssemblyVersion(string MinVersion, string MaxVersion)
+        public static bool CheckAssemblyVersion(string MinVersion, string MaxVersion)
         {
             int[] minVersion = new int[4];
             int[] maxVersion = new int[4];
