@@ -61,11 +61,11 @@ Source: "Assets\images\icons\uninstall_service.ico";                           D
 Source: "Assets\images\icons\start_service.ico";                               DestDir: "{app}\Icons"; Flags: ignoreversion
 Source: "Assets\images\icons\stop_service.ico";                                DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Addon - Commands
-Source: "Addons\Commands\addon.yaml";                                          DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion confirmoverwrite; Permissions: everyone-full;  Tasks: Addons\Commands
+Source: "Addons\Commands\addon.yaml";                                          DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
 Source: "Addons\Commands\bin\Release\Commands.dll";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
 ; Addon - Windows Monitor
-Source: "Addons\WindowsMonitor\addon.yaml";                                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion confirmoverwrite; Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
-Source: "Addons\WindowsMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion confirmoverwrite; Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\addon.yaml";                                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
 Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll";                DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
 
 [Icons]
