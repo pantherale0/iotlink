@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
@@ -63,32 +62,33 @@ namespace IOTLinkService.Service.WSServer
             return _server != null && _server.IsListening;
         }
 
-        protected override async Task OnMessage(MessageEventArgs e)
+        protected override void OnMessage(MessageEventArgs e)
         {
-            LoggerHelper.Debug("OnMessage - 1");
-            if (e.Data == null || e.Data.Length == 0)
+            if (e.IsPing)
             {
-                LoggerHelper.Debug("OnMessage: e.Data == null || e.Data.Length == 0");
+                LoggerHelper.Trace("OnMessage - Ping received from {0}", ID);
+                Sessions.PingTo(ID);
                 return;
             }
 
-            if (e.Opcode != Opcode.Text)
+            if (e.RawData == null || e.RawData.Length == 0 || !e.IsText || string.IsNullOrWhiteSpace(e.Data))
             {
-                LoggerHelper.Debug("OnMessage: e.Opcode ({0}) != Opcode.Text", e.Opcode.ToString());
+                LoggerHelper.Trace("OnMessage: Invalid message content [1].");
                 return;
             }
 
-            string data = e.Text.ReadToEnd();
-            if (string.IsNullOrWhiteSpace(data))
-            {
-                LoggerHelper.Debug("OnMessage: Empty Payload");
-                return;
-            }
+            string data = e.Data;
+            LoggerHelper.Trace("OnMessage - Data: {0}", data);
 
-            LoggerHelper.Debug("OnMessage - Data: {0}", data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
+                if (json == null || json.messageType == null || json.content == null)
+                {
+                    LoggerHelper.Trace("OnMessage: Invalid message content [2].");
+                    return;
+                }
+
                 MessageType messageType = json.messageType;
                 switch (messageType)
                 {
@@ -111,16 +111,22 @@ namespace IOTLinkService.Service.WSServer
             }
             catch (Exception ex)
             {
-                LoggerHelper.Debug("OnMessage - Exception: {0}", ex.ToString());
+                LoggerHelper.Debug("OnMessage: Exception: {0}", ex.ToString());
             }
         }
 
         internal void ParseClientRequest(dynamic content)
         {
+            if (content == null || content.type == null || content.data == null)
+            {
+                LoggerHelper.Trace("ParseClientRequest: Invalid message content.");
+                return;
+            }
+
             RequestTypeClient type = content.type;
             dynamic data = content.data;
 
-            LoggerHelper.Debug("ParseClientRequest - Request Type: {0} | Data: {1}", type, data);
+            LoggerHelper.Trace("ParseClientRequest: Request Type: {0} | Data: {1}", type, data);
             switch (type)
             {
                 case RequestTypeClient.REQUEST_CONNECTED:
@@ -132,17 +138,18 @@ namespace IOTLinkService.Service.WSServer
                     break;
 
                 default:
-                    LoggerHelper.Warn("ParseClientRequest - Invalid Request Type: {0}", type);
+                    LoggerHelper.Warn("ParseClientRequest: Invalid Request Type: {0}", type);
                     break;
             }
         }
 
         internal void ParseClientConnected(dynamic data)
         {
-            if (!string.IsNullOrWhiteSpace(data.username))
+            string username = data.username;
+            if (!string.IsNullOrWhiteSpace(username))
             {
-                string username = ((string)data.username).Trim().ToLowerInvariant();
-                _clients[username] = Id;
+                username = username.Trim().ToLowerInvariant();
+                _clients[username] = ID;
             }
         }
 
@@ -159,10 +166,16 @@ namespace IOTLinkService.Service.WSServer
 
         internal void ParseClientResponse(dynamic content)
         {
+            if (content == null || content.type == null || content.data == null)
+            {
+                LoggerHelper.Trace("ParseClientResponse: Invalid message content.");
+                return;
+            }
+
             ResponseTypeClient type = content.type;
             dynamic data = content.data;
 
-            LoggerHelper.Debug("ParseClientRequest - Request Type: {0} | Data: {1}", type, data);
+            LoggerHelper.Trace("ParseClientResponse: Request Type: {0} | Data: {1}", type, data);
             switch (type)
             {
                 case ResponseTypeClient.RESPONSE_ADDON:
@@ -170,7 +183,7 @@ namespace IOTLinkService.Service.WSServer
                     break;
 
                 default:
-                    LoggerHelper.Warn("ParseClientRequest - Invalid Request Type: {0}", type);
+                    LoggerHelper.Warn("ParseClientResponse: Invalid Request Type: {0}", type);
                     break;
             }
         }
@@ -183,12 +196,12 @@ namespace IOTLinkService.Service.WSServer
             if (string.IsNullOrWhiteSpace(addonId))
                 return;
 
-            if (!_clients.ContainsValue(Id))
+            if (!_clients.ContainsValue(ID))
                 return;
 
-            string username = _clients.First(x => x.Value == Id).Key;
+            string username = _clients.First(x => x.Value == ID).Key;
 
-            LoggerHelper.Trace("ParseAddonRequest - AgentId: {0} Username: {1} AddonId: {2} AddonData: {3}", Id, username, addonId, addonData);
+            LoggerHelper.Trace("ParseAddonRequest - AgentId: {0} Username: {1} AddonId: {2} AddonData: {3}", ID, username, addonId, addonData);
             ServiceAddonManager.GetInstance().Raise_OnAgentResponse(username, addonId, addonData);
         }
 
@@ -217,9 +230,9 @@ namespace IOTLinkService.Service.WSServer
             LoggerHelper.Trace("Sending agent message: {0}", payload);
 
             if (username == null)
-                Sessions.Broadcast(payload).ConfigureAwait(false);
+                Sessions.Broadcast(payload);
             else if (_clients.ContainsKey(username))
-                Sessions.SendTo(_clients[username], payload).ConfigureAwait(false);
+                Sessions.SendTo(_clients[username], payload);
             else
                 LoggerHelper.Error("WebSocketServer - Agent from {0} not found.", username);
         }

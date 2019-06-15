@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Threading.Tasks;
 using WebSocketSharp;
 
 namespace IOTLinkAgent.Agent.WSClient
@@ -35,8 +34,12 @@ namespace IOTLinkAgent.Agent.WSClient
             if (_client != null)
                 Disconnect();
 
-            _client = new WebSocket(uri, onOpen: OnOpen, onClose: OnClose, onError: OnError, onMessage: OnMessageReceived);
-            _client.Connect().ConfigureAwait(false);
+            _client = new WebSocket(uri);
+            _client.OnOpen += OnOpen;
+            _client.OnClose += OnClose;
+            _client.OnError += OnError;
+            _client.OnMessage += OnMessageReceived;
+            _client.Connect();
         }
 
         internal void Disconnect()
@@ -44,7 +47,7 @@ namespace IOTLinkAgent.Agent.WSClient
             if (_client == null)
                 return;
 
-            if (_client.IsAlive().Result)
+            if (_client.IsAlive)
                 _client.Close();
 
             _client = null;
@@ -52,8 +55,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
         internal bool IsConnected()
         {
-            bool isAlive = _client.IsAlive().Result;
-            return _client != null && isAlive;
+            return _client != null && _client.IsAlive;
         }
 
         internal void SendRequest(RequestTypeClient type, dynamic data = null)
@@ -66,7 +68,7 @@ namespace IOTLinkAgent.Agent.WSClient
             SendMessage(MessageType.CLIENT_RESPONSE, type, data);
         }
 
-        private async Task OnOpen()
+        private void OnOpen(object sender, EventArgs e)
         {
             LoggerHelper.Debug("WebSocketClient - Connection Opened.");
 
@@ -76,42 +78,36 @@ namespace IOTLinkAgent.Agent.WSClient
             SendRequest(RequestTypeClient.REQUEST_CONNECTED, keyValuePairs);
         }
 
-        private async Task OnClose(CloseEventArgs arg)
+        private void OnClose(object sender, CloseEventArgs arg)
         {
             LoggerHelper.Debug("WebSocketClient - Connection Closed (Clean: {0}).", arg.WasClean);
         }
 
-        private async Task OnError(ErrorEventArgs arg)
+        private void OnError(object sender, ErrorEventArgs arg)
         {
             LoggerHelper.Error("WebSocketClient - Error: {0}", arg.Message);
         }
 
-        private async Task OnMessageReceived(MessageEventArgs e)
+        private void OnMessageReceived(object sender, MessageEventArgs e)
         {
-            LoggerHelper.Debug("OnMessageReceived - 1");
-            if (e.Data == null || e.Data.Length == 0)
+            if (e.RawData == null || e.RawData.Length == 0 || !e.IsText || string.IsNullOrWhiteSpace(e.Data))
             {
-                LoggerHelper.Debug("OnMessageReceived: e.Data == null || e.Data.Length == 0");
+                LoggerHelper.Trace("OnMessageReceived: Invalid message content [1].");
                 return;
             }
 
-            if (e.Opcode != Opcode.Text)
-            {
-                LoggerHelper.Debug("WebSocketClient: e.Opcode ({0}) != Opcode.Text", e.Opcode.ToString());
-                return;
-            }
+            string data = e.Data;
+            LoggerHelper.Trace("OnMessageReceived - Data: {0}", data);
 
-            string data = e.Text.ReadToEnd();
-            if (string.IsNullOrWhiteSpace(data))
-            {
-                LoggerHelper.Debug("WebSocketClient: Empty Payload");
-                return;
-            }
-
-            LoggerHelper.Debug("OnMessageReceived - Data: {0}", data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
+                if (json == null || json.messageType == null || json.content == null)
+                {
+                    LoggerHelper.Trace("OnMessageReceived: Invalid message content [2].");
+                    return;
+                }
+
                 MessageType messageType = json.messageType;
                 switch (messageType)
                 {
@@ -136,15 +132,27 @@ namespace IOTLinkAgent.Agent.WSClient
 
         private void ParseServerResponse(dynamic content)
         {
-            LoggerHelper.Trace("ParseShowNotification - Content: {0]", content);
+            if (content == null || content.type == null || content.data == null)
+            {
+                LoggerHelper.Trace("ParseServerResponse: Invalid message content.");
+                return;
+            }
+
+            LoggerHelper.Trace("ParseServerResponse: Content: {0]", content);
         }
 
         private void ParseServerRequest(dynamic content)
         {
+            if (content == null || content.type == null || content.data == null)
+            {
+                LoggerHelper.Trace("ParseServerRequest: Invalid message content.");
+                return;
+            }
+
             RequestTypeServer type = content.type;
             dynamic data = content.data;
 
-            LoggerHelper.Debug("ParseServerRequest - Request Type: {0} | Data: {1}", type, data);
+            LoggerHelper.Trace("ParseServerRequest: Request Type: {0} | Data: {1}", type, data);
             switch (type)
             {
                 case RequestTypeServer.REQUEST_SHOW_MESSAGE:
@@ -170,13 +178,13 @@ namespace IOTLinkAgent.Agent.WSClient
             string title = data.title;
             string message = data.message;
 
-            LoggerHelper.Trace("ParseShowMessage - Title: {0} Message: {1}", title, message);
+            LoggerHelper.Trace("ParseShowMessage: Title: {0} Message: {1}", title, message);
             WindowsAPI.ShowMessage(title, message);
         }
 
         private void ParseShowNotification(dynamic data)
         {
-            LoggerHelper.Trace("ParseShowNotification - Data: {0]", data);
+            LoggerHelper.Trace("ParseShowNotification: Data: {0]", data);
         }
 
         private void ParseAddonRequest(dynamic data)
@@ -187,7 +195,7 @@ namespace IOTLinkAgent.Agent.WSClient
             if (string.IsNullOrWhiteSpace(addonId))
                 return;
 
-            LoggerHelper.Trace("ParseAddonRequest - AddonId: {0} AddonData: {1}", addonId, addonData);
+            LoggerHelper.Trace("ParseAddonRequest: AddonId: {0} AddonData: {1}", addonId, addonData);
             AgentAddonManager.GetInstance().Raise_OnAgentRequest(addonId, addonData);
         }
 

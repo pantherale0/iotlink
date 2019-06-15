@@ -176,11 +176,11 @@ namespace IOTLinkAddon.Service
             switch (requestType)
             {
                 case AddonRequestType.REQUEST_IDLE_TIME:
-                    ParseIdleTime(e.Data);
+                    ParseIdleTime(e.Data, e.Username);
                     break;
 
                 case AddonRequestType.REQUEST_DISPLAY_INFORMATION:
-                    ParseDisplayInfo(e.Data);
+                    ParseDisplayInfo(e.Data, e.Username);
                     break;
 
                 case AddonRequestType.REQUEST_DISPLAY_SCREENSHOT:
@@ -191,16 +191,24 @@ namespace IOTLinkAddon.Service
             }
         }
 
-        private void ParseIdleTime(dynamic data)
+        private void ParseIdleTime(dynamic data, string username)
         {
             uint idleTime = (uint)data.requestData;
-            LoggerHelper.Debug("ParseIdleTime: {0}", idleTime);
+
+            SendMonitorValue("Stats/IdleTime/" + username, idleTime.ToString());
         }
 
-        private void ParseDisplayInfo(dynamic data)
+        private void ParseDisplayInfo(dynamic data, string username)
         {
-            List<DisplayInfo> displayInfos = (List<DisplayInfo>)data.requestData;
-            LoggerHelper.Debug("ParseDisplayInfo: {0}", displayInfos);
+            List<DisplayInfo> displayInfos = data.requestData.ToObject<List<DisplayInfo>>();
+            for (var i = 0; i < displayInfos.Count; i++)
+            {
+                DisplayInfo displayInfo = displayInfos[i];
+
+                string topic = string.Format("Stats/Display/{0}", i);
+                SendMonitorValue(topic + "/ScreenWidth", displayInfo.ScreenWidth.ToString());
+                SendMonitorValue(topic + "/ScreenHeight", displayInfo.ScreenHeight.ToString());
+            }
         }
 
         private void SendMonitorValue(string topic, string value)
