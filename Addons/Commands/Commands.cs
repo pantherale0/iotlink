@@ -1,26 +1,27 @@
-﻿using IOTLink.API;
-using IOTLink.Engine.MQTT;
-using IOTLink.Helpers;
+﻿using IOTLinkAPI.Addons;
+using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.Events.MQTT;
 using Newtonsoft.Json;
 using System;
 
 namespace IOTLinkAddon
 {
-    public class Commands : AddonScript
+    public class Commands : ServiceAddon
     {
-        public override void Init()
+        public override void Init(IAddonManager addonManager)
         {
-            base.Init();
+            base.Init(addonManager);
 
-            _manager.SubscribeTopic(this, "shutdown", OnShutdownMessage);
-            _manager.SubscribeTopic(this, "reboot", OnRebootMessage);
-            _manager.SubscribeTopic(this, "logoff", OnLogoffMessage);
-            _manager.SubscribeTopic(this, "lock", OnLockMessage);
-            _manager.SubscribeTopic(this, "hibernate", OnHibernateMessage);
-            _manager.SubscribeTopic(this, "suspend", OnSuspendMessage);
-            _manager.SubscribeTopic(this, "run", OnRunMessage);
-            _manager.SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
-            _manager.SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
+            GetManager().SubscribeTopic(this, "shutdown", OnShutdownMessage);
+            GetManager().SubscribeTopic(this, "reboot", OnRebootMessage);
+            GetManager().SubscribeTopic(this, "logoff", OnLogoffMessage);
+            GetManager().SubscribeTopic(this, "lock", OnLockMessage);
+            GetManager().SubscribeTopic(this, "hibernate", OnHibernateMessage);
+            GetManager().SubscribeTopic(this, "suspend", OnSuspendMessage);
+            GetManager().SubscribeTopic(this, "run", OnRunMessage);
+            GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
+            GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
         }
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
@@ -69,12 +70,18 @@ namespace IOTLinkAddon
             try
             {
                 dynamic json = JsonConvert.DeserializeObject(value);
-                string command = json.command;
-                string args = json.args;
-                string path = json.path;
-                string user = json.user;
 
-                PlatformHelper.Run(command, args, path, user);
+                RunInfo runInfo = new RunInfo
+                {
+                    Application = json.command,
+                    CommandLine = json.args,
+                    WorkingDir = json.path,
+                    Username = json.user,
+                    Visible = json.visible,
+                    Fallback = json.fallback
+                };
+
+                PlatformHelper.Run(runInfo);
             }
             catch (Exception ex)
             {

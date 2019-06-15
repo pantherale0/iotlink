@@ -1,8 +1,8 @@
-﻿using IOTLink.Platform.Windows.Native.Internal;
+﻿using IOTLinkAPI.Platform.Windows.Native.Internal;
 using System;
 using System.Runtime.InteropServices;
 
-namespace IOTLink.Platform.Windows.Native
+namespace IOTLinkAPI.Platform.Windows.Native
 {
 #pragma warning disable 1591
     public class AdvApi32

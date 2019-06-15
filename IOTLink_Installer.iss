@@ -2,10 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 #include <idp.iss>
 
-#define APP_NAME     "IOT Link"
-#define APP_DIR_NAME "IOTLink"
-#define APP_EXE_NAME "IOTLinkService.exe"
-#define APP_VERSION  "1.0.1"
+#define APP_NAME         "IOT Link"
+#define APP_DIR_NAME     "IOTLink"
+#define APP_AGENT_NAME   "IOTLinkAgent.exe"
+#define APP_SERVICE_NAME "IOTLinkService.exe"
+#define APP_VERSION      "1.1.0"
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
 #define APP_AUTHOR_URL  "https://alexslx.com"
@@ -37,53 +38,57 @@ SolidCompression=no
 ; Privileges Settings
 PrivilegesRequired=admin
 SetupIconFile=Assets\images\icons\application.ico
+AlwaysRestart=yes
 
 [Files]
 ; Main Files
-Source: "IOTLink\bin\Release\IOTLinkService.exe";               DestDir: "{app}"; DestName: "{#APP_EXE_NAME}"; Flags: ignoreversion
-Source: "IOTLink\bin\Release\IOTLinkService.exe.config";        DestDir: "{app}"; DestName: "{#APP_EXE_NAME}.config"; Flags: ignoreversion
-Source: "IOTLinkAPI\bin\Release\*.dll";                         DestDir: "{app}"; Flags: ignoreversion
+Source: "Builds\Release\IOTLinkAgent.exe";                                     DestDir: "{app}"; DestName: "{#APP_AGENT_NAME}";          Flags: ignoreversion
+Source: "Builds\Release\IOTLinkAgent.exe.config";                              DestDir: "{app}"; DestName: "{#APP_AGENT_NAME}.config";   Flags: ignoreversion
+Source: "Builds\Release\IOTLinkService.exe";                                   DestDir: "{app}"; DestName: "{#APP_SERVICE_NAME}";        Flags: ignoreversion
+Source: "Builds\Release\IOTLinkService.exe.config";                            DestDir: "{app}"; DestName: "{#APP_SERVICE_NAME}.config"; Flags: ignoreversion
+Source: "Builds\Release\*.dll";                                                DestDir: "{app}"; Flags: ignoreversion
 ; Configuration Sample
-Source: "Assets\config.yaml-sample";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite createallsubdirs recursesubdirs; Permissions: everyone-full
+Source: "Assets\config.yaml-sample";                                           DestDir: "{commonappdata}\{#APP_DIR_NAME}\Configs"; DestName: "configuration.yaml"; Flags: confirmoverwrite; Permissions: everyone-full
 ; Application Icon
-Source: "Assets\images\icons\application.ico";                  DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\application.ico";                                 DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Folder Icons
-Source: "Assets\images\icons\addons.ico";                       DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\images\icons\configs.ico";                      DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\images\icons\logs.ico";                         DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\addons.ico";                                      DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\configs.ico";                                     DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\logs.ico";                                        DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Service Install/Uninstall
-Source: "Assets\images\icons\install_service.ico";              DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\images\icons\uninstall_service.ico";            DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\install_service.ico";                             DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\uninstall_service.ico";                           DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Service Start/Stop
-Source: "Assets\images\icons\start_service.ico";                DestDir: "{app}\Icons"; Flags: ignoreversion
-Source: "Assets\images\icons\stop_service.ico";                 DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\start_service.ico";                               DestDir: "{app}\Icons"; Flags: ignoreversion
+Source: "Assets\images\icons\stop_service.ico";                                DestDir: "{app}\Icons"; Flags: ignoreversion
 ; Addon - Commands
-Source: "Addons\Commands\addon.yaml";                           DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion createallsubdirs recursesubdirs confirmoverwrite; Tasks: Addons\Commands
-Source: "Addons\Commands\bin\Release\Commands.dll";             DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\Commands
+Source: "Addons\Commands\addon.yaml";                                          DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
+Source: "Addons\Commands\bin\Release\Commands.dll";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
 ; Addon - Windows Monitor
-Source: "Addons\WindowsMonitor\addon.yaml";                     DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs confirmoverwrite; Tasks: Addons\WindowsMonitor
-Source: "Addons\WindowsMonitor\config.yaml";                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs confirmoverwrite; Tasks: Addons\WindowsMonitor
-Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll"; DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion createallsubdirs recursesubdirs; Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\addon.yaml";                                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll";                DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
 
 [Icons]
 ; Service Install/Uninstall
-Name: "{group}\Install Windows Service";      Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\install_service.ico";    WorkingDir: "{app}"; Parameters: "--install";     AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
-Name: "{group}\Uninstall Windows Service";    Filename: "{app}\{#APP_EXE_NAME}";    IconFilename: "{app}\Icons\uninstall_service.ico";  WorkingDir: "{app}"; Parameters: "--uninstall";   AfterInstall: SetElevationBit('{group}\Uninstall Windows Service.lnk')
+Name: "{group}\Install Windows Service";      Filename: "{app}\{#APP_SERVICE_NAME}";                                     IconFilename: "{app}\Icons\install_service.ico";    WorkingDir: "{app}"; Parameters: "--install";     AfterInstall: SetElevationBit('{group}\Install Windows Service.lnk')
+Name: "{group}\Uninstall Windows Service";    Filename: "{app}\{#APP_SERVICE_NAME}";                                     IconFilename: "{app}\Icons\uninstall_service.ico";  WorkingDir: "{app}"; Parameters: "--uninstall";   AfterInstall: SetElevationBit('{group}\Uninstall Windows Service.lnk')
 ; Service Start/Stop
-Name: "{group}\Start Windows Service";        Filename: "net.exe";                  IconFilename: "{app}\Icons\start_service.ico";      WorkingDir: "{sys}"; Parameters: "start {#APP_DIR_NAME}";  AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
-Name: "{group}\Stop Windows Service";         Filename: "net.exe";                  IconFilename: "{app}\Icons\stop_service.ico";       WorkingDir: "{sys}"; Parameters: "stop {#APP_DIR_NAME}";   AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
+Name: "{group}\Start Windows Service";        Filename: "net.exe";                                                       IconFilename: "{app}\Icons\start_service.ico";      WorkingDir: "{sys}"; Parameters: "start {#APP_DIR_NAME}";  AfterInstall: SetElevationBit('{group}\Start Windows Service.lnk')
+Name: "{group}\Stop Windows Service";         Filename: "net.exe";                                                       IconFilename: "{app}\Icons\stop_service.ico";       WorkingDir: "{sys}"; Parameters: "stop {#APP_DIR_NAME}";   AfterInstall: SetElevationBit('{group}\Stop Windows Service.lnk')
 ; Open Folders
 Name: "{group}\Open Configuration File";      Filename: "{commonappdata}\{#APP_DIR_NAME}\Configs\configuration.yaml";    IconFilename: "{app}\Icons\configs.ico";            WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Configs";
 Name: "{group}\Open Addons Folder";           Filename: "{commonappdata}\{#APP_DIR_NAME}\Addons";                        IconFilename: "{app}\Icons\addons.ico";             WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Addons";    Flags: foldershortcut
 Name: "{group}\Open Logs Folder";             Filename: "{commonappdata}\{#APP_DIR_NAME}\Logs";                          IconFilename: "{app}\Icons\logs.ico";               WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Logs";      Flags: foldershortcut
 
 [Run]
-Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--install";                  WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
-Filename: "net.exe";               Parameters: "start {#APP_DIR_NAME}";      WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Start {#APP_NAME} Service";      StatusMsg: "Starting Windows Service"
-
+Filename: "net.exe";                          Parameters: "stop {#APP_DIR_NAME}";  WorkingDir: "{app}"; Flags: runascurrentuser runhidden;             Description: "Stop {#APP_NAME} Service";       StatusMsg: "Stopping Windows Service"
+Filename: "{app}\{#APP_SERVICE_NAME}";        Parameters: "--install";             WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
+Filename: "net.exe";                          Parameters: "start {#APP_DIR_NAME}"; WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Start {#APP_NAME} Service";      StatusMsg: "Starting Windows Service"
 
 [UninstallRun]
-Filename: "{app}\{#APP_EXE_NAME}"; Parameters: "--uninstall";    WorkingDir: "{app}"; Flags: runhidden
+Filename: "net.exe";                          Parameters: "stop {#APP_DIR_NAME}";       WorkingDir: "{app}"; Flags: runhidden;
+Filename: "{app}\{#APP_SERVICE_NAME}";        Parameters: "--uninstall";                WorkingDir: "{app}"; Flags: runhidden;
 
 [Dirs]
 Name: "{commonappdata}\{#APP_DIR_NAME}";            Permissions: everyone-full

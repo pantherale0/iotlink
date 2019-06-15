@@ -1,4 +1,4 @@
-﻿namespace IOTLink.Platform
+﻿namespace IOTLinkAPI.Platform
 {
     public class MemoryInfo
     {

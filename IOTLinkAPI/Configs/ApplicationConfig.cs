@@ -1,8 +1,8 @@
-﻿using IOTLink.Helpers;
+﻿using IOTLinkAPI.Helpers;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
-namespace IOTLink.Configs
+namespace IOTLinkAPI.Configs
 {
 #pragma warning disable 1591
     public class ApplicationConfig

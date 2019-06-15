@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace IOTLink.Platform.Windows.Native.Internal
+namespace IOTLinkAPI.Platform.Windows.Native.Internal
 {
     /// <summary>
     /// The MONITORINFOEX structure contains information about a display monitor.

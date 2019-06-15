@@ -41,6 +41,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -54,7 +55,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WindowsMonitor.cs" />
+    <Compile Include="Agent\WindowsMonitorAgent.cs" />
+    <Compile Include="Common\AddonRequestType.cs" />
+    <Compile Include="Common\MonitorConfig.cs" />
+    <Compile Include="Service\WindowsMonitorService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include=".vs\Addon_WindowsMonitor\v15\" />

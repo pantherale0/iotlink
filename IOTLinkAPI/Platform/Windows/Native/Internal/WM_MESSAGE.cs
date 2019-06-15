@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IOTLink.Platform.Windows.Native.Internal
+namespace IOTLinkAPI.Platform.Windows.Native.Internal
 {
     /// <summary>
     /// Windows Messages

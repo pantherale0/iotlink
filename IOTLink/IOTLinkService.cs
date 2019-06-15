@@ -1,7 +1,6 @@
-﻿using System;
+﻿using IOTLinkAPI.Helpers;
+using IOTLinkService.Service.Engine;
 using System.ServiceProcess;
-using IOTLink.Engine;
-using IOTLink.Helpers;
 
 namespace IOTLink
 {
@@ -16,7 +15,7 @@ namespace IOTLink
         protected override void OnStart(string[] args)
         {
             LoggerHelper.Info("Windows Service is started.");
-            MainEngine.GetInstance().StartApplication();
+            ServiceMain.GetInstance().StartApplication();
         }
 
         protected override void OnStop()
@@ -24,13 +23,13 @@ namespace IOTLink
             LoggerHelper.Info("Windows Service is stopped.");
             LoggerHelper.EmptyLine();
 
-            MainEngine.GetInstance().StopApplication();
+            ServiceMain.GetInstance().StopApplication();
         }
 
         protected override void OnSessionChange(SessionChangeDescription changeDescription)
         {
-            String username = PlatformHelper.GetUsername(changeDescription.SessionId);
-            MainEngine.GetInstance().OnSessionChange(username, changeDescription.Reason);
+            string username = PlatformHelper.GetUsername(changeDescription.SessionId);
+            ServiceMain.GetInstance().OnSessionChange(username, changeDescription.SessionId, changeDescription.Reason);
         }
     }
 }

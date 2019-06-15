@@ -1,12 +1,12 @@
-﻿using IOTLink.Platform;
-using IOTLink.Platform.Windows;
+﻿using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.Windows;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace IOTLink.Helpers
+namespace IOTLinkAPI.Helpers
 {
     public static class PlatformHelper
     {
@@ -146,24 +146,25 @@ namespace IOTLink.Helpers
         }
 
         /// <summary>
-        /// Execute a system application
+        /// Execute an application
         /// </summary>
-        /// <param name="command">Filename or command line</param>
-        /// <param name="args">String containing all arguments</param>
-        /// <param name="path">String containing the work path</param>
-        /// <param name="username">String containing the user which the application will be executed</param>
-        public static void Run(string command, string args, string path, string username = null)
+        /// <param name="runInfo">Application information</param>
+        public static void Run(RunInfo runInfo)
         {
-            if (!string.IsNullOrWhiteSpace(args))
-                args = string.Format("{0} {1}", Path.GetFileName(command), args);
+            if (!string.IsNullOrWhiteSpace(runInfo.CommandLine))
+                runInfo.CommandLine = string.Format("{0} {1}", Path.GetFileName(runInfo.Application), runInfo.CommandLine);
             else
-                args = Path.GetFileName(command);
+                runInfo.CommandLine = Path.GetFileName(runInfo.Application);
 
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
-            LoggerHelper.Debug("Run - Command: {0} Args: {1} Path: {2} User: {3}", command, args, path, username);
-            WindowsAPI.Run(command, args, path, username);
+            LoggerHelper.Debug(
+                "Run - Command: {0} Args: {1} WorkingDir: {2} User: {3} Visible: {4} FallBack: {5}",
+                runInfo.Application, runInfo.CommandLine, runInfo.WorkingDir, runInfo.Username, runInfo.Visible, runInfo.Fallback
+            );
+
+            WindowsAPI.Run(runInfo);
         }
 
         /// <summary>
