@@ -38,6 +38,7 @@ SolidCompression=no
 ; Privileges Settings
 PrivilegesRequired=admin
 SetupIconFile=Assets\images\icons\application.ico
+AlwaysRestart=yes
 
 [Files]
 ; Main Files

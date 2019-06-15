@@ -190,7 +190,7 @@ namespace IOTLinkAPI.Platform.Windows
             try
             {
                 WindowsSessionInfo sessionInfo = GetUserActiveSession(server, runInfo.Username);
-                if (sessionInfo == null && runInfo.Fallback)
+                if (sessionInfo == null && (runInfo.Fallback || string.IsNullOrWhiteSpace(runInfo.Username)))
                 {
                     LoggerHelper.Debug("WindowsAPI::Run() - User session not found, trying to get first active session.");
                     sessionInfo = GetFirstActiveSession(server);
