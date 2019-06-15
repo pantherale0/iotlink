@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
-namespace IOTLinkService.Engine.MQTT
+namespace IOTLinkService.Service.Engine.MQTT
 {
     internal class MQTTClient
     {

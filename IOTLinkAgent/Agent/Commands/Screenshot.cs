@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 
-namespace IOTLinkAgent.Commands
+namespace IOTLinkAgent.Agent.Commands
 {
     class Screenshot : ICommand
     {

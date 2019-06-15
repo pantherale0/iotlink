@@ -176,16 +176,31 @@ namespace IOTLinkAddon.Service
             switch (requestType)
             {
                 case AddonRequestType.REQUEST_IDLE_TIME:
+                    ParseIdleTime(e.Data);
                     break;
 
                 case AddonRequestType.REQUEST_DISPLAY_INFORMATION:
+                    ParseDisplayInfo(e.Data);
                     break;
 
                 case AddonRequestType.REQUEST_DISPLAY_SCREENSHOT:
+
                     break;
 
                 default: break;
             }
+        }
+
+        private void ParseIdleTime(dynamic data)
+        {
+            uint idleTime = (uint)data.requestData;
+            LoggerHelper.Debug("ParseIdleTime: {0}", idleTime);
+        }
+
+        private void ParseDisplayInfo(dynamic data)
+        {
+            List<DisplayInfo> displayInfos = (List<DisplayInfo>)data.requestData;
+            LoggerHelper.Debug("ParseDisplayInfo: {0}", displayInfos);
         }
 
         private void SendMonitorValue(string topic, string value)

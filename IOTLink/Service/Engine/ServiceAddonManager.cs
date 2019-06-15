@@ -1,11 +1,11 @@
-﻿using IOTLink.Service.WSServer;
-using IOTLinkAPI.Addons;
+﻿using IOTLinkAPI.Addons;
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
-using IOTLinkService.Engine.MQTT;
-using IOTLinkService.Loaders;
+using IOTLinkService.Service.Engine.MQTT;
+using IOTLinkService.Service.Loaders;
+using IOTLinkService.Service.WSServer;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -13,23 +13,23 @@ using System.IO;
 using System.Linq;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
-namespace IOTLinkService.Engine
+namespace IOTLinkService.Service.Engine
 {
-    public class AddonManager : IAddonServiceManager
+    public class ServiceAddonManager : IAddonServiceManager
     {
-        private static AddonManager _instance;
+        private static ServiceAddonManager _instance;
         private Dictionary<string, AddonInfo> _addons = new Dictionary<string, AddonInfo>();
         private Dictionary<string, MQTTMessageEventHandler> _topics = new Dictionary<string, MQTTMessageEventHandler>();
 
-        public static AddonManager GetInstance()
+        public static ServiceAddonManager GetInstance()
         {
             if (_instance == null)
-                _instance = new AddonManager();
+                _instance = new ServiceAddonManager();
 
             return _instance;
         }
 
-        private AddonManager()
+        private ServiceAddonManager()
         {
 
         }

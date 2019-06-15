@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.ServiceProcess;
 
-namespace IOTLinkService.Commands
+namespace IOTLinkService.Service.Commands
 {
     class ServiceCheck : ICommand
     {

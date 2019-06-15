@@ -45,5 +45,7 @@ namespace IOTLinkAPI.Addons
         public AddonConfig Settings;
 
         public ServiceAddon ServiceAddon { get; set; }
+
+        public AgentAddon AgentAddon { get; set; }
     }
 }

@@ -31,7 +31,7 @@ namespace IOTLinkAgent
                 Dictionary<string, List<string>> commands = ParseCommandLine(args);
 
                 // Init
-                MainAgent.GetInstance().Init(commands);
+                AgentMain.GetInstance().Init(commands);
             });
 
             myTask.Start();

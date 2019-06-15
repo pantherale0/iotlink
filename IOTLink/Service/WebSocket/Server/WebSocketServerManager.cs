@@ -1,8 +1,8 @@
 ﻿using IOTLink.Platform.WebSocket;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.WebSocket;
-using IOTLinkService.Engine;
-using IOTLinkService.Engine.MQTT;
+using IOTLinkService.Service.Engine;
+using IOTLinkService.Service.Engine.MQTT;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
-namespace IOTLink.Service.WSServer
+namespace IOTLinkService.Service.WSServer
 {
     internal class WebSocketServerManager : WebSocketBehavior
     {
@@ -42,7 +42,7 @@ namespace IOTLink.Service.WSServer
             if (_server != null)
                 Disconnect();
 
-            _server = new WebSocketServer(IPAddress.Loopback, 9799);
+            _server = new WebSocketServer(IPAddress.Any, 9799);
             _server.AddWebSocketService("/", () => this);
             _server.Start();
         }
@@ -65,16 +65,27 @@ namespace IOTLink.Service.WSServer
 
         protected override async Task OnMessage(MessageEventArgs e)
         {
+            LoggerHelper.Debug("OnMessage - 1");
             if (e.Data == null || e.Data.Length == 0)
+            {
+                LoggerHelper.Debug("OnMessage: e.Data == null || e.Data.Length == 0");
                 return;
+            }
 
             if (e.Opcode != Opcode.Text)
+            {
+                LoggerHelper.Debug("OnMessage: e.Opcode ({0}) != Opcode.Text", e.Opcode.ToString());
                 return;
+            }
 
             string data = e.Text.ReadToEnd();
             if (string.IsNullOrWhiteSpace(data))
+            {
+                LoggerHelper.Debug("OnMessage: Empty Payload");
                 return;
+            }
 
+            LoggerHelper.Debug("OnMessage - Data: {0}", data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
@@ -98,9 +109,9 @@ namespace IOTLink.Service.WSServer
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                LoggerHelper.Debug("OnMessage - Exception: {0}", ex.ToString());
             }
         }
 
@@ -178,7 +189,7 @@ namespace IOTLink.Service.WSServer
             string username = _clients.First(x => x.Value == Id).Key;
 
             LoggerHelper.Trace("ParseAddonRequest - AgentId: {0} Username: {1} AddonId: {2} AddonData: {3}", Id, username, addonId, addonData);
-            AddonManager.GetInstance().Raise_OnAgentResponse(username, addonId, addonData);
+            ServiceAddonManager.GetInstance().Raise_OnAgentResponse(username, addonId, addonData);
         }
 
         internal void ParseAPIMessage(dynamic content)
@@ -206,9 +217,9 @@ namespace IOTLink.Service.WSServer
             LoggerHelper.Trace("Sending agent message: {0}", payload);
 
             if (username == null)
-                Sessions.Broadcast(payload);
+                Sessions.Broadcast(payload).ConfigureAwait(false);
             else if (_clients.ContainsKey(username))
-                Sessions.SendTo(_clients[username], payload);
+                Sessions.SendTo(_clients[username], payload).ConfigureAwait(false);
             else
                 LoggerHelper.Error("WebSocketServer - Agent from {0} not found.", username);
         }

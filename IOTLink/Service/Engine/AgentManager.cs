@@ -1,13 +1,13 @@
-﻿using IOTLink.Service.WSServer;
-using IOTLinkAPI.Helpers;
+﻿using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
+using IOTLinkService.Service.WSServer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
 
-namespace IOTLink.Service.Engine
+namespace IOTLinkService.Service.Engine
 {
     public class AgentManager
     {

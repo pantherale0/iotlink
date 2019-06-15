@@ -1,4 +1,4 @@
-﻿namespace IOTLinkAgent.Commands
+﻿namespace IOTLinkAgent.Agent.Commands
 {
     public interface ICommand
     {

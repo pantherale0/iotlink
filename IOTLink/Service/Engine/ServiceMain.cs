@@ -1,20 +1,19 @@
-﻿using IOTLink.Service.Engine;
-using IOTLink.Service.WSServer;
-using IOTLinkAPI.Configs;
+﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.Windows;
-using IOTLinkService.Engine.MQTT;
+using IOTLinkService.Service.Engine.MQTT;
+using IOTLinkService.Service.WSServer;
 using System;
 using System.Collections.Generic;
 using System.ServiceProcess;
 
-namespace IOTLinkService.Engine
+namespace IOTLinkService.Service.Engine
 {
-    public class MainEngine
+    public class ServiceMain
     {
-        private static MainEngine _instance;
+        private static ServiceMain _instance;
         private bool _addonsLoaded;
 
         private DateTime _lastConfigChange;
@@ -23,15 +22,15 @@ namespace IOTLinkService.Engine
 
         private Dictionary<string, object> _globals = new Dictionary<string, object>();
 
-        public static MainEngine GetInstance()
+        public static ServiceMain GetInstance()
         {
             if (_instance == null)
-                _instance = new MainEngine();
+                _instance = new ServiceMain();
 
             return _instance;
         }
 
-        private MainEngine()
+        private ServiceMain()
         {
             // Agent Monitor
             _processMonitorTimer = new System.Timers.Timer();
@@ -121,7 +120,7 @@ namespace IOTLinkService.Engine
                 LoggerHelper.Info("Changes to configuration.yaml detected. Reloading.");
 
                 SetupMQTTHandlers();
-                AddonManager.GetInstance().Raise_OnConfigReloadHandler(this, e);
+                ServiceAddonManager.GetInstance().Raise_OnConfigReloadHandler(this, e);
 
                 _lastConfigChange = DateTime.Now;
             }
@@ -129,7 +128,7 @@ namespace IOTLinkService.Engine
 
         private void OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
-            AddonManager addonsManager = AddonManager.GetInstance();
+            ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             if (!_addonsLoaded)
             {
                 addonsManager.LoadAddons();
@@ -141,13 +140,13 @@ namespace IOTLinkService.Engine
 
         private void OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
-            AddonManager addonsManager = AddonManager.GetInstance();
+            ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnMQTTDisconnected(sender, e);
         }
 
         private void OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
-            AddonManager addonsManager = AddonManager.GetInstance();
+            ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }
 
@@ -166,7 +165,7 @@ namespace IOTLinkService.Engine
                 agentManager.StartAgent(sessionId, username);
             }
 
-            AddonManager addonsManager = AddonManager.GetInstance();
+            ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnSessionChange(this, args);
         }
 

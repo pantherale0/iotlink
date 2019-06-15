@@ -1,13 +1,12 @@
 ﻿using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
-using IOTLinkService.Service.Engine;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace IOTLinkService.Service.Loaders
+namespace IOTLinkAgent.Agent.Loaders
 {
     internal class AssemblyLoader
     {
@@ -26,7 +25,7 @@ namespace IOTLinkService.Service.Loaders
                     AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                     AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += CurrentDomain_ReflectionOnlyAssemblyResolve;
 
-                    IEnumerable<Type> scriptTypeList = asb.GetExportedTypes().Where(w => w.IsSubclassOf(typeof(ServiceAddon)));
+                    IEnumerable<Type> scriptTypeList = asb.GetExportedTypes().Where(w => w.IsSubclassOf(typeof(AgentAddon)));
 
                     AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= CurrentDomain_ReflectionOnlyAssemblyResolve;
                     AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
@@ -37,8 +36,8 @@ namespace IOTLinkService.Service.Loaders
 
                     if (scriptType != null)
                     {
-                        LoggerHelper.Debug("Found AddonScript!");
-                        addonInfo.ServiceAddon = (ServiceAddon)Activator.CreateInstance(scriptType);
+                        LoggerHelper.Debug("Found AgentAddon!");
+                        addonInfo.AgentAddon = (AgentAddon)Activator.CreateInstance(scriptType);
                         return true;
                     }
 
@@ -55,7 +54,7 @@ namespace IOTLinkService.Service.Loaders
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
-            if (args.Name.Contains(typeof(ServiceMain).Assembly.GetName().Name))
+            if (args.Name.Contains(typeof(AgentMain).Assembly.GetName().Name))
             {
                 return Assembly.GetExecutingAssembly();
             }

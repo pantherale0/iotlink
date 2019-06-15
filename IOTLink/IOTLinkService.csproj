@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1A554933-0C12-4CE5-900C-0D8E21544DD0}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>IOTLink</RootNamespace>
+    <RootNamespace>IOTLinkService</RootNamespace>
     <AssemblyName>IOTLinkService</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -87,7 +87,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Service\Engine\AddonManager.cs" />
+    <Compile Include="Service\Engine\ServiceAddonManager.cs" />
     <Compile Include="Service\Commands\ICommand.cs" />
     <Compile Include="Service\Commands\ServiceCheck.cs" />
     <Compile Include="Service\Commands\ServiceUninstall.cs" />
@@ -109,7 +109,7 @@
     <Compile Include="Service\Engine\AgentInfo.cs" />
     <Compile Include="Service\Engine\AgentManager.cs" />
     <Compile Include="Service\Loaders\AssemblyLoader.cs" />
-    <Compile Include="Service\Engine\MainEngine.cs" />
+    <Compile Include="Service\Engine\ServiceMain.cs" />
     <Compile Include="Service\MQTT\MQTTClient.cs" />
     <Compile Include="Service\WebSocket\Server\WebSocketServerManager.cs" />
   </ItemGroup>

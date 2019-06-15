@@ -88,16 +88,27 @@ namespace IOTLinkAgent.Agent.WSClient
 
         private async Task OnMessageReceived(MessageEventArgs e)
         {
+            LoggerHelper.Debug("OnMessageReceived - 1");
             if (e.Data == null || e.Data.Length == 0)
+            {
+                LoggerHelper.Debug("OnMessageReceived: e.Data == null || e.Data.Length == 0");
                 return;
+            }
 
             if (e.Opcode != Opcode.Text)
+            {
+                LoggerHelper.Debug("WebSocketClient: e.Opcode ({0}) != Opcode.Text", e.Opcode.ToString());
                 return;
+            }
 
             string data = e.Text.ReadToEnd();
             if (string.IsNullOrWhiteSpace(data))
+            {
+                LoggerHelper.Debug("WebSocketClient: Empty Payload");
                 return;
+            }
 
+            LoggerHelper.Debug("OnMessageReceived - Data: {0}", data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
@@ -117,9 +128,9 @@ namespace IOTLinkAgent.Agent.WSClient
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                LoggerHelper.Debug("OnMessage - Exception: {0}", ex.ToString());
             }
         }
 
@@ -177,6 +188,7 @@ namespace IOTLinkAgent.Agent.WSClient
                 return;
 
             LoggerHelper.Trace("ParseAddonRequest - AddonId: {0} AddonData: {1}", addonId, addonData);
+            AgentAddonManager.GetInstance().Raise_OnAgentRequest(addonId, addonData);
         }
 
         private void SendMessage(MessageType messageType, dynamic contentType, dynamic data = null)

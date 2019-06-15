@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 
-namespace IOTLinkService.Commands
+namespace IOTLinkService.Service.Commands
 {
     class ServiceUninstall : ICommand
     {

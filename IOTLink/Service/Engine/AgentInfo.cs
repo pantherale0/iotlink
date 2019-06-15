@@ -1,4 +1,4 @@
-﻿namespace IOTLink.Service.Engine
+﻿namespace IOTLinkService.Service.Engine
 {
     public class AgentInfo
     {
