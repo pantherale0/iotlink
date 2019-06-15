@@ -136,6 +136,7 @@ namespace IOTLinkService.Service.Engine
             }
 
             addonsManager.Raise_OnMQTTConnected(sender, e);
+            LoggerHelper.Info("MQTT Connected");
         }
 
         private void OnMQTTDisconnected(object sender, MQTTEventEventArgs e)

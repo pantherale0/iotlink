@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Threading.Tasks;
+using System.Threading;
 using WebSocketSharp;
 
 namespace IOTLinkAgent.Agent.WSClient
@@ -50,35 +50,40 @@ namespace IOTLinkAgent.Agent.WSClient
             int tries = 0;
             _connecting = true;
             _preventReconnect = false;
+
+            if (_client != null && _client.IsAlive)
+            {
+                _client.Close();
+                _client = null;
+
+                LoggerHelper.Info("Disconnecting from previous session");
+                Thread.Sleep(1000);
+            }
+
+            _client = new WebSocket(_webSocketUri);
+            _client.OnOpen += OnOpen;
+            _client.OnClose += OnClose;
+            _client.OnError += OnError;
+            _client.OnMessage += OnMessageReceived;
+
             do
             {
                 LoggerHelper.Info("Trying to connect to WebSocketServer: {0} (Try: {1})", _webSocketUri, (tries + 1));
-                try
+                if (!_client.IsAlive)
                 {
-                    if (_client != null && _client.IsAlive)
-                        _client.Close();
-
-                    _client = new WebSocket(_webSocketUri);
-                    _client.OnOpen += OnOpen;
-                    _client.OnClose += OnClose;
-                    _client.OnError += OnError;
-                    _client.OnMessage += OnMessageReceived;
                     _client.Connect();
 
-                    LoggerHelper.Info("Connection successful");
+                    if (_client.IsAlive)
+                        break;
                 }
-                catch (Exception)
-                {
-                    LoggerHelper.Info("Connection failed");
-                    tries++;
 
-                    double waitTime = Math.Min(5 * tries, 60);
+                int waitTime = Math.Min(5 * tries++, 60);
+                LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
+                Thread.Sleep(waitTime * 1000);
+            } while (true);
 
-                    LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
-                    Task.Delay(TimeSpan.FromSeconds(waitTime));
-                }
-            } while (_client == null || !_client.IsAlive);
             _connecting = false;
+            LoggerHelper.Info("Connection successful");
         }
 
         internal void Disconnect()

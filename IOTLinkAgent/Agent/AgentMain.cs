@@ -34,7 +34,9 @@ namespace IOTLinkAgent.Agent
                 if (!string.IsNullOrWhiteSpace(uri))
                 {
                     _webSocketUri = uri;
-                    SetupAgent();
+
+                    LoggerHelper.Debug("Initializing WebSocketClient - Server URI: {0}", _webSocketUri);
+                    WebSocketClient.GetInstance().Init(_webSocketUri);
                 }
             }
         }
@@ -54,12 +56,6 @@ namespace IOTLinkAgent.Agent
 
         private void SetupAgent()
         {
-            if (string.IsNullOrWhiteSpace(_webSocketUri))
-                return;
-
-            LoggerHelper.Debug("Initializing WebSocketClient - Server URI: {0}", _webSocketUri);
-            WebSocketClient.GetInstance().Init(_webSocketUri);
-
             LoggerHelper.Debug("Initializing AgentAddonManager");
             AgentAddonManager.GetInstance().LoadAddons();
         }
