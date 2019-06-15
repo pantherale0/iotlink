@@ -78,8 +78,6 @@ namespace IOTLinkService.Service.WSServer
             }
 
             string data = e.Data;
-            LoggerHelper.Trace("OnMessage - Data: {0}", data);
-
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
@@ -125,8 +123,6 @@ namespace IOTLinkService.Service.WSServer
 
             RequestTypeClient type = content.type;
             dynamic data = content.data;
-
-            LoggerHelper.Trace("ParseClientRequest: Request Type: {0} | Data: {1}", type, data);
             switch (type)
             {
                 case RequestTypeClient.REQUEST_CONNECTED:
@@ -174,8 +170,6 @@ namespace IOTLinkService.Service.WSServer
 
             ResponseTypeClient type = content.type;
             dynamic data = content.data;
-
-            LoggerHelper.Trace("ParseClientResponse: Request Type: {0} | Data: {1}", type, data);
             switch (type)
             {
                 case ResponseTypeClient.RESPONSE_ADDON:
@@ -200,8 +194,6 @@ namespace IOTLinkService.Service.WSServer
                 return;
 
             string username = _clients.First(x => x.Value == ID).Key;
-
-            LoggerHelper.Trace("ParseAddonRequest - AgentId: {0} Username: {1} AddonId: {2} AddonData: {3}", ID, username, addonId, addonData);
             ServiceAddonManager.GetInstance().Raise_OnAgentResponse(username, addonId, addonData);
         }
 
@@ -226,8 +218,7 @@ namespace IOTLinkService.Service.WSServer
             msg.content.type = type;
             msg.content.data = data;
 
-            string payload = JsonConvert.SerializeObject(msg);
-            LoggerHelper.Trace("Sending agent message: {0}", payload);
+            string payload = JsonConvert.SerializeObject(msg, Formatting.None);
 
             if (username == null)
                 Sessions.Broadcast(payload);

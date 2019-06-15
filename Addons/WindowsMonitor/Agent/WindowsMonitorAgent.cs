@@ -2,7 +2,11 @@
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Dynamic;
+using System.IO;
+using System.Windows.Forms;
 
 namespace IOTLinkAddon.Agent
 {
@@ -40,6 +44,7 @@ namespace IOTLinkAddon.Agent
                     break;
 
                 case AddonRequestType.REQUEST_DISPLAY_SCREENSHOT:
+                    SendDisplayScreenshot();
                     break;
 
                 default: break;
@@ -60,6 +65,34 @@ namespace IOTLinkAddon.Agent
             addonData.requestType = AddonRequestType.REQUEST_DISPLAY_INFORMATION;
             addonData.requestData = PlatformHelper.GetDisplays();
             GetManager().SendAgentResponse(this, addonData);
+        }
+
+        private void SendDisplayScreenshot()
+        {
+            Screen[] screens = Screen.AllScreens;
+            for (var i = 0; i < screens.Length; i++)
+            {
+                dynamic addonData = new ExpandoObject();
+                addonData.requestType = AddonRequestType.REQUEST_DISPLAY_SCREENSHOT;
+                addonData.requestData = new ExpandoObject();
+                addonData.requestData.displayIndex = i;
+                addonData.requestData.displayScreen = GetScreenshot(screens[i]);
+                GetManager().SendAgentResponse(this, addonData);
+            }
+        }
+
+        private byte[] GetScreenshot(Screen screen)
+        {
+            Bitmap bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y, 0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    bmp.Save(ms, ImageFormat.Png);
+                    return ms.ToArray();
+                }
+            }
         }
     }
 }

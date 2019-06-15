@@ -97,8 +97,6 @@ namespace IOTLinkAgent.Agent.WSClient
             }
 
             string data = e.Data;
-            LoggerHelper.Trace("OnMessageReceived - Data: {0}", data);
-
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
@@ -138,7 +136,7 @@ namespace IOTLinkAgent.Agent.WSClient
                 return;
             }
 
-            LoggerHelper.Trace("ParseServerResponse: Content: {0]", content);
+            LoggerHelper.Trace("ParseServerResponse: Content: {0}", content);
         }
 
         private void ParseServerRequest(dynamic content)
@@ -151,8 +149,6 @@ namespace IOTLinkAgent.Agent.WSClient
 
             RequestTypeServer type = content.type;
             dynamic data = content.data;
-
-            LoggerHelper.Trace("ParseServerRequest: Request Type: {0} | Data: {1}", type, data);
             switch (type)
             {
                 case RequestTypeServer.REQUEST_SHOW_MESSAGE:
@@ -184,7 +180,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
         private void ParseShowNotification(dynamic data)
         {
-            LoggerHelper.Trace("ParseShowNotification: Data: {0]", data);
+            LoggerHelper.Trace("ParseShowNotification: Data: {0}", data);
         }
 
         private void ParseAddonRequest(dynamic data)
@@ -195,7 +191,6 @@ namespace IOTLinkAgent.Agent.WSClient
             if (string.IsNullOrWhiteSpace(addonId))
                 return;
 
-            LoggerHelper.Trace("ParseAddonRequest: AddonId: {0} AddonData: {1}", addonId, addonData);
             AgentAddonManager.GetInstance().Raise_OnAgentRequest(addonId, addonData);
         }
 
@@ -210,7 +205,7 @@ namespace IOTLinkAgent.Agent.WSClient
             msg.content.type = contentType;
             msg.content.data = data;
 
-            _client.Send(JsonConvert.SerializeObject(msg));
+            _client.Send(JsonConvert.SerializeObject(msg, Formatting.None));
         }
     }
 }

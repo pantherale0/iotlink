@@ -90,6 +90,7 @@ namespace IOTLinkAddon.Service
             SendHardDriveInfo();
             RequestAgentIdleTime();
             RequestAgentDisplayInfo();
+            RequestAgentDisplayScreenshot();
 
             LoggerHelper.Trace("OnMonitorTimerElapsed: Completed");
             _monitorTimer.Start(); // After everything, start the timer again.
@@ -170,6 +171,14 @@ namespace IOTLinkAddon.Service
             GetManager().SendAgentRequest(this, addonData);
         }
 
+        private void RequestAgentDisplayScreenshot()
+        {
+            dynamic addonData = new ExpandoObject();
+            addonData.requestType = AddonRequestType.REQUEST_DISPLAY_SCREENSHOT;
+
+            GetManager().SendAgentRequest(this, addonData);
+        }
+
         private void OnAgentResponse(object sender, AgentAddonResponseEventArgs e)
         {
             AddonRequestType requestType = e.Data.requestType;
@@ -184,7 +193,7 @@ namespace IOTLinkAddon.Service
                     break;
 
                 case AddonRequestType.REQUEST_DISPLAY_SCREENSHOT:
-
+                    ParseDisplayScreenshot(e.Data, e.Username);
                     break;
 
                 default: break;
@@ -209,6 +218,15 @@ namespace IOTLinkAddon.Service
                 SendMonitorValue(topic + "/ScreenWidth", displayInfo.ScreenWidth.ToString());
                 SendMonitorValue(topic + "/ScreenHeight", displayInfo.ScreenHeight.ToString());
             }
+        }
+
+        private void ParseDisplayScreenshot(dynamic data, string username)
+        {
+            int displayIndex = data.requestData.displayIndex;
+            byte[] displayScreen = data.requestData.displayScreen;
+            string topic = string.Format("Stats/Display/{0}/Screen", displayIndex);
+
+            GetManager().PublishMessage(this, topic, displayScreen);
         }
 
         private void SendMonitorValue(string topic, string value)
