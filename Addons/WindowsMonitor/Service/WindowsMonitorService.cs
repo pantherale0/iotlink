@@ -16,10 +16,13 @@ namespace IOTLinkAddon.Service
     public class WindowsMonitorService : ServiceAddon
     {
         private System.Timers.Timer _monitorTimer;
+        private int _monitorCounter = 0;
+
+        private string _configPath;
         private MonitorConfig _config;
+
         private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
-        private string _configPath;
 
         public override void Init(IAddonManager addonManager)
         {
@@ -56,10 +59,10 @@ namespace IOTLinkAddon.Service
             }
 
             _monitorTimer.Stop();
-            _monitorTimer.Interval = _config.Interval * 1000;
+            _monitorTimer.Interval = 1000;
             _monitorTimer.Start();
 
-            LoggerHelper.Info("System monitor is set to an interval of {0} seconds.", _config.Interval);
+            LoggerHelper.Info("System monitor is activated.");
         }
 
         private void OnConfigReload(object sender, ConfigReloadEventArgs e)
@@ -83,7 +86,6 @@ namespace IOTLinkAddon.Service
             _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
             LoggerHelper.Trace("OnMonitorTimerElapsed: Started");
 
-
             SendCPUInfo();
             SendMemoryInfo();
             SendPowerInfo();
@@ -92,18 +94,33 @@ namespace IOTLinkAddon.Service
             RequestAgentDisplayInfo();
             RequestAgentDisplayScreenshot();
 
+            if (_monitorCounter++ == int.MaxValue)
+                _monitorCounter = 0;
+
             LoggerHelper.Trace("OnMonitorTimerElapsed: Completed");
             _monitorTimer.Start(); // After everything, start the timer again.
         }
 
         private void SendCPUInfo()
         {
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey("CPU"))
+                return;
+
+            if ((DateTime.Now.Second % _config.Monitors["CPU"]) != 0)
+                return;
+
             string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
             SendMonitorValue("Stats/CPU", cpuUsage);
         }
 
         private void SendMemoryInfo()
         {
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Memory"))
+                return;
+
+            if ((_monitorCounter % _config.Monitors["Memory"]) != 0)
+                return;
+
             MemoryInfo memoryInfo = PlatformHelper.GetMemoryInformation();
             string memoryUsage = memoryInfo.MemoryLoad.ToString();
             string memoryTotal = memoryInfo.TotalPhysical.ToString();
@@ -118,6 +135,12 @@ namespace IOTLinkAddon.Service
 
         private void SendPowerInfo()
         {
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Power"))
+                return;
+
+            if ((_monitorCounter % _config.Monitors["Power"]) != 0)
+                return;
+
             PowerStatus powerStatus = SystemInformation.PowerStatus;
             string powerLineStatus = powerStatus.PowerLineStatus.ToString();
             string batteryChargeStatus = powerStatus.BatteryChargeStatus.ToString();
@@ -134,29 +157,36 @@ namespace IOTLinkAddon.Service
 
         private void SendHardDriveInfo()
         {
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey("HardDrive"))
+                return;
+
+            if ((_monitorCounter % _config.Monitors["HardDrive"]) != 0)
+                return;
+
             foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
             {
                 if (driveInfo.DriveType != DriveType.Fixed)
                     continue;
 
-                SendHardDriveInfo(driveInfo);
+                string drive = driveInfo.Name.Remove(1, 2);
+                string topic = string.Format("Stats/HardDrive/{0}", drive);
+
+                SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString());
+                SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString());
+                SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString());
+                SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat);
+                SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel);
             }
-        }
-
-        private void SendHardDriveInfo(DriveInfo driveInfo)
-        {
-            string drive = driveInfo.Name.Remove(1, 2);
-            string topic = string.Format("Stats/HardDrive/{0}", drive);
-
-            SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString());
-            SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString());
-            SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString());
-            SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat);
-            SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel);
         }
 
         private void RequestAgentIdleTime()
         {
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey("IdleTime"))
+                return;
+
+            if ((_monitorCounter % _config.Monitors["IdleTime"]) != 0)
+                return;
+
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_IDLE_TIME;
 
@@ -165,6 +195,12 @@ namespace IOTLinkAddon.Service
 
         private void RequestAgentDisplayInfo()
         {
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Display-Info"))
+                return;
+
+            if ((_monitorCounter % _config.Monitors["Display-Info"]) != 0)
+                return;
+
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_DISPLAY_INFORMATION;
 
@@ -173,6 +209,12 @@ namespace IOTLinkAddon.Service
 
         private void RequestAgentDisplayScreenshot()
         {
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Display-Screenshot"))
+                return;
+
+            if ((_monitorCounter % _config.Monitors["Display-Screenshot"]) != 0)
+                return;
+
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_DISPLAY_SCREENSHOT;
 

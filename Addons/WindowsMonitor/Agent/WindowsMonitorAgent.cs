@@ -22,12 +22,12 @@ namespace IOTLinkAddon.Agent
 
         private void OnConfigReload(object sender, ConfigReloadEventArgs e)
         {
-            LoggerHelper.Debug("WindowsMonitorAgent::OnConfigReload - {0}", e);
+            LoggerHelper.Trace("WindowsMonitorAgent::OnConfigReload");
         }
 
         private void OnAgentRequest(object sender, AgentAddonRequestEventArgs e)
         {
-            LoggerHelper.Debug("WindowsMonitorAgent::OnAgentRequest - {0}", e);
+            LoggerHelper.Trace("WindowsMonitorAgent::OnAgentRequest");
 
             AddonRequestType requestType = e.Data.requestType;
 

@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Threading.Tasks;
 using WebSocketSharp;
 
 namespace IOTLinkAgent.Agent.WSClient
@@ -15,6 +16,9 @@ namespace IOTLinkAgent.Agent.WSClient
         private static WebSocketClient _instance;
 
         private WebSocket _client;
+        private string _webSocketUri;
+        private bool _connecting;
+        private bool _preventReconnect;
 
         public static WebSocketClient GetInstance()
         {
@@ -34,20 +38,54 @@ namespace IOTLinkAgent.Agent.WSClient
             if (_client != null)
                 Disconnect();
 
-            _client = new WebSocket(uri);
-            _client.OnOpen += OnOpen;
-            _client.OnClose += OnClose;
-            _client.OnError += OnError;
-            _client.OnMessage += OnMessageReceived;
-            _client.Connect();
+            _webSocketUri = uri;
+            Connect();
+        }
+
+        internal void Connect()
+        {
+            if (string.IsNullOrWhiteSpace(_webSocketUri) || _connecting)
+                return;
+
+            int tries = 0;
+            _connecting = true;
+            _preventReconnect = false;
+            do
+            {
+                LoggerHelper.Info("Trying to connect to WebSocketServer: {0} (Try: {1})", _webSocketUri, (tries + 1));
+                try
+                {
+                    if (_client != null && _client.IsAlive)
+                        _client.Close();
+
+                    _client = new WebSocket(_webSocketUri);
+                    _client.OnOpen += OnOpen;
+                    _client.OnClose += OnClose;
+                    _client.OnError += OnError;
+                    _client.OnMessage += OnMessageReceived;
+                    _client.Connect();
+
+                    LoggerHelper.Info("Connection successful");
+                }
+                catch (Exception)
+                {
+                    LoggerHelper.Info("Connection failed");
+                    tries++;
+
+                    double waitTime = Math.Min(5 * tries, 60);
+
+                    LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
+                    Task.Delay(TimeSpan.FromSeconds(waitTime));
+                }
+            } while (_client == null || !_client.IsAlive);
+            _connecting = false;
         }
 
         internal void Disconnect()
         {
-            if (_client == null)
-                return;
+            _preventReconnect = true;
 
-            if (_client.IsAlive)
+            if (_client != null && _client.IsAlive)
                 _client.Close();
 
             _client = null;
@@ -81,11 +119,15 @@ namespace IOTLinkAgent.Agent.WSClient
         private void OnClose(object sender, CloseEventArgs arg)
         {
             LoggerHelper.Debug("WebSocketClient - Connection Closed (Clean: {0}).", arg.WasClean);
+            if (!_preventReconnect)
+                Connect();
         }
 
         private void OnError(object sender, ErrorEventArgs arg)
         {
             LoggerHelper.Error("WebSocketClient - Error: {0}", arg.Message);
+            if (!_preventReconnect)
+                Connect();
         }
 
         private void OnMessageReceived(object sender, MessageEventArgs e)
