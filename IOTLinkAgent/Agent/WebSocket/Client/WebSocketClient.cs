@@ -49,7 +49,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
             int tries = 0;
             _connecting = true;
-            _preventReconnect = false;
+            _preventReconnect = true;
 
             if (_client != null && _client.IsAlive)
             {
@@ -83,6 +83,7 @@ namespace IOTLinkAgent.Agent.WSClient
             } while (true);
 
             _connecting = false;
+            _preventReconnect = false;
             LoggerHelper.Info("Connection successful");
         }
 
@@ -144,6 +145,7 @@ namespace IOTLinkAgent.Agent.WSClient
             }
 
             string data = e.Data;
+            LoggerHelper.Trace("Message received from server: {0}", data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
@@ -252,7 +254,10 @@ namespace IOTLinkAgent.Agent.WSClient
             msg.content.type = contentType;
             msg.content.data = data;
 
-            _client.Send(JsonConvert.SerializeObject(msg, Formatting.None));
+            string payload = JsonConvert.SerializeObject(msg, Formatting.None);
+
+            LoggerHelper.Trace("Sending message to server: {0}", payload);
+            _client.Send(payload);
         }
     }
 }

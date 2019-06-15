@@ -170,11 +170,13 @@ namespace IOTLinkAddon.Service
 
                 string drive = driveInfo.Name.Remove(1, 2);
                 string topic = string.Format("Stats/HardDrive/{0}", drive);
+                int driveUsage = (int)((100.0 / driveInfo.TotalSize) * (driveInfo.TotalSize - driveInfo.TotalFreeSpace));
 
                 SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString());
                 SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString());
                 SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString());
                 SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat);
+                SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString());
                 SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel);
             }
         }

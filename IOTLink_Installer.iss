@@ -81,9 +81,9 @@ Name: "{group}\Open Addons Folder";           Filename: "{commonappdata}\{#APP_D
 Name: "{group}\Open Logs Folder";             Filename: "{commonappdata}\{#APP_DIR_NAME}\Logs";                          IconFilename: "{app}\Icons\logs.ico";               WorkingDir: "{commonappdata}\{#APP_DIR_NAME}\Logs";      Flags: foldershortcut
 
 [Run]
-Filename: "{app}\{#APP_SERVICE_NAME}";        Parameters: "--install";                  WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden;   Description: "Install {#APP_NAME} as Service";   StatusMsg: "Installing Windows Service"
-Filename: "net.exe";                          Parameters: "start {#APP_DIR_NAME}";      WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden;   Description: "Start {#APP_NAME} Service";        StatusMsg: "Starting Windows Service"
-
+Filename: "net.exe";                          Parameters: "stop {#APP_DIR_NAME}";  WorkingDir: "{app}"; Flags: runascurrentuser runhidden;             Description: "Stop {#APP_NAME} Service";       StatusMsg: "Stopping Windows Service"
+Filename: "{app}\{#APP_SERVICE_NAME}";        Parameters: "--install";             WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Install {#APP_NAME} as Service"; StatusMsg: "Installing Windows Service"
+Filename: "net.exe";                          Parameters: "start {#APP_DIR_NAME}"; WorkingDir: "{app}"; Flags: runascurrentuser postinstall runhidden; Description: "Start {#APP_NAME} Service";      StatusMsg: "Starting Windows Service"
 
 [UninstallRun]
 Filename: "net.exe";                          Parameters: "stop {#APP_DIR_NAME}";       WorkingDir: "{app}"; Flags: runhidden;

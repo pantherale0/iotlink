@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Net;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
@@ -41,7 +40,7 @@ namespace IOTLinkService.Service.WSServer
             if (_server != null)
                 Disconnect();
 
-            _server = new WebSocketServer(IPAddress.Any, 9799);
+            _server = new WebSocketServer(WEBSOCKET_URI);
             _server.AddWebSocketService("/", () => this);
             _server.Start();
         }
@@ -78,6 +77,7 @@ namespace IOTLinkService.Service.WSServer
             }
 
             string data = e.Data;
+            LoggerHelper.Trace("Message received from client {0}: {1}", ID, data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
@@ -219,6 +219,7 @@ namespace IOTLinkService.Service.WSServer
             msg.content.data = data;
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
+            LoggerHelper.Trace("Sending message to clients: {0}", payload);
 
             if (username == null)
                 Sessions.Broadcast(payload);

@@ -37,6 +37,8 @@ namespace IOTLinkAgent.Agent
 
                     LoggerHelper.Debug("Initializing WebSocketClient - Server URI: {0}", _webSocketUri);
                     WebSocketClient.GetInstance().Init(_webSocketUri);
+
+                    SetupAgent();
                 }
             }
         }
