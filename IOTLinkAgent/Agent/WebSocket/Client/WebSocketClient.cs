@@ -30,13 +30,16 @@ namespace IOTLinkAgent.Agent.WSClient
 
         private WebSocketClient()
         {
-
+            LoggerHelper.Trace("WebSocketClient instance created.");
         }
 
         internal void Init(string uri)
         {
             if (_client != null)
+            {
+                LoggerHelper.Verbose("WebSocketClient instance found. Disconnecting.");
                 Disconnect();
+            }
 
             _webSocketUri = uri;
             Connect();
@@ -45,7 +48,10 @@ namespace IOTLinkAgent.Agent.WSClient
         internal void Connect()
         {
             if (string.IsNullOrWhiteSpace(_webSocketUri) || _connecting)
+            {
+                LoggerHelper.Verbose("WebSocketURI is empty/null or client is already connecting. Skipping");
                 return;
+            }
 
             int tries = 0;
             _connecting = true;
@@ -53,11 +59,8 @@ namespace IOTLinkAgent.Agent.WSClient
 
             if (_client != null && _client.IsAlive)
             {
-                _client.Close();
-                _client = null;
-
-                LoggerHelper.Info("Disconnecting from previous session");
-                Thread.Sleep(1000);
+                LoggerHelper.Verbose("Previous session is alive! Closing it.");
+                Disconnect();
             }
 
             _client = new WebSocket(_webSocketUri);
@@ -68,7 +71,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
             do
             {
-                LoggerHelper.Info("Trying to connect to WebSocketServer: {0} (Try: {1})", _webSocketUri, (tries + 1));
+                LoggerHelper.Verbose("Trying to connect to WebSocketServer: {0} (Try: {1})", _webSocketUri, (tries + 1));
                 if (!_client.IsAlive)
                 {
                     _client.Connect();
@@ -92,7 +95,11 @@ namespace IOTLinkAgent.Agent.WSClient
             _preventReconnect = true;
 
             if (_client != null && _client.IsAlive)
+            {
+                LoggerHelper.Verbose("Alive connection found. Closing it");
                 _client.Close();
+                Thread.Sleep(1000);
+            }
 
             _client = null;
         }
@@ -126,32 +133,38 @@ namespace IOTLinkAgent.Agent.WSClient
         {
             LoggerHelper.Debug("WebSocketClient - Connection Closed (Clean: {0}).", arg.WasClean);
             if (!_preventReconnect)
+            {
+                LoggerHelper.Verbose("Reconnecting...");
                 Connect();
+            }
         }
 
         private void OnError(object sender, ErrorEventArgs arg)
         {
             LoggerHelper.Error("WebSocketClient - Error: {0}", arg.Message);
             if (!_preventReconnect)
+            {
+                LoggerHelper.Verbose("Reconnecting...");
                 Connect();
+            }
         }
 
         private void OnMessageReceived(object sender, MessageEventArgs e)
         {
             if (e.RawData == null || e.RawData.Length == 0 || !e.IsText || string.IsNullOrWhiteSpace(e.Data))
             {
-                LoggerHelper.Trace("OnMessageReceived: Invalid message content [1].");
+                LoggerHelper.Trace("OnMessageReceived - Invalid message content [1].");
                 return;
             }
 
             string data = e.Data;
-            LoggerHelper.Trace("Message received from server: {0}", data);
+            LoggerHelper.Verbose("Message received from server: {0}", data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
                 if (json == null || json.messageType == null || json.content == null)
                 {
-                    LoggerHelper.Trace("OnMessageReceived: Invalid message content [2].");
+                    LoggerHelper.Trace("OnMessageReceived - Invalid message content [2].");
                     return;
                 }
 
@@ -173,7 +186,7 @@ namespace IOTLinkAgent.Agent.WSClient
             }
             catch (Exception ex)
             {
-                LoggerHelper.Debug("OnMessage - Exception: {0}", ex.ToString());
+                LoggerHelper.Error("OnMessageReceived - Exception: {0}", ex.ToString());
             }
         }
 
@@ -181,18 +194,18 @@ namespace IOTLinkAgent.Agent.WSClient
         {
             if (content == null || content.type == null || content.data == null)
             {
-                LoggerHelper.Trace("ParseServerResponse: Invalid message content.");
+                LoggerHelper.Trace("ParseServerResponse - Invalid message content.");
                 return;
             }
 
-            LoggerHelper.Trace("ParseServerResponse: Content: {0}", content);
+            LoggerHelper.Trace("ParseServerResponse - Content: {0}", content);
         }
 
         private void ParseServerRequest(dynamic content)
         {
             if (content == null || content.type == null || content.data == null)
             {
-                LoggerHelper.Trace("ParseServerRequest: Invalid message content.");
+                LoggerHelper.Trace("ParseServerRequest - Invalid message content.");
                 return;
             }
 
@@ -223,13 +236,13 @@ namespace IOTLinkAgent.Agent.WSClient
             string title = data.title;
             string message = data.message;
 
-            LoggerHelper.Trace("ParseShowMessage: Title: {0} Message: {1}", title, message);
+            LoggerHelper.Verbose("ParseShowMessage - Title: {0} Message: {1}", title, message);
             WindowsAPI.ShowMessage(title, message);
         }
 
         private void ParseShowNotification(dynamic data)
         {
-            LoggerHelper.Trace("ParseShowNotification: Data: {0}", data);
+            LoggerHelper.Trace("ParseShowNotification - Data: {0}", data);
         }
 
         private void ParseAddonRequest(dynamic data)
@@ -246,7 +259,10 @@ namespace IOTLinkAgent.Agent.WSClient
         private void SendMessage(MessageType messageType, dynamic contentType, dynamic data = null)
         {
             if (!IsConnected())
+            {
+                LoggerHelper.Verbose("Client not connected. Skipping.");
                 return;
+            }
 
             dynamic msg = new ExpandoObject();
             msg.messageType = messageType;
@@ -256,7 +272,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
 
-            LoggerHelper.Trace("Sending message to server: {0}", payload);
+            LoggerHelper.Verbose("Sending message to server: {0}", payload);
             _client.Send(payload);
         }
     }

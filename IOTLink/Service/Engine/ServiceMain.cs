@@ -2,11 +2,9 @@
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
-using IOTLinkAPI.Platform.Windows;
 using IOTLinkService.Service.Engine.MQTT;
 using IOTLinkService.Service.WSServer;
 using System;
-using System.Collections.Generic;
 using System.ServiceProcess;
 
 namespace IOTLinkService.Service.Engine
@@ -20,8 +18,6 @@ namespace IOTLinkService.Service.Engine
 
         private System.Timers.Timer _processMonitorTimer;
 
-        private Dictionary<string, object> _globals = new Dictionary<string, object>();
-
         public static ServiceMain GetInstance()
         {
             if (_instance == null)
@@ -32,48 +28,36 @@ namespace IOTLinkService.Service.Engine
 
         private ServiceMain()
         {
-            // Agent Monitor
-            _processMonitorTimer = new System.Timers.Timer();
-            _processMonitorTimer.Interval = 5 * 1000;
-            _processMonitorTimer.Elapsed += OnProcessMonitorTimerElapsed;
-            _processMonitorTimer.Start();
-
-            // Configuration Handling
+            LoggerHelper.Trace("ServiceMain instance created.");
             ConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
         }
 
         private void OnProcessMonitorTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            StartAgents();
+            _processMonitorTimer.Stop();
+            AgentManager.GetInstance().StartAgents();
+            _processMonitorTimer.Start();
         }
 
         public void StartApplication()
         {
+            if (_processMonitorTimer == null)
+            {
+                // Agent Monitor
+                _processMonitorTimer = new System.Timers.Timer();
+                _processMonitorTimer.Interval = 5 * 1000;
+                _processMonitorTimer.Elapsed += OnProcessMonitorTimerElapsed;
+                _processMonitorTimer.Start();
+            }
+
             SetupMQTTHandlers();
             SetupWebSocket();
-            StartAgents();
         }
 
         public void StopApplication()
         {
             AgentManager.GetInstance().StopAgents();
             LoggerHelper.GetInstance().Flush();
-        }
-
-        public object GetGlobal(string key, object def = null)
-        {
-            if (!_globals.ContainsKey(key))
-                return def;
-
-            return _globals[key];
-        }
-
-        public void SetGlobal(string key, object value)
-        {
-            if (_globals.ContainsKey(key))
-                _globals.Remove(key);
-
-            _globals.Add(key, value);
         }
 
         private void SetupWebSocket()
@@ -105,7 +89,10 @@ namespace IOTLinkService.Service.Engine
             }
 
             if (client.IsConnected())
+            {
+                LoggerHelper.Verbose("Disconnecting from MQTT Broker");
                 client.Disconnect();
+            }
 
             client.Init(config.MQTT);
             client.OnMQTTConnected += OnMQTTConnected;
@@ -118,9 +105,11 @@ namespace IOTLinkService.Service.Engine
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
             {
                 LoggerHelper.Info("Changes to configuration.yaml detected. Reloading.");
+                ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
 
                 SetupMQTTHandlers();
-                ServiceAddonManager.GetInstance().Raise_OnConfigReloadHandler(this, e);
+                SetupWebSocket();
+                addonsManager.Raise_OnConfigReloadHandler(this, e);
 
                 _lastConfigChange = DateTime.Now;
             }
@@ -128,6 +117,8 @@ namespace IOTLinkService.Service.Engine
 
         private void OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
+            LoggerHelper.Verbose("MQTT Connected");
+
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             if (!_addonsLoaded)
             {
@@ -136,23 +127,26 @@ namespace IOTLinkService.Service.Engine
             }
 
             addonsManager.Raise_OnMQTTConnected(sender, e);
-            LoggerHelper.Info("MQTT Connected");
         }
 
         private void OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
+            LoggerHelper.Verbose("MQTT Disconnected");
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnMQTTDisconnected(sender, e);
         }
 
         private void OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
+            LoggerHelper.Verbose("MQTT Message Received");
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }
 
         public void OnSessionChange(string username, int sessionId, SessionChangeReason reason)
         {
+            LoggerHelper.Verbose("Session Changed");
+
             SessionChangeEventArgs args = new SessionChangeEventArgs
             {
                 Username = username,
@@ -168,16 +162,6 @@ namespace IOTLinkService.Service.Engine
 
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnSessionChange(this, args);
-        }
-
-        private void StartAgents()
-        {
-            AgentManager agentManager = AgentManager.GetInstance();
-            List<WindowsSessionInfo> winSessions = WindowsAPI.GetWindowsSessions().FindAll(s => s.IsActive);
-            foreach (WindowsSessionInfo sessionInfo in winSessions)
-            {
-                agentManager.StartAgent(sessionInfo.SessionID, sessionInfo.Username);
-            }
         }
     }
 }

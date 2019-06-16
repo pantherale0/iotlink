@@ -16,7 +16,7 @@ namespace IOTLinkAgent
         public static int Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
-            LoggerHelper.Debug("Agent Initialized");
+            LoggerHelper.Info("Agent Initialized");
 
             // Service Run
             if (!Environment.UserInteractive)

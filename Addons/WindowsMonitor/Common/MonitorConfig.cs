@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using YamlDotNet.Serialization;
+﻿using YamlDotNet.Serialization;
 
 namespace IOTLinkAddon.Common
 {
@@ -8,7 +7,10 @@ namespace IOTLinkAddon.Common
         [YamlMember(Alias = "enabled")]
         public bool Enabled { get; set; }
 
-        [YamlMember(Alias = "monitors")]
-        public Dictionary<string, int> Monitors { get; set; }
+        [YamlMember(Alias = "cacheable")]
+        public bool Cacheable { get; set; }
+
+        [YamlMember(Alias = "interval")]
+        public int Interval { get; set; }
     }
 }

@@ -11,35 +11,21 @@ namespace IOTLinkAPI.Helpers
 {
     public static class ConfigHelper
     {
+        private const string ENGINE_CONF_FILE = "configuration.yaml";
+
         private static Dictionary<string, ConfigInfo> _configs = new Dictionary<string, ConfigInfo>();
 
         public delegate void ConfigReloadedHandler(object sender, ConfigReloadEventArgs e);
 
-        private class ConfigInfo
-        {
-            public object Config { get; set; }
-
-            public FileSystemWatcher FileSystemWatcher { get; set; }
-
-            public ConfigType ConfigType { get; set; }
-
-            public event ConfigReloadedHandler OnConfigReloadHandler;
-
-            public void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
-            {
-                OnConfigReloadHandler?.Invoke(sender, e);
-            }
-        }
-
         public static ApplicationConfig GetEngineConfig()
         {
-            string path = Path.Combine(PathHelper.ConfigPath(), "configuration.yaml");
+            string path = Path.Combine(PathHelper.ConfigPath(), ENGINE_CONF_FILE);
             return GetConfiguration<ApplicationConfig>(path);
         }
 
         public static void SetEngineConfigReloadHandler(ConfigReloadedHandler configReloadedHandler)
         {
-            string path = Path.Combine(PathHelper.ConfigPath(), "configuration.yaml");
+            string path = Path.Combine(PathHelper.ConfigPath(), ENGINE_CONF_FILE);
             SetReloadHandler<ApplicationConfig>(path, configReloadedHandler, ConfigType.CONFIGURATION_ENGINE);
         }
 
@@ -66,7 +52,7 @@ namespace IOTLinkAPI.Helpers
                 config = LoadConfiguration<T>(path);
                 if (config == null)
                 {
-                    LoggerHelper.Error("Configuration not found: {0}", path);
+                    LoggerHelper.Error("Configuration file not found: {0}", path);
                     return default(T);
                 }
             }

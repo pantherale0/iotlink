@@ -26,43 +26,43 @@ namespace IOTLinkAddon
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnShutdownMessage: Message received");
+            LoggerHelper.Verbose("OnShutdownMessage: Message received");
             PlatformHelper.Shutdown();
         }
 
         private void OnRebootMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnRebootMessage: Message received");
+            LoggerHelper.Verbose("OnRebootMessage: Message received");
             PlatformHelper.Reboot();
         }
 
         private void OnLogoffMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnLogoffMessage: Message received");
+            LoggerHelper.Verbose("OnLogoffMessage: Message received");
             PlatformHelper.Logoff(e.Message.GetPayload());
         }
 
         private void OnLockMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnLockMessage: Message received");
+            LoggerHelper.Verbose("OnLockMessage: Message received");
             PlatformHelper.Lock(e.Message.GetPayload());
         }
 
         private void OnHibernateMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnHibernateMessage: Message received");
+            LoggerHelper.Verbose("OnHibernateMessage: Message received");
             PlatformHelper.Hibernate();
         }
 
         private void OnSuspendMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnSuspendMessage: Message received");
+            LoggerHelper.Verbose("OnSuspendMessage: Message received");
             PlatformHelper.Suspend();
         }
 
         private void OnRunMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnCommandRun: Message received");
+            LoggerHelper.Verbose("OnCommandRun: Message received");
             string value = e.Message.GetPayload();
             if (value == null)
                 return;
@@ -91,7 +91,7 @@ namespace IOTLinkAddon
 
         private void OnVolumeSetMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnVolumeSet: Message received");
+            LoggerHelper.Verbose("OnVolumeSet: Message received");
             try
             {
                 double volume = Convert.ToDouble(e.Message.GetPayload());
@@ -107,7 +107,7 @@ namespace IOTLinkAddon
 
         private void OnVolumeMuteMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("OnVolumeMute: Message received");
+            LoggerHelper.Verbose("OnVolumeMute: Message received");
             try
             {
                 if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))

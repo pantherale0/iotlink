@@ -13,7 +13,7 @@ enabled: true
 ########################################################################
 # Configure which monitors are enabled and which interval they should
 # be pooled from the system. I don't recommend less than 5 seconds.
-# Comment the line to disable the specific monitor.
+# Cacheable monitors don't send the value repeatedly unless it changes.
 ########################################################################
 # CPU               : CPU Usage
 # Memory            : Memory (Usage, Available, Used, Total)
@@ -24,10 +24,31 @@ enabled: true
 # Display-Screenshot: Screenshot (Per Display) - Recommended > 60 secs.
 ########################################################################
 monitors:
-  CPU: 10
-  Memory: 10
-  HardDrive: 60
-  Power: 10
-  IdleTime: 10
-  Display-Info: 60
-  Display-Screenshot: 60
+  CPU:
+    enabled: true
+    interval: 10
+    cacheable: true
+  Memory:
+    enabled: true
+    interval: 10
+    cacheable: true
+  HardDrive:
+    enabled: true
+    interval: 10
+    cacheable: true
+  Power:
+    enabled: true
+    interval: 10
+    cacheable: true
+  IdleTime:
+    enabled: true
+    interval: 10
+    cacheable: true
+  Display-Info:
+    enabled: true
+    interval: 60
+    cacheable: true
+  Display-Screenshot:
+    enabled: true
+    interval: 60
+    cacheable: false

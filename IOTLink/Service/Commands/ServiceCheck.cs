@@ -1,4 +1,5 @@
-﻿using IOTLinkAPI.Platform.Windows;
+﻿using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Windows;
 using System;
 using System.Linq;
 using System.ServiceProcess;
@@ -17,20 +18,30 @@ namespace IOTLinkService.Service.Commands
         public int ExecuteCommand(string[] args)
         {
             if (!Environment.UserInteractive)
+            {
+                LoggerHelper.Verbose("Command {0} - Running on non-interactive mode. Skipping", COMMAND_LINE);
                 return -1;
+            }
 
             try
             {
                 bool serviceExists = ServiceController.GetServices().Any(s => s.ServiceName == "IOTLink");
                 if (serviceExists)
+                {
+                    LoggerHelper.Verbose("Command {0} - Service is installed.", COMMAND_LINE);
                     WindowsAPI.ShowMessage("Service Installer", "Service is installed.");
+                }
                 else
-                    WindowsAPI.ShowMessage("Service Installer", "Service is not installed.");
+                {
+                    LoggerHelper.Verbose("Command {0} - Service is NOT installed.", COMMAND_LINE);
+                    WindowsAPI.ShowMessage("Service Installer", "Service is NOT installed.");
+                }
 
                 return 0;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LoggerHelper.Error("Command {0} - Error while running command: {1}", COMMAND_LINE, ex.ToString());
                 WindowsAPI.ShowMessage("Service Installer", "Please, run as an administrator.");
             }
 

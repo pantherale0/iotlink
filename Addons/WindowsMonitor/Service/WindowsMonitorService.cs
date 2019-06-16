@@ -16,10 +16,10 @@ namespace IOTLinkAddon.Service
     public class WindowsMonitorService : ServiceAddon
     {
         private System.Timers.Timer _monitorTimer;
-        private int _monitorCounter = 0;
+        private uint _monitorCounter = 0;
 
         private string _configPath;
-        private MonitorConfig _config;
+        private WindowsMonitorConfig _config;
 
         private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
@@ -30,9 +30,9 @@ namespace IOTLinkAddon.Service
 
 
             _configPath = Path.Combine(this._currentPath, "config.yaml");
-            ConfigHelper.SetReloadHandler<MonitorConfig>(_configPath, OnConfigReload);
+            ConfigHelper.SetReloadHandler<WindowsMonitorConfig>(_configPath, OnConfigReload);
 
-            _config = ConfigHelper.GetConfiguration<MonitorConfig>(_configPath);
+            _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
 
             _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             _cpuPerformanceCounter.NextValue();
@@ -70,13 +70,13 @@ namespace IOTLinkAddon.Service
             if (e.ConfigType != ConfigType.CONFIGURATION_ADDON)
                 return;
 
-            _config = ConfigHelper.GetConfiguration<MonitorConfig>(_configPath);
+            _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
             SetupTimers();
         }
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            LoggerHelper.Debug("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
+            LoggerHelper.Verbose("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
             GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
         }
@@ -84,7 +84,7 @@ namespace IOTLinkAddon.Service
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
             _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
-            LoggerHelper.Trace("OnMonitorTimerElapsed: Started");
+            LoggerHelper.Verbose("OnMonitorTimerElapsed: Started");
 
             SendCPUInfo();
             SendMemoryInfo();
@@ -94,32 +94,31 @@ namespace IOTLinkAddon.Service
             RequestAgentDisplayInfo();
             RequestAgentDisplayScreenshot();
 
-            if (_monitorCounter++ == int.MaxValue)
+            if (_monitorCounter++ == uint.MaxValue)
                 _monitorCounter = 0;
 
-            LoggerHelper.Trace("OnMonitorTimerElapsed: Completed");
+            LoggerHelper.Verbose("OnMonitorTimerElapsed: Completed");
             _monitorTimer.Start(); // After everything, start the timer again.
         }
 
         private void SendCPUInfo()
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey("CPU"))
+            const string configKey = "CPU";
+            if (!CanRun(configKey))
                 return;
 
-            if ((DateTime.Now.Second % _config.Monitors["CPU"]) != 0)
-                return;
-
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
             string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
-            SendMonitorValue("Stats/CPU", cpuUsage);
+            SendMonitorValue("Stats/CPU", cpuUsage, configKey);
         }
 
         private void SendMemoryInfo()
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Memory"))
+            const string configKey = "Memory";
+            if (!CanRun(configKey))
                 return;
 
-            if ((_monitorCounter % _config.Monitors["Memory"]) != 0)
-                return;
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             MemoryInfo memoryInfo = PlatformHelper.GetMemoryInformation();
             string memoryUsage = memoryInfo.MemoryLoad.ToString();
@@ -127,19 +126,19 @@ namespace IOTLinkAddon.Service
             string memoryAvailable = memoryInfo.AvailPhysical.ToString();
             string memoryUsed = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical).ToString();
 
-            SendMonitorValue("Stats/Memory/Usage", memoryUsage);
-            SendMonitorValue("Stats/Memory/Available", memoryAvailable);
-            SendMonitorValue("Stats/Memory/Used", memoryUsed);
-            SendMonitorValue("Stats/Memory/Total", memoryTotal);
+            SendMonitorValue("Stats/Memory/Usage", memoryUsage, configKey);
+            SendMonitorValue("Stats/Memory/Available", memoryAvailable, configKey);
+            SendMonitorValue("Stats/Memory/Used", memoryUsed, configKey);
+            SendMonitorValue("Stats/Memory/Total", memoryTotal, configKey);
         }
 
         private void SendPowerInfo()
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Power"))
+            const string configKey = "Power";
+            if (!CanRun(configKey))
                 return;
 
-            if ((_monitorCounter % _config.Monitors["Power"]) != 0)
-                return;
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             PowerStatus powerStatus = SystemInformation.PowerStatus;
             string powerLineStatus = powerStatus.PowerLineStatus.ToString();
@@ -148,20 +147,20 @@ namespace IOTLinkAddon.Service
             string batteryLifePercent = (powerStatus.BatteryLifePercent * 100).ToString();
             string batteryLifeRemaining = powerStatus.BatteryLifeRemaining.ToString();
 
-            SendMonitorValue("Stats/Power/Status", powerLineStatus);
-            SendMonitorValue("Stats/Battery/Status", batteryChargeStatus);
-            SendMonitorValue("Stats/Battery/FullLifetime", batteryFullLifetime);
-            SendMonitorValue("Stats/Battery/RemainingTime", batteryLifeRemaining);
-            SendMonitorValue("Stats/Battery/RemainingPercent", batteryLifePercent);
+            SendMonitorValue("Stats/Power/Status", powerLineStatus, configKey);
+            SendMonitorValue("Stats/Battery/Status", batteryChargeStatus, configKey);
+            SendMonitorValue("Stats/Battery/FullLifetime", batteryFullLifetime, configKey);
+            SendMonitorValue("Stats/Battery/RemainingTime", batteryLifeRemaining, configKey);
+            SendMonitorValue("Stats/Battery/RemainingPercent", batteryLifePercent, configKey);
         }
 
         private void SendHardDriveInfo()
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey("HardDrive"))
+            const string configKey = "HardDrive";
+            if (!CanRun(configKey))
                 return;
 
-            if ((_monitorCounter % _config.Monitors["HardDrive"]) != 0)
-                return;
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
             {
@@ -170,24 +169,27 @@ namespace IOTLinkAddon.Service
 
                 string drive = driveInfo.Name.Remove(1, 2);
                 string topic = string.Format("Stats/HardDrive/{0}", drive);
-                int driveUsage = (int)((100.0 / driveInfo.TotalSize) * (driveInfo.TotalSize - driveInfo.TotalFreeSpace));
 
-                SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString());
-                SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString());
-                SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString());
-                SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat);
-                SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString());
-                SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel);
+                long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
+                int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
+
+                SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString(), configKey);
+                SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString(), configKey);
+                SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString(), configKey);
+                SendMonitorValue(topic + "/UsedSpace", usedSpace.ToString(), configKey);
+                SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat, configKey);
+                SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString(), configKey);
+                SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel, configKey);
             }
         }
 
         private void RequestAgentIdleTime()
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey("IdleTime"))
+            const string configKey = "IdleTime";
+            if (!CanRun(configKey))
                 return;
 
-            if ((_monitorCounter % _config.Monitors["IdleTime"]) != 0)
-                return;
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_IDLE_TIME;
@@ -197,11 +199,11 @@ namespace IOTLinkAddon.Service
 
         private void RequestAgentDisplayInfo()
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Display-Info"))
+            const string configKey = "Display-Info";
+            if (!CanRun(configKey))
                 return;
 
-            if ((_monitorCounter % _config.Monitors["Display-Info"]) != 0)
-                return;
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_DISPLAY_INFORMATION;
@@ -211,11 +213,11 @@ namespace IOTLinkAddon.Service
 
         private void RequestAgentDisplayScreenshot()
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey("Display-Screenshot"))
+            const string configKey = "Display-Screenshot";
+            if (!CanRun(configKey))
                 return;
 
-            if ((_monitorCounter % _config.Monitors["Display-Screenshot"]) != 0)
-                return;
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_DISPLAY_SCREENSHOT;
@@ -246,21 +248,23 @@ namespace IOTLinkAddon.Service
 
         private void ParseIdleTime(dynamic data, string username)
         {
+            const string configKey = "IdleTime";
             uint idleTime = (uint)data.requestData;
 
-            SendMonitorValue("Stats/IdleTime/" + username, idleTime.ToString());
+            SendMonitorValue("Stats/IdleTime/" + username, idleTime.ToString(), configKey);
         }
 
         private void ParseDisplayInfo(dynamic data, string username)
         {
+            const string configKey = "Display-Info";
             List<DisplayInfo> displayInfos = data.requestData.ToObject<List<DisplayInfo>>();
             for (var i = 0; i < displayInfos.Count; i++)
             {
                 DisplayInfo displayInfo = displayInfos[i];
 
                 string topic = string.Format("Stats/Display/{0}", i);
-                SendMonitorValue(topic + "/ScreenWidth", displayInfo.ScreenWidth.ToString());
-                SendMonitorValue(topic + "/ScreenHeight", displayInfo.ScreenHeight.ToString());
+                SendMonitorValue(topic + "/ScreenWidth", displayInfo.ScreenWidth.ToString(), configKey);
+                SendMonitorValue(topic + "/ScreenHeight", displayInfo.ScreenHeight.ToString(), configKey);
             }
         }
 
@@ -273,12 +277,31 @@ namespace IOTLinkAddon.Service
             GetManager().PublishMessage(this, topic, displayScreen);
         }
 
-        private void SendMonitorValue(string topic, string value)
+        private bool CanRun(string configKey)
         {
-            if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)
-                return;
+            if (_config.Monitors == null || !_config.Monitors.ContainsKey(configKey) || !_config.Monitors[configKey].Enabled)
+            {
+                LoggerHelper.Verbose("{0} monitor disabled.", configKey);
+                return false;
+            }
 
-            _cache[topic] = value;
+            MonitorConfig monitor = _config.Monitors[configKey];
+            if ((_monitorCounter % monitor.Interval) != 0)
+                return false;
+
+            return true;
+        }
+
+        private void SendMonitorValue(string topic, string value, string configKey = null)
+        {
+            if (configKey != null && _config.Monitors != null && _config.Monitors.ContainsKey(configKey) && _config.Monitors[configKey].Cacheable)
+            {
+                if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)
+                    return;
+
+                _cache[topic] = value;
+            }
+
             GetManager().PublishMessage(this, topic, value);
         }
     }

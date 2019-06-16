@@ -64,7 +64,7 @@ namespace IOTLinkAPI.Helpers
         /// <param name="force">Boolean indicating if the call should be flagged as forced</param>
         public static void Reboot(bool force = false)
         {
-            LoggerHelper.Debug("Executing {0} system shutdown.", force ? "forced" : "normal");
+            LoggerHelper.Debug("Executing {0} system reboot.", force ? "forced" : "normal");
             string filename = "shutdown";
             string args = null;
 

@@ -1,4 +1,6 @@
-﻿using IOTLinkAPI.Platform.Events;
+﻿using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Events;
+using System;
 
 namespace IOTLinkAPI.Addons
 {
@@ -23,12 +25,26 @@ namespace IOTLinkAPI.Addons
 
         public void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
         {
-            OnConfigReloadHandler?.Invoke(sender, e);
+            try
+            {
+                OnConfigReloadHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("AgentAddon::OnConfigReloadHandler - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
 
         public void Raise_OnAgentResponse(object sender, AgentAddonRequestEventArgs e)
         {
-            OnAgentRequestHandler?.Invoke(sender, e);
+            try
+            {
+                OnAgentRequestHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("AgentAddon::OnAgentResponse - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
     }
 }

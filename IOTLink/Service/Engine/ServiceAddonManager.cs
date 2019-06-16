@@ -31,7 +31,7 @@ namespace IOTLinkService.Service.Engine
 
         private ServiceAddonManager()
         {
-
+            LoggerHelper.Trace("ServiceAddonManager instance created.");
         }
 
         /// <summary>
