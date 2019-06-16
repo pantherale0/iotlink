@@ -1,5 +1,6 @@
 ﻿using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.Windows;
 using IOTLinkService.Service.WSServer;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace IOTLinkService.Service.Engine
     public class AgentManager
     {
         private static AgentManager _instance;
+        private bool verifyingAgents = false;
 
         public static AgentManager GetInstance()
         {
@@ -23,11 +25,13 @@ namespace IOTLinkService.Service.Engine
 
         private AgentManager()
         {
-
+            LoggerHelper.Trace("AgentManager instance created.");
         }
 
         public List<AgentInfo> GetAgents()
         {
+            LoggerHelper.Trace("GetAgents() - Initialized");
+
             string wmiQuery = string.Format("SELECT SessionId, ProcessID, CommandLine FROM Win32_Process WHERE Name='{0}.exe'", PathHelper.APP_AGENT_NAME);
             ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
             ManagementObjectCollection objCollection = searcher.Get();
@@ -38,28 +42,58 @@ namespace IOTLinkService.Service.Engine
                 int sessionId = Convert.ToInt32(processInfo.Properties["SessionId"].Value);
                 int processId = Convert.ToInt32(processInfo.Properties["ProcessID"].Value);
                 string commandLine = (string)processInfo.Properties["CommandLine"].Value;
+                string username = PlatformHelper.GetUsername(sessionId);
 
                 agents.Add(new AgentInfo
                 {
                     SessionId = sessionId,
                     ProcessId = processId,
                     CommandLine = commandLine,
-                    Username = PlatformHelper.GetUsername(sessionId)
+                    Username = username
                 });
+
+                LoggerHelper.Trace("GetAgents() - Agent Found. SessionId: {0} PID: {1} Username: {2} CommandLine: {3}", sessionId, processId, username, commandLine);
             }
 
             return agents;
         }
 
+        public void StartAgents()
+        {
+            if (verifyingAgents)
+                return;
+
+            LoggerHelper.Trace("StartAgents() - Initialized");
+            try
+            {
+                verifyingAgents = true;
+                List<WindowsSessionInfo> winSessions = WindowsAPI.GetWindowsSessions().FindAll(s => s.IsActive);
+                foreach (WindowsSessionInfo sessionInfo in winSessions)
+                {
+                    LoggerHelper.Trace(
+                        "StartAgents() - Windows Session Found. SessionId: {0} StationName: {1} Username: {2} IsActive: {3}",
+                        sessionInfo.SessionID, sessionInfo.StationName, sessionInfo.Username, sessionInfo.IsActive
+                    );
+                    StartAgent(sessionInfo.SessionID, sessionInfo.Username);
+                }
+            }
+            finally
+            {
+                verifyingAgents = false;
+            }
+        }
+
         public void StartAgent(int sessionId, string username = null)
         {
-            AgentManager agentManager = AgentManager.GetInstance();
-            List<AgentInfo> agents = agentManager.GetAgents();
+            LoggerHelper.Trace("StartAgent() - Initialized. SessionId: {0} Username: {1}", sessionId, username);
+            List<AgentInfo> agents = GetAgents();
+
             foreach (AgentInfo agentInfo in agents)
             {
+                LoggerHelper.Trace("StartAgent() - Agent Found. SessionId: {0} PID: {1} Username: {2} CommandLine: {3}", agentInfo.SessionId, agentInfo.ProcessId, agentInfo.Username, agentInfo.CommandLine);
                 if (agentInfo.SessionId == sessionId && agentInfo.CommandLine.Contains("--agent"))
                 {
-                    LoggerHelper.Trace("StartAgent - Agent instance is already running for this user. Skipping.");
+                    LoggerHelper.Trace("StartAgent() - Agent instance is already running for this user. Skipping.");
                     return;
                 }
             }
@@ -77,24 +111,32 @@ namespace IOTLinkService.Service.Engine
                 Fallback = false
             };
 
+            LoggerHelper.Debug(
+                "StartAgent() - Executing Run. Application: {0} CommandLine: {1} WorkingDir: {2} Username: {3} Visible: {4} Fallback: {5}",
+                runInfo.Application, runInfo.CommandLine, runInfo.WorkingDir, runInfo.Username, runInfo.Visible, runInfo.Fallback
+            );
             PlatformHelper.Run(runInfo);
         }
 
         public void StopAgents()
         {
-            AgentManager agentManager = AgentManager.GetInstance();
-            List<AgentInfo> agents = agentManager.GetAgents();
+            LoggerHelper.Trace("StopAgents() - Initialized");
+            List<AgentInfo> agents = GetAgents();
             foreach (AgentInfo agentInfo in agents)
             {
                 try
                 {
+                    LoggerHelper.Trace("StopAgents() - Agent Found. SessionId: {0} PID: {1} Username: {2} CommandLine: {3}", agentInfo.SessionId, agentInfo.ProcessId, agentInfo.Username, agentInfo.CommandLine);
                     Process process = Process.GetProcessById(agentInfo.ProcessId);
                     if (process != null)
+                    {
+                        LoggerHelper.Debug("StopAgents() - Process {0} found. Killing it.", process.Id);
                         process.Kill();
+                    }
                 }
                 catch (Exception ex)
                 {
-                    LoggerHelper.Error("StopAgents - Failed to Kill PID {0}: {1}", agentInfo.ProcessId, ex.ToString());
+                    LoggerHelper.Error("StopAgents() - Failed to Kill PID {0}: {1}", agentInfo.ProcessId, ex.ToString());
                 }
             }
         }

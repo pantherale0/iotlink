@@ -2,6 +2,7 @@
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Dynamic;
@@ -22,12 +23,12 @@ namespace IOTLinkAddon.Agent
 
         private void OnConfigReload(object sender, ConfigReloadEventArgs e)
         {
-            LoggerHelper.Trace("WindowsMonitorAgent::OnConfigReload");
+            LoggerHelper.Verbose("WindowsMonitorAgent::OnConfigReload");
         }
 
         private void OnAgentRequest(object sender, AgentAddonRequestEventArgs e)
         {
-            LoggerHelper.Trace("WindowsMonitorAgent::OnAgentRequest");
+            LoggerHelper.Verbose("WindowsMonitorAgent::OnAgentRequest");
 
             AddonRequestType requestType = e.Data.requestType;
 
@@ -72,27 +73,39 @@ namespace IOTLinkAddon.Agent
             Screen[] screens = Screen.AllScreens;
             for (var i = 0; i < screens.Length; i++)
             {
+                byte[] screenshot = GetScreenshot(screens[i]);
+                if (screenshot == null || screenshot.Length == 0)
+                    return;
+
                 dynamic addonData = new ExpandoObject();
                 addonData.requestType = AddonRequestType.REQUEST_DISPLAY_SCREENSHOT;
                 addonData.requestData = new ExpandoObject();
                 addonData.requestData.displayIndex = i;
-                addonData.requestData.displayScreen = GetScreenshot(screens[i]);
+                addonData.requestData.displayScreen = screenshot;
                 GetManager().SendAgentResponse(this, addonData);
             }
         }
 
         private byte[] GetScreenshot(Screen screen)
         {
-            Bitmap bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
-            using (Graphics g = Graphics.FromImage(bmp))
+            try
             {
-                g.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y, 0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
-                using (MemoryStream ms = new MemoryStream())
+                Bitmap bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
+                using (Graphics g = Graphics.FromImage(bmp))
                 {
-                    bmp.Save(ms, ImageFormat.Png);
-                    return ms.ToArray();
+                    g.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y, 0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        bmp.Save(ms, ImageFormat.Png);
+                        return ms.ToArray();
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                LoggerHelper.Debug("GetScreenshot - Exception: {0}", ex.ToString());
+            }
+            return null;
         }
     }
 }

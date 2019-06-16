@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Threading;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
@@ -32,17 +33,47 @@ namespace IOTLinkService.Service.WSServer
 
         private WebSocketServerManager()
         {
-
+            LoggerHelper.Trace("WebSocketServerManager instance created.");
         }
 
         internal void Init()
         {
             if (_server != null)
+            {
+                LoggerHelper.Verbose("WebSocketServer instance found. Disconnecting.");
                 Disconnect();
+            }
 
             _server = new WebSocketServer(WEBSOCKET_URI);
             _server.AddWebSocketService("/", () => this);
-            _server.Start();
+            StartServer();
+        }
+
+        internal void StartServer()
+        {
+            if (_server == null)
+            {
+                LoggerHelper.Debug("WebSocketServer instance not found.");
+                return;
+            }
+
+            int tries = 0;
+            do
+            {
+                LoggerHelper.Verbose("Trying to start a WebSocketServer: {0} (Try: {1})", WEBSOCKET_URI, (tries + 1));
+                if (!_server.IsListening)
+                {
+                    _server.Start();
+                    if (_server.IsListening)
+                        break;
+                }
+
+                int waitTime = Math.Min(1 * tries++, 60);
+                LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
+                Thread.Sleep(waitTime * 1000);
+            } while (true);
+
+            LoggerHelper.Info("WebSocketServer started at {0}.", WEBSOCKET_URI);
         }
 
         internal void Disconnect()
@@ -51,7 +82,10 @@ namespace IOTLinkService.Service.WSServer
                 return;
 
             if (_server.IsListening)
+            {
+                LoggerHelper.Verbose("WebSocketServer was listening. Stopping.");
                 _server.Stop();
+            }
 
             _server = null;
         }
@@ -63,27 +97,28 @@ namespace IOTLinkService.Service.WSServer
 
         protected override void OnMessage(MessageEventArgs e)
         {
-            if (e.IsPing)
-            {
-                LoggerHelper.Trace("OnMessage - Ping received from {0}", ID);
-                Sessions.PingTo(ID);
-                return;
-            }
-
-            if (e.RawData == null || e.RawData.Length == 0 || !e.IsText || string.IsNullOrWhiteSpace(e.Data))
-            {
-                LoggerHelper.Trace("OnMessage: Invalid message content [1].");
-                return;
-            }
-
-            string data = e.Data;
-            LoggerHelper.Trace("Message received from client {0}: {1}", ID, data);
             try
             {
+                if (e.IsPing)
+                {
+                    LoggerHelper.Trace("OnMessage - Ping received from {0}", ID);
+                    Sessions.PingTo(ID);
+                    return;
+                }
+
+                if (e.RawData == null || e.RawData.Length == 0 || !e.IsText || string.IsNullOrWhiteSpace(e.Data))
+                {
+                    LoggerHelper.Trace("OnMessage - Invalid message content [1].");
+                    return;
+                }
+
+                string data = e.Data;
+                LoggerHelper.Trace("Message received from client {0}: {1}", ID, data);
+
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
                 if (json == null || json.messageType == null || json.content == null)
                 {
-                    LoggerHelper.Trace("OnMessage: Invalid message content [2].");
+                    LoggerHelper.Trace("OnMessage - Invalid message content [2].");
                     return;
                 }
 
@@ -109,7 +144,7 @@ namespace IOTLinkService.Service.WSServer
             }
             catch (Exception ex)
             {
-                LoggerHelper.Debug("OnMessage: Exception: {0}", ex.ToString());
+                LoggerHelper.Error("OnMessage - Exception: {0}", ex.ToString());
             }
         }
 
@@ -117,7 +152,7 @@ namespace IOTLinkService.Service.WSServer
         {
             if (content == null || content.type == null || content.data == null)
             {
-                LoggerHelper.Trace("ParseClientRequest: Invalid message content.");
+                LoggerHelper.Trace("ParseClientRequest - Invalid message content.");
                 return;
             }
 
@@ -134,7 +169,7 @@ namespace IOTLinkService.Service.WSServer
                     break;
 
                 default:
-                    LoggerHelper.Warn("ParseClientRequest: Invalid Request Type: {0}", type);
+                    LoggerHelper.Warn("ParseClientRequest - Invalid Request Type: {0}", type);
                     break;
             }
         }
@@ -164,7 +199,7 @@ namespace IOTLinkService.Service.WSServer
         {
             if (content == null || content.type == null || content.data == null)
             {
-                LoggerHelper.Trace("ParseClientResponse: Invalid message content.");
+                LoggerHelper.Trace("ParseClientResponse - Invalid message content.");
                 return;
             }
 
@@ -177,7 +212,7 @@ namespace IOTLinkService.Service.WSServer
                     break;
 
                 default:
-                    LoggerHelper.Warn("ParseClientResponse: Invalid Request Type: {0}", type);
+                    LoggerHelper.Warn("ParseClientResponse - Invalid Request Type: {0}", type);
                     break;
             }
         }
@@ -219,14 +254,14 @@ namespace IOTLinkService.Service.WSServer
             msg.content.data = data;
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
-            LoggerHelper.Trace("Sending message to clients: {0}", payload);
+            LoggerHelper.Verbose("Sending message to clients: {0}", payload);
 
             if (username == null)
                 Sessions.Broadcast(payload);
             else if (_clients.ContainsKey(username))
                 Sessions.SendTo(_clients[username], payload);
             else
-                LoggerHelper.Error("WebSocketServer - Agent from {0} not found.", username);
+                LoggerHelper.Warn("WebSocketServer - Agent from {0} not found.", username);
         }
     }
 }

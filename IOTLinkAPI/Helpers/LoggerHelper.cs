@@ -23,9 +23,12 @@ namespace IOTLinkAPI.Helpers
             ERROR,
             WARNING,
             INFO,
+            VERBOSE,
             DEBUG,
+            DEBUG_LOOP,
             TRACE,
-            HELP_ME
+            TRACE_LOOP,
+            DATA_DUMP
         }
 
         private LoggerHelper()
@@ -168,6 +171,11 @@ namespace IOTLinkAPI.Helpers
             GetInstance().WriteLog(LogLevel.INFO, GetCallerInformation(), message, args);
         }
 
+        public static void Verbose(string message, params object[] args)
+        {
+            GetInstance().WriteLog(LogLevel.VERBOSE, GetCallerInformation(), message, args);
+        }
+
         public static void Debug(string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.DEBUG, GetCallerInformation(), message, args);
@@ -178,9 +186,9 @@ namespace IOTLinkAPI.Helpers
             GetInstance().WriteLog(LogLevel.TRACE, GetCallerInformation(), message, args);
         }
 
-        public static void HelpMe(string message, params object[] args)
+        public static void TraceLoop(string message, params object[] args)
         {
-            GetInstance().WriteLog(LogLevel.HELP_ME, GetCallerInformation(), message, args);
+            GetInstance().WriteLog(LogLevel.TRACE_LOOP, GetCallerInformation(), message, args);
         }
 
         public static void EmptyLine()

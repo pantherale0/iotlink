@@ -28,7 +28,7 @@ namespace IOTLinkAgent.Agent
 
         private AgentAddonManager()
         {
-
+            LoggerHelper.Trace("AgentAddonManager instance created.");
         }
 
         /// <summary>

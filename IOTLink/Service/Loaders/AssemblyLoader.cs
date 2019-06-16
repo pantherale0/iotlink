@@ -37,7 +37,7 @@ namespace IOTLinkService.Service.Loaders
 
                     if (scriptType != null)
                     {
-                        LoggerHelper.Debug("Found AddonScript!");
+                        LoggerHelper.Debug("Found ServiceAddon!");
                         addonInfo.ServiceAddon = (ServiceAddon)Activator.CreateInstance(scriptType);
                         return true;
                     }
@@ -47,7 +47,7 @@ namespace IOTLinkService.Service.Loaders
             }
             catch (Exception e)
             {
-                LoggerHelper.Debug("Unhandled Exception: {0}", e.ToString());
+                LoggerHelper.Error("Unhandled Exception: {0}", e.ToString());
             }
 
             return false;

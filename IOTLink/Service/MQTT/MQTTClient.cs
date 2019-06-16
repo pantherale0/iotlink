@@ -38,7 +38,7 @@ namespace IOTLinkService.Service.Engine.MQTT
 
         private MQTTClient()
         {
-
+            LoggerHelper.Trace("MQTTClient instance created.");
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             }
 
             // Client ID
-            if (!String.IsNullOrEmpty(_config.ClientId))
+            if (!string.IsNullOrEmpty(_config.ClientId))
                 mqttOptionBuilder = mqttOptionBuilder.WithClientId(_config.ClientId);
             else
                 mqttOptionBuilder = mqttOptionBuilder.WithClientId(Environment.MachineName);
@@ -139,6 +139,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
 
             // Allow reconnection and go on
+            LoggerHelper.Trace("MQTT Init finished. Connecting...");
             Connect();
         }
 
@@ -152,7 +153,10 @@ namespace IOTLinkService.Service.Engine.MQTT
             try
             {
                 if (!_client.IsConnected)
+                {
+                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
                     return;
+                }
 
                 topic = GetFullTopicName(topic);
 
@@ -177,7 +181,10 @@ namespace IOTLinkService.Service.Engine.MQTT
             try
             {
                 if (!_client.IsConnected)
+                {
+                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
                     return;
+                }
 
                 topic = GetFullTopicName(topic);
 
@@ -209,14 +216,23 @@ namespace IOTLinkService.Service.Engine.MQTT
             try
             {
                 if (!_client.IsConnected)
+                {
+                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
                     return;
+                }
 
                 _preventReconnect = true;
+                LoggerHelper.Verbose("Disconnecting");
                 while (_client.IsConnected)
                 {
+                    LoggerHelper.Trace("Disconnect Loop.");
+
                     // Send LWT Disconnected
                     if (_config.LWT != null && _config.LWT.Enabled && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                    {
+                        LoggerHelper.Verbose("Sending LWT message before disconnecting.");
                         _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
+                    }
 
                     _client.DisconnectAsync().ConfigureAwait(false);
                     Thread.Sleep(250);
@@ -235,22 +251,25 @@ namespace IOTLinkService.Service.Engine.MQTT
         private async void Connect()
         {
             if (_connecting)
+            {
+                LoggerHelper.Verbose("Is already connecting. Skipping");
                 return;
+            }
 
             _connecting = true;
             _preventReconnect = false;
             int tries = 0;
             do
             {
-                LoggerHelper.Info("Trying to connect to broker: {0} (Try: {1})", GetBrokerInfo(), (tries + 1));
+                LoggerHelper.Info("Trying to connect to broker: {0} (Try: {1}).", GetBrokerInfo(), (tries + 1));
                 try
                 {
                     await _client.ConnectAsync(_options).ConfigureAwait(false);
-                    LoggerHelper.Info("Connection successful");
+                    LoggerHelper.Info("Connection successful.");
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    LoggerHelper.Info("Connection failed");
+                    LoggerHelper.Info("Connection failed: {0}", ex.ToString());
                     tries++;
 
                     double waitTime = Math.Min(5 * tries, 60);
@@ -269,7 +288,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// <returns></returns>
         private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
-            LoggerHelper.Info("MQTT Connected");
+            LoggerHelper.Verbose("MQTT Connected");
 
             // Send LWT Connected
             if (_config.LWT != null && _config.LWT.Enabled && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
@@ -277,8 +296,7 @@ namespace IOTLinkService.Service.Engine.MQTT
 
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
-            if (OnMQTTConnected != null)
-                OnMQTTConnected(this, mqttEvent);
+            OnMQTTConnected?.Invoke(this, mqttEvent);
 
             // Subscribe to ALL Messages
             SubscribeTopic(GetFullTopicName("#"));
@@ -291,15 +309,17 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// <returns></returns>
         private async Task OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
-            LoggerHelper.Info("MQTT Disconnected");
+            LoggerHelper.Verbose("MQTT Disconnected");
 
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
-            if (OnMQTTDisconnected != null)
-                OnMQTTDisconnected(this, mqttEvent);
+            OnMQTTDisconnected?.Invoke(this, mqttEvent);
 
             if (!_preventReconnect)
+            {
+                LoggerHelper.Verbose("Reconnecting...");
                 Connect();
+            }
         }
 
         /// <summary>
@@ -314,8 +334,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             // Fire event
             MQTTMessage message = GetMQTTMessage(arg);
             MQTTMessageEventEventArgs mqttEvent = new MQTTMessageEventEventArgs(MQTTEventEventArgs.MQTTEventType.MessageReceived, message, arg);
-            if (OnMQTTMessageReceived != null)
-                OnMQTTMessageReceived(this, mqttEvent);
+            OnMQTTMessageReceived?.Invoke(this, mqttEvent);
         }
 
         /// <summary>
@@ -324,7 +343,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// <param name="topic">String containg the topic</param>
         private async void SubscribeTopic(string topic)
         {
-            LoggerHelper.Debug("Subscribing to {0}", topic);
+            LoggerHelper.Trace("Subscribing to {0}", topic);
 
             await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build()).ConfigureAwait(false);
         }

@@ -23,19 +23,21 @@ namespace IOTLinkAgent.Agent
 
         private AgentMain()
         {
+            LoggerHelper.Trace("AgentMain instance created.");
             ConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
         }
 
         internal void Init(Dictionary<string, List<string>> commands)
         {
+            LoggerHelper.Trace("AgentMain::Init() - Initialized.");
             if (commands.ContainsKey("agent"))
             {
                 string uri = string.Concat(commands["agent"]);
                 if (!string.IsNullOrWhiteSpace(uri))
                 {
-                    _webSocketUri = uri;
+                    LoggerHelper.Verbose("Initializing WebSocketClient - Server URI: {0}", uri);
 
-                    LoggerHelper.Debug("Initializing WebSocketClient - Server URI: {0}", _webSocketUri);
+                    _webSocketUri = uri;
                     WebSocketClient.GetInstance().Init(_webSocketUri);
 
                     SetupAgent();
@@ -48,9 +50,10 @@ namespace IOTLinkAgent.Agent
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
             {
                 LoggerHelper.Info("Changes to configuration.yaml detected. Reloading.");
+                AgentAddonManager addonManager = AgentAddonManager.GetInstance();
 
                 SetupAgent();
-                AgentAddonManager.GetInstance().Raise_OnConfigReloadHandler(this, e);
+                addonManager.Raise_OnConfigReloadHandler(this, e);
 
                 _lastConfigChange = DateTime.Now;
             }
@@ -59,7 +62,9 @@ namespace IOTLinkAgent.Agent
         private void SetupAgent()
         {
             LoggerHelper.Debug("Initializing AgentAddonManager");
-            AgentAddonManager.GetInstance().LoadAddons();
+
+            AgentAddonManager addonManager = AgentAddonManager.GetInstance();
+            addonManager.LoadAddons();
         }
     }
 }

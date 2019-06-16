@@ -1,5 +1,7 @@
-﻿using IOTLinkAPI.Platform.Events;
+﻿using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
+using System;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
 namespace IOTLinkAPI.Addons
@@ -30,32 +32,74 @@ namespace IOTLinkAPI.Addons
 
         public void Raise_OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            OnSessionChangeHandler?.Invoke(this, e);
+            try
+            {
+                OnSessionChangeHandler?.Invoke(this, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ServiceAddon::OnSessionChange - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
 
         public void Raise_OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
-            OnMQTTConnectedHandler?.Invoke(sender, e);
+            try
+            {
+                OnMQTTConnectedHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ServiceAddon::OnMQTTConnected - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
 
         public void Raise_OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
-            OnMQTTDisconnectedHandler?.Invoke(sender, e);
+            try
+            {
+                OnMQTTDisconnectedHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ServiceAddon::OnMQTTDisconnected - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
 
         public void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
-            OnMQTTMessageReceivedHandler?.Invoke(sender, e);
+            try
+            {
+                OnMQTTMessageReceivedHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ServiceAddon::OnMQTTMessageReceived - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
 
         public void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
         {
-            OnConfigReloadHandler?.Invoke(sender, e);
+            try
+            {
+                OnConfigReloadHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ServiceAddon::OnConfigReloadHandler - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
 
         public void Raise_OnAgentResponse(object sender, AgentAddonResponseEventArgs e)
         {
-            OnAgentResponseHandler?.Invoke(sender, e);
+            try
+            {
+                OnAgentResponseHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ServiceAddon::OnAgentResponse - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
         }
     }
 }
