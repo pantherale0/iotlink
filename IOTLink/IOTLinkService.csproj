@@ -68,8 +68,8 @@
     <StartupObject>IOTLink.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MQTTnet, Version=3.0.2.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
-      <HintPath>..\packages\MQTTnet.3.0.2\lib\net461\MQTTnet.dll</HintPath>
+    <Reference Include="MQTTnet, Version=3.0.3.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
+      <HintPath>..\packages\MQTTnet.3.0.3-rc3\lib\net461\MQTTnet.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>

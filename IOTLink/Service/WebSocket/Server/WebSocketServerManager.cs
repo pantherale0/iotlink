@@ -259,7 +259,7 @@ namespace IOTLinkService.Service.WSServer
             if (username == null)
                 Sessions.Broadcast(payload);
             else if (_clients.ContainsKey(username))
-                Sessions.SendTo(_clients[username], payload);
+                Sessions.SendTo(payload, _clients[username]);
             else
                 LoggerHelper.Warn("WebSocketServer - Agent from {0} not found.", username);
         }

@@ -84,7 +84,7 @@ namespace IOTLinkAddon.Service
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
             _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
-            LoggerHelper.Verbose("OnMonitorTimerElapsed: Started");
+            LoggerHelper.Debug("OnMonitorTimerElapsed: Started");
 
             SendCPUInfo();
             SendMemoryInfo();
@@ -97,7 +97,7 @@ namespace IOTLinkAddon.Service
             if (_monitorCounter++ == uint.MaxValue)
                 _monitorCounter = 0;
 
-            LoggerHelper.Verbose("OnMonitorTimerElapsed: Completed");
+            LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
             _monitorTimer.Start(); // After everything, start the timer again.
         }
 

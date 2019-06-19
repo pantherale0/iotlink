@@ -8,7 +8,6 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using System;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
@@ -42,41 +41,39 @@ namespace IOTLinkService.Service.Engine.MQTT
         }
 
         /// <summary>
-        /// Initialize the MQTT Client based on the current configurations.
+        /// Initialize the MQTT Client.
         /// </summary>
-        /// <param name="MQTT"><see cref="MqttConfig">MQTT</see> configuration</param>
-        internal void Init(MqttConfig MQTT)
+        /// <returns>Boolean</returns>
+        internal bool Init()
         {
+            _config = ConfigHelper.GetEngineConfig().MQTT;
+
             // Configuration not found
-            if (MQTT == null)
+            if (_config == null)
             {
-                LoggerHelper.Error("MQTT Configuration not found.");
-                return;
+                LoggerHelper.Warn("MQTT is disabled or not configured yet.");
+                return false;
             }
 
             // No broker information
-            if ((MQTT.TCP == null || !MQTT.TCP.Enabled) && (MQTT.WebSocket == null || !MQTT.WebSocket.Enabled))
+            if ((_config.TCP == null || !_config.TCP.Enabled) && (_config.WebSocket == null || !_config.WebSocket.Enabled))
             {
                 LoggerHelper.Error("You need to configure TCP or WebSocket connection");
-                return;
+                return false;
             }
 
             // Ambiguous broker information
-            if ((MQTT.TCP != null && MQTT.TCP.Enabled) && (MQTT.WebSocket != null && MQTT.WebSocket.Enabled))
+            if ((_config.TCP != null && _config.TCP.Enabled) && (_config.WebSocket != null && _config.WebSocket.Enabled))
             {
                 LoggerHelper.Error("You need to disable TCP or WebSocket connection. Cannot use both together.");
-                return;
+                return false;
             }
 
-
-            _config = MQTT;
             var mqttOptionBuilder = new MqttClientOptionsBuilder();
 
             // Credentials
-            if (_config.Credentials != null && !string.IsNullOrWhiteSpace(_config.Credentials.Username))
-            {
-                mqttOptionBuilder = mqttOptionBuilder.WithCredentials(_config.Credentials.Username, _config.Credentials.Password);
-            }
+            if (_config.Credentials != null && !string.IsNullOrWhiteSpace(this._config.Credentials.Username))
+                mqttOptionBuilder = mqttOptionBuilder.WithCredentials(this._config.Credentials.Username, this._config.Credentials.Password);
 
             // TCP Connection
             if (_config.TCP != null && _config.TCP.Enabled)
@@ -84,7 +81,7 @@ namespace IOTLinkService.Service.Engine.MQTT
                 if (string.IsNullOrWhiteSpace(_config.TCP.Hostname))
                 {
                     LoggerHelper.Warn("MQTT TCP Hostname not configured yet.");
-                    return;
+                    return false;
                 }
 
                 mqttOptionBuilder = mqttOptionBuilder.WithTcpServer(_config.TCP.Hostname, _config.TCP.Port);
@@ -98,7 +95,7 @@ namespace IOTLinkService.Service.Engine.MQTT
                 if (string.IsNullOrWhiteSpace(_config.WebSocket.URI))
                 {
                     LoggerHelper.Warn("MQTT WebSocket URI not configured yet.");
-                    return;
+                    return false;
                 }
 
                 mqttOptionBuilder = mqttOptionBuilder.WithWebSocketServer(_config.WebSocket.URI);
@@ -132,140 +129,59 @@ namespace IOTLinkService.Service.Engine.MQTT
             // Build all options
             _options = mqttOptionBuilder.Build();
 
-            // Create client
-            _client = new MqttFactory().CreateMqttClient();
-            _client.UseConnectedHandler(OnConnectedHandler);
-            _client.UseDisconnectedHandler(OnDisconnectedHandler);
-            _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
-
-            // Allow reconnection and go on
-            LoggerHelper.Trace("MQTT Init finished. Connecting...");
-            Connect();
-        }
-
-        /// <summary>
-        /// Publish a message to the connected broker
-        /// </summary>
-        /// <param name="topic">String containg the topic</param>
-        /// <param name="message">String containg the message</param>
-        internal async void PublishMessage(string topic, string message)
-        {
-            try
-            {
-                if (!_client.IsConnected)
-                {
-                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
-                    return;
-                }
-
-                topic = GetFullTopicName(topic);
-
-                LoggerHelper.Trace("Publishing to {0}: {1}", topic, message);
-
-                MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
-                await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Publish a message to the connected broker
-        /// </summary>
-        /// <param name="topic">String containg the topic</param>
-        /// <param name="message">Message bytes[]</param>
-        internal async void PublishMessage(string topic, byte[] message)
-        {
-            try
-            {
-                if (!_client.IsConnected)
-                {
-                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
-                    return;
-                }
-
-                topic = GetFullTopicName(topic);
-
-                LoggerHelper.Trace("Publishing to {0}: ({1} bytes)", topic, message?.Length);
-
-                MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
-                await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Return the current connection state
-        /// </summary>
-        /// <returns>Boolean</returns>
-        internal bool IsConnected()
-        {
-            return _client != null && _client.IsConnected;
-        }
-
-        /// <summary>
-        /// Disconnect from the broker
-        /// </summary>
-        internal void Disconnect()
-        {
-            try
-            {
-                if (!_client.IsConnected)
-                {
-                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
-                    return;
-                }
-
-                _preventReconnect = true;
-                LoggerHelper.Verbose("Disconnecting");
-                while (_client.IsConnected)
-                {
-                    LoggerHelper.Trace("Disconnect Loop.");
-
-                    // Send LWT Disconnected
-                    if (_config.LWT != null && _config.LWT.Enabled && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
-                    {
-                        LoggerHelper.Verbose("Sending LWT message before disconnecting.");
-                        _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
-                    }
-
-                    _client.DisconnectAsync().ConfigureAwait(false);
-                    Thread.Sleep(250);
-                }
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to disconnect. {0}", ex.Message);
-            }
+            LoggerHelper.Trace("MQTT Init finished.");
+            return true;
         }
 
         /// <summary>
         /// Try to connect to the configured broker.
         /// Every attempt a delay of (5 * attemps, max 60) seconds is executed.
         /// </summary>
-        private async void Connect()
+        internal async void Connect()
         {
             if (_connecting)
             {
-                LoggerHelper.Verbose("Is already connecting. Skipping");
+                LoggerHelper.Verbose("MQTT client is already connecting. Skipping");
                 return;
             }
 
+            int tries = 0;
             _connecting = true;
             _preventReconnect = false;
-            int tries = 0;
+
             do
             {
-                LoggerHelper.Info("Trying to connect to broker: {0} (Try: {1}).", GetBrokerInfo(), (tries + 1));
+                // Safely disconnect the existing client if it exists.
                 try
                 {
+                    if (_client != null && _client.IsConnected)
+                    {
+                        LoggerHelper.Verbose("Disconnecting from previous session.");
+                        Disconnect();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Error("Error while trying to disconnect an existing MQTT Client: {0}", ex.ToString());
+                }
+                finally
+                {
+                    _client = null;
+                }
+
+                // Safely again, try to connect with the existing broker information.
+                try
+                {
+                    LoggerHelper.Info("Trying to connect to broker: {0} (Try: {1}).", GetBrokerInfo(), (tries + 1));
+
+                    _client = new MqttFactory().CreateMqttClient();
+                    _client.UseConnectedHandler(OnConnectedHandler);
+                    _client.UseDisconnectedHandler(OnDisconnectedHandler);
+                    _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
+
                     await _client.ConnectAsync(_options).ConfigureAwait(false);
-                    LoggerHelper.Info("Connection successful.");
+
+                    LoggerHelper.Info("Connection established successfully.");
                 }
                 catch (Exception ex)
                 {
@@ -282,6 +198,127 @@ namespace IOTLinkService.Service.Engine.MQTT
         }
 
         /// <summary>
+        /// Disconnect from the broker
+        /// </summary>
+        internal void Disconnect(bool skipLastWill = false)
+        {
+            try
+            {
+                if (_client == null)
+                    return;
+
+                if (!_client.IsConnected)
+                {
+                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
+                    _client = null;
+                    return;
+                }
+
+                int tries = 0;
+                _preventReconnect = true;
+
+                LoggerHelper.Verbose("Disconnecting from MQTT Broker.");
+                while (_client.IsConnected)
+                {
+                    LoggerHelper.Trace("Trying to disconnect from the broker (Try: {0}).", tries++);
+
+                    // Send LWT Disconnected
+                    if (!skipLastWill && IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                    {
+                        LoggerHelper.Verbose("Sending LWT message before disconnecting.");
+                        _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
+                    }
+
+                    _client.DisconnectAsync().ConfigureAwait(false);
+                    Task.Delay(TimeSpan.FromSeconds(5));
+                }
+
+                // Remove client reference.
+                _client = null;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to disconnect. {0}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Return the current connection state
+        /// </summary>
+        /// <returns>Boolean</returns>
+        internal bool IsConnected()
+        {
+            return _client != null && _client.IsConnected;
+        }
+
+        /// <summary>
+        /// Return if LWT is enabled
+        /// </summary>
+        /// <returns></returns>
+        internal bool IsLastWillEnabled()
+        {
+            return _config.LWT != null && _config.LWT.Enabled;
+        }
+
+        /// <summary>
+        /// Publish a message to the connected broker
+        /// </summary>
+        /// <param name="topic">String containg the topic</param>
+        /// <param name="message">String containg the message</param>
+        internal async void PublishMessage(string topic, string message)
+        {
+            try
+            {
+                if (_client == null || !_client.IsConnected)
+                {
+                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
+                    return;
+                }
+
+                topic = GetFullTopicName(topic);
+
+                LoggerHelper.Trace("Publishing to {0}: {1}", topic, message);
+
+                MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
+                await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
+                Connect();
+            }
+        }
+
+        /// <summary>
+        /// Publish a message to the connected broker
+        /// </summary>
+        /// <param name="topic">String containg the topic</param>
+        /// <param name="message">Message bytes[]</param>
+        internal async void PublishMessage(string topic, byte[] message)
+        {
+            try
+            {
+                if (_client == null || !_client.IsConnected)
+                {
+                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
+                    return;
+                }
+
+                topic = GetFullTopicName(topic);
+
+                LoggerHelper.Trace("Publishing to {0}: ({1} bytes)", topic, message?.Length);
+
+                MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
+                await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
+                Connect();
+            }
+        }
+
+        /// <summary>
         /// Handle broker connection
         /// </summary>
         /// <param name="arg"><see cref="MqttClientConnectedEventArgs"/> event</param>
@@ -291,7 +328,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             LoggerHelper.Verbose("MQTT Connected");
 
             // Send LWT Connected
-            if (_config.LWT != null && _config.LWT.Enabled && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
+            if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
                 await _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage)).ConfigureAwait(false);
 
             // Fire event
