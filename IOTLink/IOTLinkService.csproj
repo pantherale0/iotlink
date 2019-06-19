@@ -68,8 +68,8 @@
     <StartupObject>IOTLink.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MQTTnet, Version=3.0.2.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
-      <HintPath>..\packages\MQTTnet.3.0.2\lib\net461\MQTTnet.dll</HintPath>
+    <Reference Include="MQTTnet, Version=3.0.3.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
+      <HintPath>..\packages\MQTTnet.3.0.3-rc3\lib\net461\MQTTnet.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -79,9 +79,6 @@
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Management" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
-    </Reference>
     <Reference Include="YamlDotNet, Version=6.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
       <HintPath>..\packages\YamlDotNet.6.1.1\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
@@ -111,7 +108,10 @@
     <Compile Include="Service\Loaders\AssemblyLoader.cs" />
     <Compile Include="Service\Engine\ServiceMain.cs" />
     <Compile Include="Service\MQTT\MQTTClient.cs" />
-    <Compile Include="Service\WebSocket\Server\WebSocketServerManager.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketHandlers.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketMessageEventArgs.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketServer.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketServerManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

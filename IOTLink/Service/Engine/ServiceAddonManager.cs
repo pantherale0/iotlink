@@ -5,7 +5,7 @@ using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkService.Service.Engine.MQTT;
 using IOTLinkService.Service.Loaders;
-using IOTLinkService.Service.WSServer;
+using IOTLinkService.Service.WebSockets.Server;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;

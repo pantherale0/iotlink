@@ -191,6 +191,11 @@ namespace IOTLinkAPI.Helpers
             GetInstance().WriteLog(LogLevel.TRACE_LOOP, GetCallerInformation(), message, args);
         }
 
+        public static void DataDump(string message, params object[] args)
+        {
+            GetInstance().WriteLog(LogLevel.DATA_DUMP, GetCallerInformation(), message, args);
+        }
+
         public static void EmptyLine()
         {
             GetInstance().WriteFile();

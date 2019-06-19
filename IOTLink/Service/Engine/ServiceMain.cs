@@ -1,9 +1,8 @@
-﻿using IOTLinkAPI.Configs;
-using IOTLinkAPI.Helpers;
+﻿using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkService.Service.Engine.MQTT;
-using IOTLinkService.Service.WSServer;
+using IOTLinkService.Service.WebSockets.Server;
 using System;
 using System.ServiceProcess;
 
@@ -68,36 +67,14 @@ namespace IOTLinkService.Service.Engine
 
         private void SetupMQTTHandlers()
         {
-            ApplicationConfig config = ConfigHelper.GetEngineConfig();
-            if (config == null)
-            {
-                LoggerHelper.Error("Configuration not loaded. Check your configuration file for mistakes and re-save it.");
-                return;
-            }
-
-            if (config.MQTT == null)
-            {
-                LoggerHelper.Warn("MQTT is disabled or not configured yet.");
-                return;
-            }
-
             MQTTClient client = MQTTClient.GetInstance();
-            if (client == null)
+            if (client.Init())
             {
-                LoggerHelper.Error("Failed to obtain MQTTClient instance. Restart the service.");
-                return;
+                client.OnMQTTConnected += OnMQTTConnected;
+                client.OnMQTTDisconnected += OnMQTTDisconnected;
+                client.OnMQTTMessageReceived += OnMQTTMessageReceived;
+                client.Connect();
             }
-
-            if (client.IsConnected())
-            {
-                LoggerHelper.Verbose("Disconnecting from MQTT Broker");
-                client.Disconnect();
-            }
-
-            client.Init(config.MQTT);
-            client.OnMQTTConnected += OnMQTTConnected;
-            client.OnMQTTDisconnected += OnMQTTDisconnected;
-            client.OnMQTTMessageReceived += OnMQTTMessageReceived;
         }
 
         private void OnConfigChanged(object sender, ConfigReloadEventArgs e)
@@ -138,7 +115,7 @@ namespace IOTLinkService.Service.Engine
 
         private void OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Verbose("MQTT Message Received");
+            LoggerHelper.Debug("MQTT Message Received");
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }

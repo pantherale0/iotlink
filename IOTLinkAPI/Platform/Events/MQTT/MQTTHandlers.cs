@@ -4,7 +4,7 @@ namespace IOTLinkAPI.Platform.Events.MQTT
 {
     public abstract class MQTTHandlers
     {
-        public delegate void MQTTEventHandler(Object sender, MQTTEventEventArgs e);
-        public delegate void MQTTMessageEventHandler(Object sender, MQTTMessageEventEventArgs e);
+        public delegate void MQTTEventHandler(object sender, MQTTEventEventArgs e);
+        public delegate void MQTTMessageEventHandler(object sender, MQTTMessageEventEventArgs e);
     }
 }
