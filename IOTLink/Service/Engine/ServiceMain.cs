@@ -1,9 +1,8 @@
-﻿using IOTLinkAPI.Configs;
-using IOTLinkAPI.Helpers;
+﻿using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkService.Service.Engine.MQTT;
-using IOTLinkService.Service.WSServer;
+using IOTLinkService.Service.WebSockets.Server;
 using System;
 using System.ServiceProcess;
 
@@ -69,7 +68,7 @@ namespace IOTLinkService.Service.Engine
         private void SetupMQTTHandlers()
         {
             MQTTClient client = MQTTClient.GetInstance();
-            if(client.Init())
+            if (client.Init())
             {
                 client.OnMQTTConnected += OnMQTTConnected;
                 client.OnMQTTDisconnected += OnMQTTDisconnected;

@@ -8,13 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Threading;
-using WebSocketSharp;
-using WebSocketSharp.Server;
 
-namespace IOTLinkService.Service.WSServer
+namespace IOTLinkService.Service.WebSockets.Server
 {
-    internal class WebSocketServerManager : WebSocketBehavior
+    internal class WebSocketServerManager
     {
         public const string WEBSOCKET_URI = "ws://localhost:9799";
         private static WebSocketServerManager _instance;
@@ -44,36 +41,9 @@ namespace IOTLinkService.Service.WSServer
                 Disconnect();
             }
 
-            _server = new WebSocketServer(WEBSOCKET_URI);
-            _server.AddWebSocketService("/", () => this);
-            StartServer();
-        }
-
-        internal void StartServer()
-        {
-            if (_server == null)
-            {
-                LoggerHelper.Debug("WebSocketServer instance not found.");
-                return;
-            }
-
-            int tries = 0;
-            do
-            {
-                LoggerHelper.Verbose("Trying to start a WebSocketServer: {0} (Try: {1})", WEBSOCKET_URI, (tries + 1));
-                if (!_server.IsListening)
-                {
-                    _server.Start();
-                    if (_server.IsListening)
-                        break;
-                }
-
-                int waitTime = Math.Min(1 * tries++, 60);
-                LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
-                Thread.Sleep(waitTime * 1000);
-            } while (true);
-
-            LoggerHelper.Info("WebSocketServer started at {0}.", WEBSOCKET_URI);
+            _server = new WebSocketServer();
+            _server.OnMessageHandler += OnMessage;
+            _server.Start(WEBSOCKET_URI);
         }
 
         internal void Disconnect()
@@ -81,44 +51,30 @@ namespace IOTLinkService.Service.WSServer
             if (_server == null)
                 return;
 
-            if (_server.IsListening)
-            {
-                LoggerHelper.Verbose("WebSocketServer was listening. Stopping.");
-                _server.Stop();
-            }
-
             _server = null;
         }
 
         internal bool IsConnected()
         {
-            return _server != null && _server.IsListening;
+            return _server != null;
         }
 
-        protected override void OnMessage(MessageEventArgs e)
+        protected void OnMessage(object sender, WebSocketMessageEventArgs e)
         {
             try
             {
-                if (e.IsPing)
+                if (string.IsNullOrWhiteSpace(e.Message))
                 {
-                    LoggerHelper.Trace("OnMessage - Ping received from {0}", ID);
-                    Sessions.PingTo(ID);
+                    LoggerHelper.Trace("OnMessage - Empty message received.");
                     return;
                 }
 
-                if (e.RawData == null || e.RawData.Length == 0 || !e.IsText || string.IsNullOrWhiteSpace(e.Data))
-                {
-                    LoggerHelper.Trace("OnMessage - Invalid message content [1].");
-                    return;
-                }
+                LoggerHelper.Trace("Message received from client {0}: {1}", e.ID, e.Message);
 
-                string data = e.Data;
-                LoggerHelper.Trace("Message received from client {0}: {1}", ID, data);
-
-                dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
+                dynamic json = JsonConvert.DeserializeObject<dynamic>(e.Message);
                 if (json == null || json.messageType == null || json.content == null)
                 {
-                    LoggerHelper.Trace("OnMessage - Invalid message content [2].");
+                    LoggerHelper.Trace("OnMessage - Invalid message content.");
                     return;
                 }
 
@@ -126,15 +82,15 @@ namespace IOTLinkService.Service.WSServer
                 switch (messageType)
                 {
                     case MessageType.CLIENT_REQUEST:
-                        ParseClientRequest(json.content);
+                        ParseClientRequest(e.ID, json.content);
                         break;
 
                     case MessageType.CLIENT_RESPONSE:
-                        ParseClientResponse(json.content);
+                        ParseClientResponse(e.ID, json.content);
                         break;
 
                     case MessageType.API_MESSAGE:
-                        ParseAPIMessage(json.content);
+                        ParseAPIMessage(e.ID, json.content);
                         break;
 
                     default:
@@ -148,7 +104,7 @@ namespace IOTLinkService.Service.WSServer
             }
         }
 
-        internal void ParseClientRequest(dynamic content)
+        internal void ParseClientRequest(string clientId, dynamic content)
         {
             if (content == null || content.type == null || content.data == null)
             {
@@ -161,7 +117,7 @@ namespace IOTLinkService.Service.WSServer
             switch (type)
             {
                 case RequestTypeClient.REQUEST_CONNECTED:
-                    ParseClientConnected(data);
+                    ParseClientConnected(clientId, data);
                     break;
 
                 case RequestTypeClient.REQUEST_PUBLISH_MESSAGE:
@@ -174,13 +130,13 @@ namespace IOTLinkService.Service.WSServer
             }
         }
 
-        internal void ParseClientConnected(dynamic data)
+        internal void ParseClientConnected(string clientId, dynamic data)
         {
             string username = data.username;
             if (!string.IsNullOrWhiteSpace(username))
             {
                 username = username.Trim().ToLowerInvariant();
-                _clients[username] = ID;
+                _clients[username] = clientId;
             }
         }
 
@@ -195,7 +151,7 @@ namespace IOTLinkService.Service.WSServer
             MQTTClient.GetInstance().PublishMessage(topic, payload);
         }
 
-        internal void ParseClientResponse(dynamic content)
+        internal void ParseClientResponse(string clientId, dynamic content)
         {
             if (content == null || content.type == null || content.data == null)
             {
@@ -208,7 +164,7 @@ namespace IOTLinkService.Service.WSServer
             switch (type)
             {
                 case ResponseTypeClient.RESPONSE_ADDON:
-                    ParseAddonResponse(data);
+                    ParseAddonResponse(clientId, data);
                     break;
 
                 default:
@@ -217,7 +173,7 @@ namespace IOTLinkService.Service.WSServer
             }
         }
 
-        private void ParseAddonResponse(dynamic data)
+        private void ParseAddonResponse(string clientId, dynamic data)
         {
             string addonId = data.addonId;
             dynamic addonData = data.addonData;
@@ -225,14 +181,14 @@ namespace IOTLinkService.Service.WSServer
             if (string.IsNullOrWhiteSpace(addonId))
                 return;
 
-            if (!_clients.ContainsValue(ID))
+            if (!_clients.ContainsValue(clientId))
                 return;
 
-            string username = _clients.First(x => x.Value == ID).Key;
+            string username = _clients.First(x => x.Value == clientId).Key;
             ServiceAddonManager.GetInstance().Raise_OnAgentResponse(username, addonId, addonData);
         }
 
-        internal void ParseAPIMessage(dynamic content)
+        internal void ParseAPIMessage(string clientId, dynamic content)
         {
             LoggerHelper.Debug("ParseAPIMessage: {0}", content);
         }
@@ -254,12 +210,13 @@ namespace IOTLinkService.Service.WSServer
             msg.content.data = data;
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
-            LoggerHelper.Verbose("Sending message to clients: {0}", payload);
+            LoggerHelper.Verbose("Sending message to clients");
+            LoggerHelper.DataDump("Message Payload: {0}", payload);
 
             if (username == null)
-                Sessions.Broadcast(payload);
+                _server.Broadcast(payload);
             else if (_clients.ContainsKey(username))
-                Sessions.SendTo(payload, _clients[username]);
+                _server.SendMessage(_clients[username], payload);
             else
                 LoggerHelper.Warn("WebSocketServer - Agent from {0} not found.", username);
         }

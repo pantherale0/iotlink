@@ -1,7 +1,7 @@
 ﻿using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Windows;
-using IOTLinkService.Service.WSServer;
+using IOTLinkService.Service.WebSockets.Server;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -87,7 +87,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
             _connecting = false;
             _preventReconnect = false;
-            LoggerHelper.Info("Connection successful");
+            LoggerHelper.Verbose("Connection successful");
         }
 
         internal void Disconnect()
@@ -158,7 +158,8 @@ namespace IOTLinkAgent.Agent.WSClient
             }
 
             string data = e.Data;
-            LoggerHelper.Verbose("Message received from server: {0}", data);
+            LoggerHelper.Verbose("Message received from server");
+            LoggerHelper.DataDump("Message Payload: {0}", data);
             try
             {
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(data);
@@ -272,7 +273,9 @@ namespace IOTLinkAgent.Agent.WSClient
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
 
-            LoggerHelper.Verbose("Sending message to server: {0}", payload);
+            LoggerHelper.Verbose("Sending message to server");
+            LoggerHelper.DataDump("Message Payload: {0}", payload);
+
             _client.Send(payload);
         }
     }
