@@ -98,7 +98,7 @@ namespace IOTLinkService.Service.WebSockets.Server
 
                 if (!_clients.ContainsKey(webSocket))
                 {
-                    currentId = new Guid().ToString("N");
+                    currentId = Guid.NewGuid().ToString("N");
                     _clients.Add(webSocket, currentId);
                 }
                 else
