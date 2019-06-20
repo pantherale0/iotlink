@@ -51,6 +51,7 @@ namespace IOTLinkService.Service.WebSockets.Server
             if (_server == null)
                 return;
 
+            _server.Disconnect();
             _server = null;
         }
 

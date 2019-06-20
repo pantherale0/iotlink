@@ -11,7 +11,9 @@ namespace IOTLinkService.Service.WebSockets.Server
     internal class WebSocketServer
     {
         private const int BUFFER_LENGTH = 2048;
-        private int count = 0;
+        private int _count = 0;
+        private HttpListener _listener;
+        private bool _disconnect;
 
         public event WebSocketMessageEventHandler OnMessageHandler;
 
@@ -19,21 +21,73 @@ namespace IOTLinkService.Service.WebSockets.Server
 
         public async void Start(string listenerPrefix)
         {
-            HttpListener listener = new HttpListener();
-            listener.Prefixes.Add(this.ParseURI(listenerPrefix));
-            listener.Start();
-
-            while (true)
+            // Try to create the HttpListener
+            while (_listener == null || !_listener.IsListening)
             {
-                HttpListenerContext listenerContext = await listener.GetContextAsync();
-                if (listenerContext.Request.IsWebSocketRequest)
+                try
                 {
-                    ProcessRequest(listenerContext);
+                    if (_listener != null)
+                    {
+                        if (_listener.IsListening)
+                        {
+                            _listener.Stop();
+                            Thread.Sleep(2500);
+                        }
+
+                        _listener = null;
+                    }
+
+                    _disconnect = false;
+                    _listener = new HttpListener();
+                    _listener.Prefixes.Add(ParseURI(listenerPrefix));
+                    _listener.Start();
                 }
-                else
+                catch (Exception ex)
                 {
-                    listenerContext.Response.StatusCode = 400;
-                    listenerContext.Response.Close();
+                    LoggerHelper.Error("Error while trying to create a new WebSocketServer: {0}", ex.ToString());
+                }
+            }
+
+            // Listen for incoming websocket connections
+            while (!_disconnect && _listener != null && _listener.IsListening)
+            {
+                try
+                {
+                    HttpListenerContext listenerContext = await _listener.GetContextAsync();
+                    if (listenerContext.Request.IsWebSocketRequest && !_disconnect)
+                    {
+                        ProcessRequest(listenerContext);
+                    }
+                    else
+                    {
+                        listenerContext.Response.StatusCode = 400;
+                        listenerContext.Response.Close();
+                    }
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+        }
+
+        public void Disconnect()
+        {
+            _disconnect = true;
+
+            while (_listener != null && _listener.IsListening)
+            {
+                try
+                {
+                    _listener.Close();
+                    Thread.Sleep(1000);
+
+                    if (!_listener.IsListening)
+                        _listener = null;
+                }
+                catch (Exception)
+                {
+
                 }
             }
         }
@@ -79,7 +133,7 @@ namespace IOTLinkService.Service.WebSockets.Server
             try
             {
                 webSocketContext = await listenerContext.AcceptWebSocketAsync(subProtocol: null);
-                Interlocked.Increment(ref count);
+                Interlocked.Increment(ref _count);
             }
             catch (Exception)
             {
@@ -106,7 +160,7 @@ namespace IOTLinkService.Service.WebSockets.Server
                     currentId = _clients[webSocket];
                 }
 
-                while (webSocket.State == WebSocketState.Open)
+                while (!_disconnect && webSocket.State == WebSocketState.Open)
                 {
                     WebSocketReceiveResult receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer, offset, free), CancellationToken.None);
                     offset += receiveResult.Count;
@@ -143,6 +197,11 @@ namespace IOTLinkService.Service.WebSockets.Server
                     buffer = new byte[BUFFER_LENGTH];
                     free = buffer.Length;
                 }
+            }
+            catch (WebSocketException ex)
+            {
+                if (ex.InnerException == null || ex.InnerException.GetType() != typeof(HttpListenerException))
+                    LoggerHelper.Error("Exception while running WebSocketServer: {0}", ex.ToString());
             }
             catch (Exception ex)
             {
