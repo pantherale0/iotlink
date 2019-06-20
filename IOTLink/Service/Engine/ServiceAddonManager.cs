@@ -134,7 +134,7 @@ namespace IOTLinkService.Service.Engine
             webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_ADDON, data, username);
         }
 
-        public void ShowNotification(ServiceAddon sender, string title, string message, string imageUrl = null)
+        public void ShowNotification(ServiceAddon sender, string title, string message, string iconUrl = null)
         {
             if (sender == null || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(message))
                 return;
@@ -146,7 +146,7 @@ namespace IOTLinkService.Service.Engine
             dynamic data = new ExpandoObject();
             data.title = title;
             data.message = message;
-            data.imageUrl = imageUrl;
+            data.imageUrl = iconUrl;
 
             webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_SHOW_NOTIFICATION, data);
         }

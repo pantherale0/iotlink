@@ -248,9 +248,9 @@ namespace IOTLinkAgent.Agent.WSClient
 
             string title = data.title;
             string message = data.message;
-            string imageUrl = data.imageUrl;
+            string iconUrl = data.iconUrl;
 
-            LoggerHelper.Verbose("Showing Notification - Title: {0} Message: {1} Image: {2}", title, message, imageUrl);
+            LoggerHelper.Verbose("Showing Notification - Title: {0} Message: {1} Image: {2}", title, message, iconUrl);
 
             if (string.IsNullOrWhiteSpace(message))
                 return;
@@ -258,10 +258,10 @@ namespace IOTLinkAgent.Agent.WSClient
             if (string.IsNullOrWhiteSpace(title))
                 title = "IOT Link";
 
-            if (string.IsNullOrWhiteSpace(imageUrl) || !imageUrl.StartsWith("http://") && !imageUrl.StartsWith("https://") && imageUrl.StartsWith("file:///"))
-                imageUrl = "file:///" + System.IO.Path.Combine(PathHelper.IconsPath(), "application.ico");
+            if (string.IsNullOrWhiteSpace(iconUrl) || !iconUrl.StartsWith("http://") && !iconUrl.StartsWith("https://") && iconUrl.StartsWith("file:///"))
+                iconUrl = "file:///" + System.IO.Path.Combine(PathHelper.IconsPath(), "application.ico");
 
-            NotificationManager.GetInstance().ShowNotification(title, message, imageUrl);
+            NotificationManager.GetInstance().ShowNotification(title, message, iconUrl);
         }
 
         private void ParseAddonRequest(dynamic data)

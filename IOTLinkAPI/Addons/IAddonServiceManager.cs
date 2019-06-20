@@ -14,7 +14,7 @@ namespace IOTLinkAPI.Addons
 
         void PublishMessage(ServiceAddon sender, string topic, byte[] message);
 
-        void ShowNotification(ServiceAddon sender, string title, string message, string imageUrl = null);
+        void ShowNotification(ServiceAddon sender, string title, string message, string iconUrl = null);
 
         void SendAgentRequest(ServiceAddon sender, dynamic addonData, string username = null);
     }

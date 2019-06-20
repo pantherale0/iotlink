@@ -23,44 +23,44 @@ namespace IOTLinkAgent.Agent.Notifications
             LoggerHelper.Trace("NotificationManager instance created.");
         }
 
-        public void ShowNotification(string message, string imageUrl = null)
+        public void ShowNotification(string message, string iconUrl = null)
         {
-            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(imageUrl) ? ToastTemplateType.ToastText01 : ToastTemplateType.ToastImageAndText01;
+            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(iconUrl) ? ToastTemplateType.ToastText01 : ToastTemplateType.ToastImageAndText01;
             XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplateType);
 
             XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
             stringElements[0].AppendChild(toastXml.CreateTextNode(message));
 
-            if (!string.IsNullOrWhiteSpace(imageUrl))
+            if (!string.IsNullOrWhiteSpace(iconUrl))
             {
                 XmlNodeList imageElements = toastXml.GetElementsByTagName("image");
-                imageElements[0].Attributes.GetNamedItem("src").NodeValue = imageUrl;
+                imageElements[0].Attributes.GetNamedItem("src").NodeValue = iconUrl;
             }
 
             ShowToast(toastXml);
         }
 
-        public void ShowNotification(string title, string message, string imageUrl = null)
+        public void ShowNotification(string title, string message, string iconUrl = null)
         {
-            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(imageUrl) ? ToastTemplateType.ToastText02 : ToastTemplateType.ToastImageAndText02;
+            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(iconUrl) ? ToastTemplateType.ToastText02 : ToastTemplateType.ToastImageAndText02;
             XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplateType);
 
             XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
             stringElements[0].AppendChild(toastXml.CreateTextNode(title));
             stringElements[1].AppendChild(toastXml.CreateTextNode(message));
 
-            if (!string.IsNullOrWhiteSpace(imageUrl))
+            if (!string.IsNullOrWhiteSpace(iconUrl))
             {
                 XmlNodeList imageElements = toastXml.GetElementsByTagName("image");
-                imageElements[0].Attributes.GetNamedItem("src").NodeValue = imageUrl;
+                imageElements[0].Attributes.GetNamedItem("src").NodeValue = iconUrl;
             }
 
             ShowToast(toastXml);
         }
 
-        public void ShowNotification(string title, string messageLine1, string messageLine2, string imageUrl = null)
+        public void ShowNotification(string title, string messageLine1, string messageLine2, string iconUrl = null)
         {
-            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(imageUrl) ? ToastTemplateType.ToastText04 : ToastTemplateType.ToastImageAndText04;
+            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(iconUrl) ? ToastTemplateType.ToastText04 : ToastTemplateType.ToastImageAndText04;
             XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplateType);
 
             XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
@@ -68,10 +68,10 @@ namespace IOTLinkAgent.Agent.Notifications
             stringElements[1].AppendChild(toastXml.CreateTextNode(messageLine1));
             stringElements[2].AppendChild(toastXml.CreateTextNode(messageLine2));
 
-            if (!string.IsNullOrWhiteSpace(imageUrl))
+            if (!string.IsNullOrWhiteSpace(iconUrl))
             {
                 XmlNodeList imageElements = toastXml.GetElementsByTagName("image");
-                imageElements[0].Attributes.GetNamedItem("src").NodeValue = imageUrl;
+                imageElements[0].Attributes.GetNamedItem("src").NodeValue = iconUrl;
             }
 
             ShowToast(toastXml);
