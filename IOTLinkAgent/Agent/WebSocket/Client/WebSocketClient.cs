@@ -1,4 +1,5 @@
 ﻿using IOTLink.Platform.WebSocket;
+using IOTLinkAgent.Agent.Notifications;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.WebSocket;
 using IOTLinkAPI.Platform.Windows;
@@ -244,6 +245,23 @@ namespace IOTLinkAgent.Agent.WSClient
         private void ParseShowNotification(dynamic data)
         {
             LoggerHelper.Trace("ParseShowNotification - Data: {0}", data);
+
+            string title = data.title;
+            string message = data.message;
+            string imageUrl = data.imageUrl;
+
+            LoggerHelper.Verbose("Showing Notification - Title: {0} Message: {1} Image: {2}", title, message, imageUrl);
+
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            if (string.IsNullOrWhiteSpace(title))
+                title = "IOT Link";
+
+            if (string.IsNullOrWhiteSpace(imageUrl) || !imageUrl.StartsWith("http://") && !imageUrl.StartsWith("https://") && imageUrl.StartsWith("file:///"))
+                imageUrl = "file:///" + System.IO.Path.Combine(PathHelper.IconsPath(), "application.ico");
+
+            NotificationManager.GetInstance().ShowNotification(title, message, imageUrl);
         }
 
         private void ParseAddonRequest(dynamic data)
