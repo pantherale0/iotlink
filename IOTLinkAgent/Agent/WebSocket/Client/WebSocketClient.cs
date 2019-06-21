@@ -249,19 +249,12 @@ namespace IOTLinkAgent.Agent.WSClient
             string title = data.title;
             string message = data.message;
             string iconUrl = data.iconUrl;
-
-            LoggerHelper.Verbose("Showing Notification - Title: {0} Message: {1} Image: {2}", title, message, iconUrl);
+            string launchParams = data.launchParams;
 
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
-            if (string.IsNullOrWhiteSpace(title))
-                title = "IOT Link";
-
-            if (string.IsNullOrWhiteSpace(iconUrl) || !iconUrl.StartsWith("http://") && !iconUrl.StartsWith("https://") && iconUrl.StartsWith("file:///"))
-                iconUrl = "file:///" + System.IO.Path.Combine(PathHelper.IconsPath(), "application.ico");
-
-            NotificationManager.GetInstance().ShowNotification(title, message, iconUrl);
+            NotificationManager.GetInstance().ShowNotification(title, message, iconUrl, launchParams);
         }
 
         private void ParseAddonRequest(dynamic data)

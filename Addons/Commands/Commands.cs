@@ -139,7 +139,7 @@ namespace IOTLinkAddon
             try
             {
                 dynamic json = JsonConvert.DeserializeObject(value);
-                GetManager().ShowNotification(this, (string)json.title, (string)json.message, (string)json.iconUrl);
+                GetManager().ShowNotification(this, (string)json.title, (string)json.message, (string)json.iconUrl, (string)json.launchParams);
             }
             catch (Exception ex)
             {

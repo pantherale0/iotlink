@@ -1,4 +1,8 @@
 ﻿using IOTLinkAPI.Helpers;
+using NotificationsExtensions.ToastContent;
+using System;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
 
@@ -23,58 +27,33 @@ namespace IOTLinkAgent.Agent.Notifications
             LoggerHelper.Trace("NotificationManager instance created.");
         }
 
-        public void ShowNotification(string message, string iconUrl = null)
+        public void ShowNotification(string title, string message, string iconUrl = null, string launchParams = null)
         {
-            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(iconUrl) ? ToastTemplateType.ToastText01 : ToastTemplateType.ToastImageAndText01;
-            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplateType);
+            var toast = ToastContentFactory.CreateToastImageAndText02();
+            toast.TextHeading.Text = ParseTitle(title);
+            toast.Image.Src = ParseIconUrl(iconUrl);
+            toast.TextBodyWrap.Text = message;
+            toast.Launch = launchParams;
 
-            XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
-            stringElements[0].AppendChild(toastXml.CreateTextNode(message));
-
-            if (!string.IsNullOrWhiteSpace(iconUrl))
-            {
-                XmlNodeList imageElements = toastXml.GetElementsByTagName("image");
-                imageElements[0].Attributes.GetNamedItem("src").NodeValue = iconUrl;
-            }
-
-            ShowToast(toastXml);
+            var xml = new XmlDocument();
+            xml.LoadXml(toast.GetContent());
+            ShowToast(xml);
         }
 
-        public void ShowNotification(string title, string message, string iconUrl = null)
+        private string ParseTitle(string title)
         {
-            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(iconUrl) ? ToastTemplateType.ToastText02 : ToastTemplateType.ToastImageAndText02;
-            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplateType);
+            if (string.IsNullOrWhiteSpace(title))
+                return APP_ID;
 
-            XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
-            stringElements[0].AppendChild(toastXml.CreateTextNode(title));
-            stringElements[1].AppendChild(toastXml.CreateTextNode(message));
-
-            if (!string.IsNullOrWhiteSpace(iconUrl))
-            {
-                XmlNodeList imageElements = toastXml.GetElementsByTagName("image");
-                imageElements[0].Attributes.GetNamedItem("src").NodeValue = iconUrl;
-            }
-
-            ShowToast(toastXml);
+            return title;
         }
 
-        public void ShowNotification(string title, string messageLine1, string messageLine2, string iconUrl = null)
+        private string ParseIconUrl(string iconUrl)
         {
-            ToastTemplateType toastTemplateType = string.IsNullOrWhiteSpace(iconUrl) ? ToastTemplateType.ToastText04 : ToastTemplateType.ToastImageAndText04;
-            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplateType);
+            if (string.IsNullOrWhiteSpace(iconUrl) || !iconUrl.StartsWith("http://") && !iconUrl.StartsWith("https://") && iconUrl.StartsWith("file:///"))
+                return string.Format("file:///{0}", System.IO.Path.Combine(PathHelper.IconsPath(), "application.ico"));
 
-            XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
-            stringElements[0].AppendChild(toastXml.CreateTextNode(title));
-            stringElements[1].AppendChild(toastXml.CreateTextNode(messageLine1));
-            stringElements[2].AppendChild(toastXml.CreateTextNode(messageLine2));
-
-            if (!string.IsNullOrWhiteSpace(iconUrl))
-            {
-                XmlNodeList imageElements = toastXml.GetElementsByTagName("image");
-                imageElements[0].Attributes.GetNamedItem("src").NodeValue = iconUrl;
-            }
-
-            ShowToast(toastXml);
+            return iconUrl;
         }
 
         private void ShowToast(XmlDocument toastXml)
@@ -82,8 +61,6 @@ namespace IOTLinkAgent.Agent.Notifications
             // Create the toast and attach event listeners
             ToastNotification toast = new ToastNotification(toastXml);
             toast.Activated += ToastActivated;
-            toast.Dismissed += ToastDismissed;
-            toast.Failed += ToastFailed;
 
             // Show the toast.
             ToastNotificationManager.CreateToastNotifier(APP_ID).Show(toast);
@@ -91,27 +68,76 @@ namespace IOTLinkAgent.Agent.Notifications
 
         private void ToastActivated(ToastNotification sender, object e)
         {
-            LoggerHelper.Trace("Toast Activated");
+            LoggerHelper.Trace("Toast Activated {0}: {1}", sender.ToString(), e.ToString());
+
+            if (e.GetType() != typeof(ToastActivatedEventArgs))
+                return;
+
+
+            ToastActivatedEventArgs args = (ToastActivatedEventArgs)e;
+            if (string.IsNullOrWhiteSpace(args.Arguments))
+                return;
+
+            LoggerHelper.Trace("Toast Arguments: {0}", args.Arguments);
+
+            var regex = @"^toast://(?<command>[A-Za-z_]+)([/]{0,1})(?<arguments>.*)$";
+            var toastLaunch = Regex.Match(args.Arguments, regex);
+            var toastCommand = toastLaunch.Groups["command"];
+            var toastArgs = toastLaunch.Groups["arguments"];
+            if (!toastCommand.Success)
+            {
+                LoggerHelper.Trace("Cannot parse toast command");
+                return;
+            }
+
+            string command = toastCommand.Value.Trim().ToLowerInvariant();
+            string[] commandArgs = toastArgs.Value.Split(new char[] { '#' }, options: StringSplitOptions.RemoveEmptyEntries);
+            ParseToastCommand(command, commandArgs);
         }
 
-        private void ToastDismissed(ToastNotification sender, ToastDismissedEventArgs e)
+        private void ParseToastCommand(string command, string[] args)
         {
-            LoggerHelper.Trace("Toast Dismissed: {0}", e.Reason.ToString());
-
-            switch (e.Reason)
+            try
             {
-                case ToastDismissalReason.ApplicationHidden:
-                    break;
-                case ToastDismissalReason.UserCanceled:
-                    break;
-                case ToastDismissalReason.TimedOut:
-                    break;
+                switch (command)
+                {
+                    case "open":
+                        ParseOpenCommand(args);
+                        break;
+
+                    case "addon":
+                        break;
+
+                    default:
+                        LoggerHelper.Warn("Unknown toast command. Command: {0} Args: {1}", command, string.Join(" ", args));
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while executing toast command {0}: {1}", command, ex.ToString());
             }
         }
 
-        private void ToastFailed(ToastNotification sender, ToastFailedEventArgs e)
+        private void ParseOpenCommand(string[] args)
         {
-            LoggerHelper.Error("Toast Failed: {0}", e.ErrorCode.ToString());
+            if (args.Length < 1)
+                return;
+
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = args[0],
+                Verb = "open",
+                UseShellExecute = true
+            };
+
+            if (args.Length >= 2)
+                psi.Arguments = args[1];
+
+            if (args.Length >= 3)
+                psi.WorkingDirectory = args[2];
+
+            Process.Start(psi);
         }
     }
 }
