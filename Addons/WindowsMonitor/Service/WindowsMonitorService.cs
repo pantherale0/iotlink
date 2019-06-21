@@ -173,10 +173,11 @@ namespace IOTLinkAddon.Service
                 long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
                 int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
 
-                SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString(), configKey);
-                SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString(), configKey);
-                SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString(), configKey);
-                SendMonitorValue(topic + "/UsedSpace", usedSpace.ToString(), configKey);
+                SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
+                SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
+                SendMonitorValue(topic + "/TotalFreeSpace", GetSize(driveInfo.TotalFreeSpace).ToString(), configKey);
+                SendMonitorValue(topic + "/UsedSpace", GetSize(usedSpace).ToString(), configKey);
+
                 SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat, configKey);
                 SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString(), configKey);
                 SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel, configKey);
@@ -275,6 +276,22 @@ namespace IOTLinkAddon.Service
             string topic = string.Format("Stats/Display/{0}/Screen", displayIndex);
 
             GetManager().PublishMessage(this, topic, displayScreen);
+        }
+
+        private double GetSize(long sizeInBytes)
+        {
+            switch (_config.SizeFormat)
+            {
+                default:
+                case "MB":
+                    return MathHelper.BytesToMegabytes(sizeInBytes);
+
+                case "GB":
+                    return MathHelper.BytesToGigabytes(sizeInBytes);
+
+                case "TB":
+                    return MathHelper.BytesToTerabytes(sizeInBytes);
+            }
         }
 
         private bool CanRun(string configKey)

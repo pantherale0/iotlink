@@ -285,7 +285,11 @@ namespace IOTLinkService.Service.Engine.MQTT
             catch (Exception ex)
             {
                 LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
-                Connect();
+                if (!_preventReconnect)
+                {
+                    LoggerHelper.Verbose("Reconnecting...");
+                    Connect();
+                }
             }
         }
 
@@ -314,7 +318,11 @@ namespace IOTLinkService.Service.Engine.MQTT
             catch (Exception ex)
             {
                 LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
-                Connect();
+                if (!_preventReconnect)
+                {
+                    LoggerHelper.Verbose("Reconnecting...");
+                    Connect();
+                }
             }
         }
 
@@ -326,6 +334,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
             LoggerHelper.Verbose("MQTT Connected");
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             // Send LWT Connected
             if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
@@ -347,6 +356,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         private async Task OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
             LoggerHelper.Verbose("MQTT Disconnected");
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
@@ -381,8 +391,19 @@ namespace IOTLinkService.Service.Engine.MQTT
         private async void SubscribeTopic(string topic)
         {
             LoggerHelper.Trace("Subscribing to {0}", topic);
-
-            await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build()).ConfigureAwait(false);
+            try
+            {
+                await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build()).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to subscribe to {0}: {1}", topic, ex.ToString());
+                if (!_preventReconnect)
+                {
+                    LoggerHelper.Verbose("Reconnecting...");
+                    Connect();
+                }
+            }
         }
 
         /// <summary>

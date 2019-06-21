@@ -8,6 +8,9 @@ namespace IOTLinkAddon.Common
         [YamlMember(Alias = "enabled")]
         public bool Enabled { get; set; }
 
+        [YamlMember(Alias = "sizeFormat")]
+        public string SizeFormat { get; set; } = "MB";
+
         [YamlMember(Alias = "monitors")]
         public Dictionary<string, MonitorConfig> Monitors { get; set; }
     }
