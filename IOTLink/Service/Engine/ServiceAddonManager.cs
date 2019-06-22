@@ -134,6 +134,24 @@ namespace IOTLinkService.Service.Engine
             webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_ADDON, data, username);
         }
 
+        public void ShowNotification(ServiceAddon sender, string title, string message, string iconUrl = null, string launchParams = null)
+        {
+            if (sender == null || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(message))
+                return;
+
+            WebSocketServerManager webSocketServerManager = WebSocketServerManager.GetInstance();
+            if (webSocketServerManager == null || !webSocketServerManager.IsConnected())
+                return;
+
+            dynamic data = new ExpandoObject();
+            data.title = title;
+            data.message = message;
+            data.imageUrl = iconUrl;
+            data.launchParams = launchParams;
+
+            webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_SHOW_NOTIFICATION, data);
+        }
+
         /// <summary>
         /// Check if any addon exists with the given ID.
         /// </summary>

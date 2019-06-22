@@ -27,21 +27,19 @@ namespace IOTLinkAgent.Agent
             ConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
         }
 
-        internal void Init(Dictionary<string, List<string>> commands)
+        internal void Init(List<string> args)
         {
             LoggerHelper.Trace("AgentMain::Init() - Initialized.");
-            if (commands.ContainsKey("agent"))
+
+            string uri = string.Concat(args);
+            if (!string.IsNullOrWhiteSpace(uri))
             {
-                string uri = string.Concat(commands["agent"]);
-                if (!string.IsNullOrWhiteSpace(uri))
-                {
-                    LoggerHelper.Verbose("Initializing WebSocketClient - Server URI: {0}", uri);
+                LoggerHelper.Verbose("Initializing WebSocketClient - Server URI: {0}", uri);
 
-                    _webSocketUri = uri;
-                    WebSocketClient.GetInstance().Init(_webSocketUri);
+                _webSocketUri = uri;
+                WebSocketClient.GetInstance().Init(_webSocketUri);
 
-                    SetupAgent();
-                }
+                SetupAgent();
             }
         }
 

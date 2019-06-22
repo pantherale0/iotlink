@@ -157,7 +157,8 @@
 Exit /b 0</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>net start IOTLink
+    <PostBuildEvent>xcopy "$(SolutionDir)\Assets\images\icons" "$(TargetDir)\Icons" /i /s
+net start IOTLink
 Exit /b 0</PostBuildEvent>
   </PropertyGroup>
 </Project>

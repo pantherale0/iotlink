@@ -89,6 +89,15 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Icons Path
+        /// </summary>
+        /// <returns>String</returns>
+        public static string IconsPath()
+        {
+            return Path.Combine(BaseAppPath(), "Icons");
+        }
+
+        /// <summary>
         /// Read a shared text file from the system
         /// </summary>
         /// <param name="path">String containing the file path</param>

@@ -25,6 +25,7 @@ namespace IOTLinkAddon.Service
             GetManager().SubscribeTopic(this, "displays", OnDisplayMessage);
             GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
             GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
+            GetManager().SubscribeTopic(this, "notify", OnNotifyMessage);
         }
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
@@ -160,6 +161,24 @@ namespace IOTLinkAddon.Service
             catch (Exception ex)
             {
                 LoggerHelper.Debug("OnDisplayMessage: Wrong Payload: {0}", ex.Message);
+            }
+        }
+
+        private void OnNotifyMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnNotifyMessage: Message received");
+            string value = e.Message.GetPayload();
+            if (value == null)
+                return;
+
+            try
+            {
+                dynamic json = JsonConvert.DeserializeObject(value);
+                GetManager().ShowNotification(this, (string)json.title, (string)json.message, (string)json.iconUrl, (string)json.launchParams);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("OnNotifyMessage failure: {0}", ex.Message);
             }
         }
     }
