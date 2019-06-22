@@ -72,16 +72,36 @@ namespace IOTLinkAPI.Platform.Windows
 
         public static string GetCurrentUsername()
         {
-            uint currentSessionId = GetCurrentSessionId();
-            if (currentSessionId == INVALID_SESSION_ID)
-                return "SYSTEM";
+            IntPtr server = GetServerPtr();
+            try
+            {
+                WindowsSessionInfo sessionInfo = GetFirstActiveSession(server);
+                if (sessionInfo == null)
+                    return "SYSTEM";
 
-            return GetUsername((int)currentSessionId);
+                return sessionInfo.Username;
+            }
+            finally
+            {
+                WtsApi32.WTSCloseServer(server);
+            }
         }
 
         public static uint GetCurrentSessionId()
         {
-            return Kernel32.WTSGetActiveConsoleSessionId();
+            IntPtr server = GetServerPtr();
+            try
+            {
+                WindowsSessionInfo sessionInfo = GetFirstActiveSession(server);
+                if (sessionInfo == null)
+                    return INVALID_SESSION_ID;
+
+                return (uint)sessionInfo.SessionID;
+            }
+            finally
+            {
+                WtsApi32.WTSCloseServer(server);
+            }
         }
 
         public static string GetDomainName(int sessionId)
