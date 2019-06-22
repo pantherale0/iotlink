@@ -24,6 +24,8 @@ namespace IOTLinkAddon.Service
         private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
+        private string _currentUser = "SYSTEM";
+
         public override void Init(IAddonManager addonManager)
         {
             base.Init(addonManager);
@@ -79,6 +81,18 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
             GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
+
+            if (e.Reason == System.ServiceProcess.SessionChangeReason.SessionLogon || e.Reason == System.ServiceProcess.SessionChangeReason.SessionUnlock)
+            {
+                _currentUser = e.Username;
+                SendCurrentUserInfo();
+            }
+
+            if (e.Reason == System.ServiceProcess.SessionChangeReason.SessionLogoff || e.Reason == System.ServiceProcess.SessionChangeReason.SessionLock)
+            {
+                _currentUser = "SYSTEM";
+                SendCurrentUserInfo();
+            }
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
@@ -193,7 +207,7 @@ namespace IOTLinkAddon.Service
 
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
-            SendMonitorValue("Stats/CurrentUser", PlatformHelper.GetCurrentUsername(), configKey);
+            SendMonitorValue("Stats/CurrentUser", _currentUser, configKey);
         }
 
         private void RequestAgentIdleTime()
