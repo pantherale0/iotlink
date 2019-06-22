@@ -5,21 +5,29 @@ using IOTLinkAPI.Platform.Windows.Native.Internal;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace IOTLinkAPI.Platform.Windows
 {
 #pragma warning disable 1591
     public static class WindowsAPI
     {
-        private const int WM_SYSCOMMAND = 0x0112;
-        private const int SC_MONITORPOWER = 0xF170;
-        private const int MOUSEEVENTFMOVE = 0x0001;
+        private static readonly uint WM_SYSCOMMAND = 0x0112;
+        private static readonly uint SC_MONITORPOWER = 0xF170;
+        private static readonly uint MOUSEEVENTFMOVE = 0x0001;
 
-        private const int CREATE_UNICODE_ENVIRONMENT = 0x00000400;
-        private const int CREATE_NO_WINDOW = 0x08000000;
-        private const int CREATE_NEW_CONSOLE = 0x00000010;
+        private static readonly uint CREATE_UNICODE_ENVIRONMENT = 0x00000400;
+        private static readonly uint CREATE_NO_WINDOW = 0x08000000;
+        private static readonly uint CREATE_NEW_CONSOLE = 0x00000010;
 
-        private const uint INVALID_SESSION_ID = 0xFFFFFFFF;
+        private static readonly uint INVALID_SESSION_ID = 0xFFFFFFFF;
+
+        private static readonly IntPtr HWND_BROADCAST = new IntPtr(0xFFFF);
+        private static readonly IntPtr HWND_TOP = new IntPtr(0);
+        private static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+        private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+        private static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
 
         public enum DialogStyle
         {
@@ -224,7 +232,7 @@ namespace IOTLinkAPI.Platform.Windows
                 tStartUpInfo.lpDesktop = "winsta0\\default";
 
                 // Creation Flags
-                uint dwCreationFlags = CREATE_UNICODE_ENVIRONMENT | (uint)(runInfo.Visible ? CREATE_NEW_CONSOLE : CREATE_NO_WINDOW);
+                uint dwCreationFlags = CREATE_UNICODE_ENVIRONMENT | (runInfo.Visible ? CREATE_NEW_CONSOLE : CREATE_NO_WINDOW);
 
                 bool childProcStarted = AdvApi32.CreateProcessAsUser(
                             hUserToken,                    // Token of the logged-on user. 
@@ -296,7 +304,7 @@ namespace IOTLinkAPI.Platform.Windows
         public static void ShowMessage(string title, string message)
         {
             uint sessionId = Kernel32.WTSGetActiveConsoleSessionId();
-            if (sessionId == 0xFFFFFFFF)
+            if (sessionId == INVALID_SESSION_ID)
                 return;
 
             IntPtr server = GetServerPtr();
@@ -340,6 +348,18 @@ namespace IOTLinkAPI.Platform.Windows
         {
             CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
             return defaultPlaybackDevice.Volume;
+        }
+
+        public static void TurnOffDisplays()
+        {
+            User32.PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)2);
+        }
+
+        public static void TurnOnDisplays()
+        {
+            User32.mouse_event(MOUSEEVENTFMOVE, 0, 1, 0, 0);
+            Thread.Sleep(100);
+            User32.mouse_event(MOUSEEVENTFMOVE, 0, -1, 0, 0);
         }
 
         public static uint GetIdleTime()

@@ -1,13 +1,15 @@
-﻿using IOTLinkAPI.Addons;
+﻿using IOTLinkAddon.Common;
+using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events.MQTT;
 using Newtonsoft.Json;
 using System;
+using System.Dynamic;
 
-namespace IOTLinkAddon
+namespace IOTLinkAddon.Service
 {
-    public class Commands : ServiceAddon
+    public class CommandsService : ServiceAddon
     {
         public override void Init(IAddonManager addonManager)
         {
@@ -20,6 +22,7 @@ namespace IOTLinkAddon
             GetManager().SubscribeTopic(this, "hibernate", OnHibernateMessage);
             GetManager().SubscribeTopic(this, "suspend", OnSuspendMessage);
             GetManager().SubscribeTopic(this, "run", OnRunMessage);
+            GetManager().SubscribeTopic(this, "displays", OnDisplayMessage);
             GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
             GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
         }
@@ -125,6 +128,38 @@ namespace IOTLinkAddon
             catch (Exception ex)
             {
                 LoggerHelper.Debug("OnVolumeMute: Wrong Payload: {0}", ex.Message);
+            }
+        }
+
+        private void OnDisplayMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnDisplayMessage: Message received");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
+                    return;
+
+                bool turnOn = Convert.ToBoolean(e.Message.GetPayload());
+                if (turnOn)
+                {
+                    LoggerHelper.Debug("OnDisplayMessage: Turn On");
+
+                    dynamic addonData = new ExpandoObject();
+                    addonData.requestType = AddonRequestType.REQUEST_DISPLAY_TURN_ON;
+                    GetManager().SendAgentRequest(this, addonData);
+                }
+                else
+                {
+                    LoggerHelper.Debug("OnDisplayMessage: Turn Off");
+
+                    dynamic addonData = new ExpandoObject();
+                    addonData.requestType = AddonRequestType.REQUEST_DISPLAY_TURN_OFF;
+                    GetManager().SendAgentRequest(this, addonData);
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Debug("OnDisplayMessage: Wrong Payload: {0}", ex.Message);
             }
         }
     }

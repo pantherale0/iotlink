@@ -233,6 +233,30 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Turn on displays
+        /// </summary>
+        /// <returns>Double</returns>
+        public static void TurnOnDisplays()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            WindowsAPI.TurnOnDisplays();
+        }
+
+        /// <summary>
+        /// Turn off displays
+        /// </summary>
+        /// <returns>Double</returns>
+        public static void TurnOffDisplays()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            WindowsAPI.TurnOffDisplays();
+        }
+
+        /// <summary>
         /// Get User Idle Time
         /// </summary>
         /// <returns>Double</returns>
