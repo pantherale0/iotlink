@@ -90,6 +90,7 @@ namespace IOTLinkAddon.Service
             SendMemoryInfo();
             SendPowerInfo();
             SendHardDriveInfo();
+            SendCurrentUserInfo();
             RequestAgentIdleTime();
             RequestAgentDisplayInfo();
             RequestAgentDisplayScreenshot();
@@ -184,6 +185,17 @@ namespace IOTLinkAddon.Service
             }
         }
 
+        private void SendCurrentUserInfo()
+        {
+            const string configKey = "CurrentUser";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            SendMonitorValue("Stats/CurrentUser", PlatformHelper.GetCurrentUsername(), configKey);
+        }
+
         private void RequestAgentIdleTime()
         {
             const string configKey = "IdleTime";
@@ -195,7 +207,7 @@ namespace IOTLinkAddon.Service
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_IDLE_TIME;
 
-            GetManager().SendAgentRequest(this, addonData);
+            GetManager().SendAgentRequest(this, addonData, PlatformHelper.GetCurrentUsername());
         }
 
         private void RequestAgentDisplayInfo()
@@ -249,10 +261,13 @@ namespace IOTLinkAddon.Service
 
         private void ParseIdleTime(dynamic data, string username)
         {
+            if (string.Compare(PlatformHelper.GetCurrentUsername(), username) != 0)
+                return;
+
             const string configKey = "IdleTime";
             uint idleTime = (uint)data.requestData;
 
-            SendMonitorValue("Stats/IdleTime/" + username, idleTime.ToString(), configKey);
+            SendMonitorValue("Stats/IdleTime", idleTime.ToString(), configKey);
         }
 
         private void ParseDisplayInfo(dynamic data, string username)

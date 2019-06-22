@@ -38,6 +38,18 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Return the username from the current session
+        /// </summary>
+        /// <returns>String</returns>
+        public static string GetCurrentUsername()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return WindowsAPI.GetCurrentUsername();
+
+            throw new PlatformNotSupportedException();
+        }
+
+        /// <summary>
         /// Execute a system shutdown
         /// </summary>
         /// <param name="force">Boolean indicating if the call should be flagged as forced</param>
