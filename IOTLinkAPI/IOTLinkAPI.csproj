@@ -135,6 +135,7 @@
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Platform\DisplayInfo.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
+    <Compile Include="Platform\NetworkInfo.cs" />
     <Compile Include="Platform\RunInfo.cs" />
     <Compile Include="Platform\WebSocket\RequestTypeClient.cs" />
     <Compile Include="Platform\WebSocket\MessageType.cs" />

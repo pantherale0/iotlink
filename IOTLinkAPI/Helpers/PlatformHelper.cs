@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
 namespace IOTLinkAPI.Helpers
@@ -280,12 +283,63 @@ namespace IOTLinkAPI.Helpers
             return WindowsAPI.GetIdleTime();
         }
 
+        /// <summary>
+        /// Get Displays Information
+        /// </summary>
+        /// <returns></returns>
         public static List<DisplayInfo> GetDisplays()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
             return WindowsAPI.GetDisplays();
+        }
+
+        /// <summary>
+        /// Get Network Information
+        /// </summary>
+        /// <returns></returns>
+        public static List<NetworkInfo> GetIPAddresses()
+        {
+            List<NetworkInfo> networks = new List<NetworkInfo>();
+
+            NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface network in networkInterfaces)
+            {
+                IPInterfaceProperties properties = network.GetIPProperties();
+
+                if (network.OperationalStatus == OperationalStatus.Up && !network.Description.ToLower().Contains("virtual") && !network.Description.ToLower().Contains("pseudo"))
+                {
+                    if (network.NetworkInterfaceType != NetworkInterfaceType.Ethernet && network.NetworkInterfaceType != NetworkInterfaceType.Wireless80211)
+                        continue;
+
+                    NetworkInfo networkInfo = new NetworkInfo();
+                    networkInfo.Wired = network.NetworkInterfaceType == NetworkInterfaceType.Ethernet;
+                    networkInfo.Speed = network.Speed / 1000000;
+
+                    foreach (IPAddressInformation address in properties.UnicastAddresses)
+                    {
+                        AddressFamily family = address.Address.AddressFamily;
+                        if (family != AddressFamily.InterNetwork && family != AddressFamily.InterNetworkV6)
+                            continue;
+
+                        if (IPAddress.IsLoopback(address.Address))
+                            continue;
+
+                        if (family == AddressFamily.InterNetwork)
+                            networkInfo.IPv4Address = address.Address.ToString();
+                        else if (networkInfo.IPv6Address == null)
+                            networkInfo.IPv6Address = address.Address.ToString();
+                    }
+
+                    if (string.IsNullOrWhiteSpace(networkInfo.IPv4Address) && string.IsNullOrWhiteSpace(networkInfo.IPv6Address))
+                        continue;
+
+                    networks.Add(networkInfo);
+                }
+            }
+
+            return networks;
         }
     }
 }
