@@ -9,6 +9,16 @@
 enabled: true
 
 ########################################################################
+# Size Format
+########################################################################
+# Which size should be used to output hard-drive informations.
+########################################################################
+# Type: MB, GB or TB
+# Default: MB
+########################################################################
+sizeFormat: MB
+
+########################################################################
 # Monitors
 ########################################################################
 # Configure which monitors are enabled and which interval they should
@@ -19,6 +29,7 @@ enabled: true
 # Memory            : Memory (Usage, Available, Used, Total)
 # HardDrive         : Hard Drives (Total Size, Free Space, Format, etc)
 # Power             : Power (Status, Battery Status, Remaning Time, etc)
+# CurrentUser       : Current user logged in physically into machine.
 # IdleTime          : Idle Time (Per User)
 # Display-Info      : Screen Width and Height (Per Display)
 # Display-Screenshot: Screenshot (Per Display) - Recommended > 60 secs.
@@ -37,6 +48,10 @@ monitors:
     interval: 10
     cacheable: true
   Power:
+    enabled: true
+    interval: 10
+    cacheable: true
+  CurrentUser:
     enabled: true
     interval: 10
     cacheable: true
