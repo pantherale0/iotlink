@@ -2,7 +2,6 @@
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
-using System.Dynamic;
 
 namespace IOTLinkAddon.Agent
 {
@@ -26,9 +25,6 @@ namespace IOTLinkAddon.Agent
             LoggerHelper.Verbose("CommandsAgent::OnAgentRequest");
 
             AddonRequestType requestType = e.Data.requestType;
-
-            dynamic addonData = new ExpandoObject();
-            addonData.requestType = requestType;
             switch (requestType)
             {
                 case AddonRequestType.REQUEST_DISPLAY_TURN_ON:

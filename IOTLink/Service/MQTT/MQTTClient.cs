@@ -147,7 +147,6 @@ namespace IOTLinkService.Service.Engine.MQTT
 
             int tries = 0;
             _connecting = true;
-            _preventReconnect = false;
 
             do
             {
@@ -169,6 +168,7 @@ namespace IOTLinkService.Service.Engine.MQTT
                     _client = null;
                 }
 
+                _preventReconnect = false;
                 // Safely again, try to connect with the existing broker information.
                 try
                 {
