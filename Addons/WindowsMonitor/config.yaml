@@ -1,39 +1,40 @@
-########################################################################
+############################################################################
 # Enabled
-########################################################################
+############################################################################
 # This flag indicates whether the module is enabled or disabled.
-########################################################################
+############################################################################
 # Type: Boolean
 # Default: false
-########################################################################
+############################################################################
 enabled: true
 
-########################################################################
+############################################################################
 # Size Format
-########################################################################
+############################################################################
 # Which size should be used to output hard-drive informations.
-########################################################################
+############################################################################
 # Type: MB, GB or TB
-# Default: MB
-########################################################################
-sizeFormat: MB
+# Default: GB
+############################################################################
+sizeFormat: GB
 
-########################################################################
+############################################################################
 # Monitors
-########################################################################
+############################################################################
 # Configure which monitors are enabled and which interval they should
 # be pooled from the system. I don't recommend less than 5 seconds.
 # Cacheable monitors don't send the value repeatedly unless it changes.
-########################################################################
+############################################################################
 # CPU               : CPU Usage
-# Memory            : Memory (Usage, Available, Used, Total)
-# HardDrive         : Hard Drives (Total Size, Free Space, Format, etc)
-# Power             : Power (Status, Battery Status, Remaning Time, etc)
+# Memory            : Memory (Usage, Available, Used, Total).
+# HardDrive         : Hard Drives (Total Size, Free Space, Format, etc).
+# Power             : Power (Status, Battery Status, Remaning Time, etc).
+# NetworkInfo       : Network Information (IPv4, IPv6, Speed, Wired).
 # CurrentUser       : Current user logged in physically into machine.
-# IdleTime          : Idle Time (Per User)
-# Display-Info      : Screen Width and Height (Per Display)
+# IdleTime          : Idle Time (Current user physically logged in).
+# Display-Info      : Screen Width and Height (Per Display).
 # Display-Screenshot: Screenshot (Per Display) - Recommended > 60 secs.
-########################################################################
+############################################################################
 monitors:
   CPU:
     enabled: true
