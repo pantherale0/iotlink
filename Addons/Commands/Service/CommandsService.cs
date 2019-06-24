@@ -23,7 +23,7 @@ namespace IOTLinkAddon.Service
             GetManager().SubscribeTopic(this, "suspend", OnSuspendMessage);
             GetManager().SubscribeTopic(this, "run", OnRunMessage);
             GetManager().SubscribeTopic(this, "displays/on", OnDisplayTurnOnMessage);
-            GetManager().SubscribeTopic(this, "displays/off", OnDisplayTurnOnMessage);
+            GetManager().SubscribeTopic(this, "displays/off", OnDisplayTurnOffMessage);
             GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
             GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
             GetManager().SubscribeTopic(this, "notify", OnNotifyMessage);
