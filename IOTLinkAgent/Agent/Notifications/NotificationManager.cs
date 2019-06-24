@@ -29,11 +29,15 @@ namespace IOTLinkAgent.Agent.Notifications
 
         public void ShowNotification(string title, string message, string iconUrl = null, string launchParams = null)
         {
+            LoggerHelper.Verbose("NotificationManager - Displaying Notification");
+
             var toast = ToastContentFactory.CreateToastImageAndText02();
             toast.TextHeading.Text = ParseTitle(title);
             toast.Image.Src = ParseIconUrl(iconUrl);
             toast.TextBodyWrap.Text = message;
             toast.Launch = launchParams;
+
+            LoggerHelper.DataDump("Title: {0} | Message: {1} | Icon: {2} | LaunchParams: {3}", toast.TextHeading.Text, message, toast.Image.Src, launchParams);
 
             var xml = new XmlDocument();
             xml.LoadXml(toast.GetContent());
@@ -50,7 +54,7 @@ namespace IOTLinkAgent.Agent.Notifications
 
         private string ParseIconUrl(string iconUrl)
         {
-            if (string.IsNullOrWhiteSpace(iconUrl) || !iconUrl.StartsWith("http://") && !iconUrl.StartsWith("https://") && iconUrl.StartsWith("file:///"))
+            if (string.IsNullOrWhiteSpace(iconUrl) || !iconUrl.StartsWith("http://") && !iconUrl.StartsWith("https://") && !iconUrl.StartsWith("file:///"))
                 return string.Format("file:///{0}", System.IO.Path.Combine(PathHelper.IconsPath(), "application.ico"));
 
             return iconUrl;
@@ -68,11 +72,8 @@ namespace IOTLinkAgent.Agent.Notifications
 
         private void ToastActivated(ToastNotification sender, object e)
         {
-            LoggerHelper.Trace("Toast Activated {0}: {1}", sender.ToString(), e.ToString());
-
             if (e.GetType() != typeof(ToastActivatedEventArgs))
                 return;
-
 
             ToastActivatedEventArgs args = (ToastActivatedEventArgs)e;
             if (string.IsNullOrWhiteSpace(args.Arguments))
@@ -86,7 +87,7 @@ namespace IOTLinkAgent.Agent.Notifications
             var toastArgs = toastLaunch.Groups["arguments"];
             if (!toastCommand.Success)
             {
-                LoggerHelper.Trace("Cannot parse toast command");
+                LoggerHelper.Warn("Invalid notification toast parameters: {0}", args.Arguments);
                 return;
             }
 
@@ -106,6 +107,7 @@ namespace IOTLinkAgent.Agent.Notifications
                         break;
 
                     case "addon":
+                        LoggerHelper.Warn("Addon type not implemented yet.");
                         break;
 
                     default:

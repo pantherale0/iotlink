@@ -18,12 +18,12 @@ namespace IOTLinkAddon.Agent
 
         private void OnConfigReload(object sender, ConfigReloadEventArgs e)
         {
-            LoggerHelper.Verbose("WindowsMonitorAgent::OnConfigReload");
+            LoggerHelper.Verbose("CommandsAgent::OnConfigReload");
         }
 
         private void OnAgentRequest(object sender, AgentAddonRequestEventArgs e)
         {
-            LoggerHelper.Verbose("WindowsMonitorAgent::OnAgentRequest");
+            LoggerHelper.Verbose("CommandsAgent::OnAgentRequest");
 
             AddonRequestType requestType = e.Data.requestType;
 
@@ -45,11 +45,13 @@ namespace IOTLinkAddon.Agent
 
         private void DisplayTurnOn()
         {
+            LoggerHelper.Verbose("CommandsAgent::DisplayTurnOn");
             PlatformHelper.TurnOnDisplays();
         }
 
         private void DisplayTurnOff()
         {
+            LoggerHelper.Verbose("CommandsAgent::DisplayTurnOff");
             PlatformHelper.TurnOffDisplays();
         }
     }

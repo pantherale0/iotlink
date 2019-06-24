@@ -146,7 +146,7 @@ namespace IOTLinkService.Service.Engine
             dynamic data = new ExpandoObject();
             data.title = title;
             data.message = message;
-            data.imageUrl = iconUrl;
+            data.iconUrl = iconUrl;
             data.launchParams = launchParams;
 
             webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_SHOW_NOTIFICATION, data);
