@@ -156,7 +156,7 @@ begin
   WizardForm.StatusLabel.Caption := 'Installing .NET Framework 4.7.2. This might take a few minutes...';
   WizardForm.ProgressGauge.Style := npbstMarquee;
   try
-    if not Exec(ExpandConstant('{tmp}\DotNetFrameworkInstaller.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+    if not Exec(ExpandConstant('{tmp}\DotNetFrameworkInstaller.exe'), '/q /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
     begin
       MsgBox('.NET installation failed with code: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
     end;
