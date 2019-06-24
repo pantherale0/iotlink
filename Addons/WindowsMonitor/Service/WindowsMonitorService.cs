@@ -105,6 +105,7 @@ namespace IOTLinkAddon.Service
             SendPowerInfo();
             SendHardDriveInfo();
             SendCurrentUserInfo();
+            SendNetworkInfo();
             RequestAgentIdleTime();
             RequestAgentDisplayInfo();
             RequestAgentDisplayScreenshot();
@@ -208,6 +209,27 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             SendMonitorValue("Stats/CurrentUser", _currentUser, configKey);
+        }
+
+        private void SendNetworkInfo()
+        {
+            const string configKey = "NetworkInfo";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            List<NetworkInfo> networks = PlatformHelper.GetNetworkInfos();
+            for (int i = 0; i < networks.Count; i++)
+            {
+                NetworkInfo networkInfo = networks[i];
+                string topic = string.Format("Stats/Network/{0}", i);
+
+                SendMonitorValue(topic + "/IPv4", networkInfo.IPv4Address, configKey);
+                SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
+                SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
+                SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
+            }
         }
 
         private void RequestAgentIdleTime()

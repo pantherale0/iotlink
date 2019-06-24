@@ -384,7 +384,7 @@ namespace IOTLinkService.Service.Engine
             if (addon == null)
                 return string.Empty;
 
-            topic = StringHelper.PascalToKebabCase(topic);
+            topic = topic.Split('/').Select(x => StringHelper.PascalToKebabCase(x)).Aggregate((x, y) => x + '/' + y);
             string addonId = StringHelper.PascalToKebabCase(addon.GetAppInfo().AddonId);
             return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addonId, topic));
         }

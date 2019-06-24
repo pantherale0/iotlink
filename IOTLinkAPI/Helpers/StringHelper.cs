@@ -151,7 +151,10 @@ namespace IOTLinkAPI.Helpers
             if (string.IsNullOrWhiteSpace(source))
                 return source;
 
-            return Regex.Replace(source, "(?<!^)(?<!/)([A-Z][a-z]|(?<=[a-z])[A-Z])", "-$1", RegexOptions.Compiled).Trim().ToLowerInvariant();
+            if (source.Length > 5)
+                return Regex.Replace(source, "(?<!^)(?<!/)([A-Z][a-z]|(?<=[a-z])[A-Z])", "-$1", RegexOptions.Compiled).Trim().ToLowerInvariant();
+
+            return source.Trim().ToLowerInvariant();
         }
     }
 }

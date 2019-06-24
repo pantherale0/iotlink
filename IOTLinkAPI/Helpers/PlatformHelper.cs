@@ -299,7 +299,7 @@ namespace IOTLinkAPI.Helpers
         /// Get Network Information
         /// </summary>
         /// <returns></returns>
-        public static List<NetworkInfo> GetIPAddresses()
+        public static List<NetworkInfo> GetNetworkInfos()
         {
             List<NetworkInfo> networks = new List<NetworkInfo>();
 

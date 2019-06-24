@@ -51,6 +51,10 @@ monitors:
     enabled: true
     interval: 10
     cacheable: true
+  NetworkInfo:
+    enabled: true
+    interval: 10
+    cacheable: true
   CurrentUser:
     enabled: true
     interval: 10
