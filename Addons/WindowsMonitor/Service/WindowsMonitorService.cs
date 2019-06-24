@@ -30,11 +30,11 @@ namespace IOTLinkAddon.Service
         {
             base.Init(addonManager);
 
-
             _configPath = Path.Combine(this._currentPath, "config.yaml");
             ConfigHelper.SetReloadHandler<WindowsMonitorConfig>(_configPath, OnConfigReload);
 
             _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
+            _currentUser = PlatformHelper.GetCurrentUsername();
 
             _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             _cpuPerformanceCounter.NextValue();

@@ -4,6 +4,8 @@ using IOTLinkAPI.Platform.Windows.Native;
 using IOTLinkAPI.Platform.Windows.Native.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -77,6 +79,10 @@ namespace IOTLinkAPI.Platform.Windows
             {
                 WindowsSessionInfo sessionInfo = GetFirstActiveSession(server);
                 if (sessionInfo == null)
+                    return "SYSTEM";
+
+                List<Process> processes = Process.GetProcesses().Where(p => p.ProcessName == "explorer" && p.SessionId == sessionInfo.SessionID).ToList();
+                if (processes.Count == 0)
                     return "SYSTEM";
 
                 return sessionInfo.Username;
