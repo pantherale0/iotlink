@@ -1,7 +1,9 @@
-﻿using IOTLinkAPI.Helpers;
+﻿using IOTLinkAgent.Agent.Loaders;
+using IOTLinkAPI.Helpers;
 using NotificationsExtensions.ToastContent;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
@@ -37,10 +39,12 @@ namespace IOTLinkAgent.Agent.Notifications
             toast.TextBodyWrap.Text = message;
             toast.Launch = launchParams;
 
+            string xmlStr = toast.GetContent();
             LoggerHelper.DataDump("Title: {0} | Message: {1} | Icon: {2} | LaunchParams: {3}", toast.TextHeading.Text, message, toast.Image.Src, launchParams);
+            LoggerHelper.DataDump("XML: {0}", xmlStr);
 
             var xml = new XmlDocument();
-            xml.LoadXml(toast.GetContent());
+            xml.LoadXml(xmlStr);
             ShowToast(xml);
         }
 
@@ -55,7 +59,19 @@ namespace IOTLinkAgent.Agent.Notifications
         private string ParseIconUrl(string iconUrl)
         {
             if (string.IsNullOrWhiteSpace(iconUrl) || !iconUrl.StartsWith("http://") && !iconUrl.StartsWith("https://") && !iconUrl.StartsWith("file:///"))
-                return string.Format("file:///{0}", System.IO.Path.Combine(PathHelper.IconsPath(), "application.ico"));
+                iconUrl = string.Format("file:///{0}", Path.Combine(PathHelper.IconsPath(), "application.ico"));
+
+            if (iconUrl.StartsWith("http://") || !iconUrl.StartsWith("https://"))
+            {
+                try
+                {
+                    iconUrl = string.Format("file:///{0}", ImageLoader.DownloadFile(iconUrl));
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Warn("Cannot download {0} for displaying notification: {1}", iconUrl, ex.ToString());
+                }
+            }
 
             return iconUrl;
         }

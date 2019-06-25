@@ -70,6 +70,7 @@
     <Compile Include="Agent\AgentAddonManager.cs" />
     <Compile Include="Agent\AgentMain.cs" />
     <Compile Include="Agent\Loaders\AssemblyLoader.cs" />
+    <Compile Include="Agent\Loaders\ImageLoader.cs" />
     <Compile Include="Agent\Notifications\NotificationManager.cs" />
     <Compile Include="Agent\WebSocket\Client\WebSocketClient.cs" />
     <Compile Include="Program.cs" />
