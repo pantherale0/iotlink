@@ -26,6 +26,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
         public event MQTTMessageEventHandler OnMQTTMessageReceived;
+        public event MQTTRefreshMessageEventHandler OnMQTTRefreshMessageReceived;
 
         public static MQTTClient GetInstance()
         {
@@ -223,10 +224,10 @@ namespace IOTLinkService.Service.Engine.MQTT
                     LoggerHelper.Trace("Trying to disconnect from the broker (Try: {0}).", tries++);
 
                     // Send LWT Disconnected
-                    if (!skipLastWill && IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                    if (!skipLastWill)
                     {
                         LoggerHelper.Verbose("Sending LWT message before disconnecting.");
-                        _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
+                        SendLWTDisconnect();
                     }
 
                     _client.DisconnectAsync().ConfigureAwait(false);
@@ -337,8 +338,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             await Task.Delay(TimeSpan.FromSeconds(1));
 
             // Send LWT Connected
-            if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
-                await _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage)).ConfigureAwait(false);
+            SendLWTConnect();
 
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
@@ -380,8 +380,16 @@ namespace IOTLinkService.Service.Engine.MQTT
 
             // Fire event
             MQTTMessage message = GetMQTTMessage(arg);
-            MQTTMessageEventEventArgs mqttEvent = new MQTTMessageEventEventArgs(MQTTEventEventArgs.MQTTEventType.MessageReceived, message, arg);
-            OnMQTTMessageReceived?.Invoke(this, mqttEvent);
+            if (string.Compare(message.Topic, "refresh", StringComparison.InvariantCultureIgnoreCase) == 0)
+            {
+                SendLWTConnect();
+                OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                MQTTMessageEventEventArgs mqttEvent = new MQTTMessageEventEventArgs(MQTTEventEventArgs.MQTTEventType.MessageReceived, message, arg);
+                OnMQTTMessageReceived?.Invoke(this, mqttEvent);
+            }
         }
 
         /// <summary>
@@ -427,6 +435,32 @@ namespace IOTLinkService.Service.Engine.MQTT
             };
 
             return message;
+        }
+
+        private void SendLWTConnect()
+        {
+            try
+            {
+                if (IsLastWillEnabled() && _client.IsConnected && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
+                    _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage)).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to publish LWT (Connect): {0}", ex.ToString());
+            }
+        }
+
+        private void SendLWTDisconnect()
+        {
+            try
+            {
+                if (IsLastWillEnabled() && _client.IsConnected && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                    _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to publish LWT (Disconnect): {0}", ex.ToString());
+            }
         }
 
         /// <summary>

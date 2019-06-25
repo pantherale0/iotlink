@@ -20,10 +20,12 @@ namespace IOTLinkAPI.Addons
         public event SessionChangeHandler OnSessionChangeHandler;
         public event ConfigReloadedHandler OnConfigReloadHandler;
         public event AgentResponseHandler OnAgentResponseHandler;
+        public event RefreshRequestedHandler OnRefreshRequestedHandler;
 
         public delegate void SessionChangeHandler(object sender, SessionChangeEventArgs e);
         public delegate void ConfigReloadedHandler(object sender, ConfigReloadEventArgs e);
         public delegate void AgentResponseHandler(object sender, AgentAddonResponseEventArgs e);
+        public delegate void RefreshRequestedHandler(object sender, EventArgs e);
 
         public IAddonServiceManager GetManager()
         {
@@ -99,6 +101,18 @@ namespace IOTLinkAPI.Addons
             catch (Exception ex)
             {
                 LoggerHelper.Error("ServiceAddon::OnAgentResponse - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
+            }
+        }
+
+        public void Raise_OnRefreshRequested(object sender, EventArgs e)
+        {
+            try
+            {
+                OnRefreshRequestedHandler?.Invoke(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ServiceAddon::OnRefreshRequested - AddonId: {0} Error: {1}", _addonInfo.AddonId, ex.ToString());
             }
         }
     }

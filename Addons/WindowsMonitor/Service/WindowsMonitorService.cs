@@ -42,8 +42,16 @@ namespace IOTLinkAddon.Service
             OnSessionChangeHandler += OnSessionChange;
             OnConfigReloadHandler += OnConfigReload;
             OnAgentResponseHandler += OnAgentResponse;
+            OnRefreshRequestedHandler += OnRefreshRequested;
 
             SetupTimers();
+        }
+
+        private void OnRefreshRequested(object sender, EventArgs e)
+        {
+            LoggerHelper.Verbose("Refresh requested");
+            _cache.Clear();
+            SendAllInformation();
         }
 
         private void SetupTimers()
@@ -97,24 +105,40 @@ namespace IOTLinkAddon.Service
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
-            _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
             LoggerHelper.Debug("OnMonitorTimerElapsed: Started");
 
-            SendCPUInfo();
-            SendMemoryInfo();
-            SendPowerInfo();
-            SendHardDriveInfo();
-            SendCurrentUserInfo();
-            SendNetworkInfo();
-            RequestAgentIdleTime();
-            RequestAgentDisplayInfo();
-            RequestAgentDisplayScreenshot();
+            SendAllInformation();
 
             if (_monitorCounter++ == uint.MaxValue)
                 _monitorCounter = 0;
 
             LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
-            _monitorTimer.Start(); // After everything, start the timer again.
+        }
+
+        private void SendAllInformation()
+        {
+            try
+            {
+                _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
+
+                SendCPUInfo();
+                SendMemoryInfo();
+                SendPowerInfo();
+                SendHardDriveInfo();
+                SendCurrentUserInfo();
+                SendNetworkInfo();
+                RequestAgentIdleTime();
+                RequestAgentDisplayInfo();
+                RequestAgentDisplayScreenshot();
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("SendAllInformation - Error: {0}", ex.ToString());
+            }
+            finally
+            {
+                _monitorTimer.Start(); // After everything, start the timer again.
+            }
         }
 
         private void SendCPUInfo()

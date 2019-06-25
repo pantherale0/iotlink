@@ -450,6 +450,21 @@ namespace IOTLinkService.Service.Engine
         }
 
         /// <summary>
+        /// Broadcast Refresh Request
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e"><see cref="EventArgs"/> object</param>
+        internal void Raise_OnRefreshRequested(object sender, EventArgs e)
+        {
+            List<AddonInfo> addons = GetAddonsList();
+            foreach (AddonInfo addonInfo in addons)
+            {
+                if (addonInfo.ServiceAddon != null)
+                    addonInfo.ServiceAddon.Raise_OnRefreshRequested(sender, e);
+            }
+        }
+
+        /// <summary>
         /// Dispatch MQTT Message Received event to all addons 
         /// which has been subscribed to the related topic
         /// </summary>
