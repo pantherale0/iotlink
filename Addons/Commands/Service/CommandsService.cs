@@ -1,13 +1,15 @@
-﻿using IOTLinkAPI.Addons;
+﻿using IOTLinkAddon.Common;
+using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events.MQTT;
 using Newtonsoft.Json;
 using System;
+using System.Dynamic;
 
-namespace IOTLinkAddon
+namespace IOTLinkAddon.Service
 {
-    public class Commands : ServiceAddon
+    public class CommandsService : ServiceAddon
     {
         public override void Init(IAddonManager addonManager)
         {
@@ -20,8 +22,11 @@ namespace IOTLinkAddon
             GetManager().SubscribeTopic(this, "hibernate", OnHibernateMessage);
             GetManager().SubscribeTopic(this, "suspend", OnSuspendMessage);
             GetManager().SubscribeTopic(this, "run", OnRunMessage);
+            GetManager().SubscribeTopic(this, "displays/on", OnDisplayTurnOnMessage);
+            GetManager().SubscribeTopic(this, "displays/off", OnDisplayTurnOffMessage);
             GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
             GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
+            GetManager().SubscribeTopic(this, "notify", OnNotifyMessage);
         }
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
@@ -125,6 +130,42 @@ namespace IOTLinkAddon
             catch (Exception ex)
             {
                 LoggerHelper.Debug("OnVolumeMute: Wrong Payload: {0}", ex.Message);
+            }
+        }
+
+        private void OnDisplayTurnOnMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Debug("OnDisplayTurnOnMessage: Message received");
+
+            dynamic addonData = new ExpandoObject();
+            addonData.requestType = AddonRequestType.REQUEST_DISPLAY_TURN_ON;
+            GetManager().SendAgentRequest(this, addonData);
+        }
+
+        private void OnDisplayTurnOffMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Debug("OnDisplayTurnOffMessage: Message received");
+
+            dynamic addonData = new ExpandoObject();
+            addonData.requestType = AddonRequestType.REQUEST_DISPLAY_TURN_OFF;
+            GetManager().SendAgentRequest(this, addonData);
+        }
+
+        private void OnNotifyMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnNotifyMessage: Message received");
+            string value = e.Message.GetPayload();
+            if (value == null)
+                return;
+
+            try
+            {
+                dynamic json = JsonConvert.DeserializeObject(value);
+                GetManager().ShowNotification(this, (string)json.title, (string)json.message, (string)json.iconUrl, (string)json.launchParams);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("OnNotifyMessage failure: {0}", ex.Message);
             }
         }
     }

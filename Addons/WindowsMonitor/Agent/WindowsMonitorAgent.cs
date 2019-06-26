@@ -31,9 +31,6 @@ namespace IOTLinkAddon.Agent
             LoggerHelper.Verbose("WindowsMonitorAgent::OnAgentRequest");
 
             AddonRequestType requestType = e.Data.requestType;
-
-            dynamic addonData = new ExpandoObject();
-            addonData.requestType = requestType;
             switch (requestType)
             {
                 case AddonRequestType.REQUEST_IDLE_TIME:

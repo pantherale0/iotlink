@@ -24,15 +24,17 @@ namespace IOTLinkAddon.Service
         private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
+        private string _currentUser = "SYSTEM";
+
         public override void Init(IAddonManager addonManager)
         {
             base.Init(addonManager);
-
 
             _configPath = Path.Combine(this._currentPath, "config.yaml");
             ConfigHelper.SetReloadHandler<WindowsMonitorConfig>(_configPath, OnConfigReload);
 
             _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
+            _currentUser = PlatformHelper.GetCurrentUsername();
 
             _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             _cpuPerformanceCounter.NextValue();
@@ -40,8 +42,16 @@ namespace IOTLinkAddon.Service
             OnSessionChangeHandler += OnSessionChange;
             OnConfigReloadHandler += OnConfigReload;
             OnAgentResponseHandler += OnAgentResponse;
+            OnRefreshRequestedHandler += OnRefreshRequested;
 
             SetupTimers();
+        }
+
+        private void OnRefreshRequested(object sender, EventArgs e)
+        {
+            LoggerHelper.Verbose("Refresh requested");
+            _cache.Clear();
+            SendAllInformation();
         }
 
         private void SetupTimers()
@@ -79,26 +89,56 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
             GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
+
+            if (e.Reason == System.ServiceProcess.SessionChangeReason.SessionLogon || e.Reason == System.ServiceProcess.SessionChangeReason.SessionUnlock)
+            {
+                _currentUser = e.Username;
+                SendCurrentUserInfo();
+            }
+
+            if (e.Reason == System.ServiceProcess.SessionChangeReason.SessionLogoff || e.Reason == System.ServiceProcess.SessionChangeReason.SessionLock)
+            {
+                _currentUser = "SYSTEM";
+                SendCurrentUserInfo();
+            }
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
-            _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
             LoggerHelper.Debug("OnMonitorTimerElapsed: Started");
 
-            SendCPUInfo();
-            SendMemoryInfo();
-            SendPowerInfo();
-            SendHardDriveInfo();
-            RequestAgentIdleTime();
-            RequestAgentDisplayInfo();
-            RequestAgentDisplayScreenshot();
+            SendAllInformation();
 
             if (_monitorCounter++ == uint.MaxValue)
                 _monitorCounter = 0;
 
             LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
-            _monitorTimer.Start(); // After everything, start the timer again.
+        }
+
+        private void SendAllInformation()
+        {
+            try
+            {
+                _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
+
+                SendCPUInfo();
+                SendMemoryInfo();
+                SendPowerInfo();
+                SendHardDriveInfo();
+                SendCurrentUserInfo();
+                SendNetworkInfo();
+                RequestAgentIdleTime();
+                RequestAgentDisplayInfo();
+                RequestAgentDisplayScreenshot();
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("SendAllInformation - Error: {0}", ex.ToString());
+            }
+            finally
+            {
+                _monitorTimer.Start(); // After everything, start the timer again.
+            }
         }
 
         private void SendCPUInfo()
@@ -173,13 +213,46 @@ namespace IOTLinkAddon.Service
                 long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
                 int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
 
-                SendMonitorValue(topic + "/TotalSize", (driveInfo.TotalSize / (1024 * 1024)).ToString(), configKey);
-                SendMonitorValue(topic + "/AvailableFreeSpace", (driveInfo.AvailableFreeSpace / (1024 * 1024)).ToString(), configKey);
-                SendMonitorValue(topic + "/TotalFreeSpace", (driveInfo.TotalFreeSpace / (1024 * 1024)).ToString(), configKey);
-                SendMonitorValue(topic + "/UsedSpace", usedSpace.ToString(), configKey);
+                SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
+                SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
+                SendMonitorValue(topic + "/TotalFreeSpace", GetSize(driveInfo.TotalFreeSpace).ToString(), configKey);
+                SendMonitorValue(topic + "/UsedSpace", GetSize(usedSpace).ToString(), configKey);
+
                 SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat, configKey);
                 SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString(), configKey);
                 SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel, configKey);
+            }
+        }
+
+        private void SendCurrentUserInfo()
+        {
+            const string configKey = "CurrentUser";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            SendMonitorValue("Stats/CurrentUser", _currentUser, configKey);
+        }
+
+        private void SendNetworkInfo()
+        {
+            const string configKey = "NetworkInfo";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            List<NetworkInfo> networks = PlatformHelper.GetNetworkInfos();
+            for (int i = 0; i < networks.Count; i++)
+            {
+                NetworkInfo networkInfo = networks[i];
+                string topic = string.Format("Stats/Network/{0}", i);
+
+                SendMonitorValue(topic + "/IPv4", networkInfo.IPv4Address, configKey);
+                SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
+                SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
+                SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
             }
         }
 
@@ -194,7 +267,7 @@ namespace IOTLinkAddon.Service
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_IDLE_TIME;
 
-            GetManager().SendAgentRequest(this, addonData);
+            GetManager().SendAgentRequest(this, addonData, PlatformHelper.GetCurrentUsername());
         }
 
         private void RequestAgentDisplayInfo()
@@ -248,10 +321,13 @@ namespace IOTLinkAddon.Service
 
         private void ParseIdleTime(dynamic data, string username)
         {
+            if (string.Compare(PlatformHelper.GetCurrentUsername(), username) != 0)
+                return;
+
             const string configKey = "IdleTime";
             uint idleTime = (uint)data.requestData;
 
-            SendMonitorValue("Stats/IdleTime/" + username, idleTime.ToString(), configKey);
+            SendMonitorValue("Stats/IdleTime", idleTime.ToString(), configKey);
         }
 
         private void ParseDisplayInfo(dynamic data, string username)
@@ -275,6 +351,22 @@ namespace IOTLinkAddon.Service
             string topic = string.Format("Stats/Display/{0}/Screen", displayIndex);
 
             GetManager().PublishMessage(this, topic, displayScreen);
+        }
+
+        private double GetSize(long sizeInBytes)
+        {
+            switch (_config.SizeFormat)
+            {
+                default:
+                case "MB":
+                    return MathHelper.BytesToMegabytes(sizeInBytes);
+
+                case "GB":
+                    return MathHelper.BytesToGigabytes(sizeInBytes);
+
+                case "TB":
+                    return MathHelper.BytesToTerabytes(sizeInBytes);
+            }
         }
 
         private bool CanRun(string configKey)

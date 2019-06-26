@@ -73,6 +73,7 @@ namespace IOTLinkService.Service.Engine
                 client.OnMQTTConnected += OnMQTTConnected;
                 client.OnMQTTDisconnected += OnMQTTDisconnected;
                 client.OnMQTTMessageReceived += OnMQTTMessageReceived;
+                client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
                 client.Connect();
             }
         }
@@ -120,6 +121,13 @@ namespace IOTLinkService.Service.Engine
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }
 
+        private void OnMQTTRefreshMessageReceived(object sender, EventArgs e)
+        {
+            LoggerHelper.Debug("MQTT Refresh Message Received");
+            ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
+            addonsManager.Raise_OnRefreshRequested(sender, e);
+        }
+
         public void OnSessionChange(string username, int sessionId, SessionChangeReason reason)
         {
             LoggerHelper.Verbose("Session Changed");
@@ -130,12 +138,6 @@ namespace IOTLinkService.Service.Engine
                 SessionId = sessionId,
                 Reason = reason
             };
-
-            if (reason == SessionChangeReason.SessionLogon || reason == SessionChangeReason.SessionUnlock || reason == SessionChangeReason.RemoteConnect)
-            {
-                AgentManager agentManager = AgentManager.GetInstance();
-                agentManager.StartAgent(sessionId, username);
-            }
 
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnSessionChange(this, args);

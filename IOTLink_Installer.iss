@@ -6,7 +6,7 @@
 #define APP_DIR_NAME     "IOTLink"
 #define APP_AGENT_NAME   "IOTLinkAgent.exe"
 #define APP_SERVICE_NAME "IOTLinkService.exe"
-#define APP_VERSION      "1.1.3"
+#define APP_VERSION      "1.2.0"
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
 #define APP_AUTHOR_URL  "https://alexslx.com"
@@ -31,7 +31,8 @@ OutputDir=Setup
 OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}
 WizardStyle=modern
 AllowNoIcons=yes
-LicenseFile=LICENSE.md    
+LicenseFile=LICENSE.md
+UninstallDisplayIcon={app}\MyProg.exe    
 ; Compression
 Compression=lzma2
 SolidCompression=no
@@ -155,7 +156,7 @@ begin
   WizardForm.StatusLabel.Caption := 'Installing .NET Framework 4.7.2. This might take a few minutes...';
   WizardForm.ProgressGauge.Style := npbstMarquee;
   try
-    if not Exec(ExpandConstant('{tmp}\DotNetFrameworkInstaller.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+    if not Exec(ExpandConstant('{tmp}\DotNetFrameworkInstaller.exe'), '/q /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
     begin
       MsgBox('.NET installation failed with code: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
     end;

@@ -116,6 +116,7 @@
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Configs\ConfigInfo.cs" />
     <Compile Include="Configs\MqttConfig.cs" />
+    <Compile Include="Helpers\MathHelper.cs" />
     <Compile Include="Platform\ConfigType.cs" />
     <Compile Include="Platform\Events\AgentAddonRequestEventArgs.cs" />
     <Compile Include="Platform\Events\AgentAddonResponseEventArgs.cs" />
@@ -134,6 +135,7 @@
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Platform\DisplayInfo.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
+    <Compile Include="Platform\NetworkInfo.cs" />
     <Compile Include="Platform\RunInfo.cs" />
     <Compile Include="Platform\WebSocket\RequestTypeClient.cs" />
     <Compile Include="Platform\WebSocket\MessageType.cs" />
@@ -149,6 +151,10 @@
     <Compile Include="Platform\Windows\Native\Internal\StartupInfo.cs" />
     <Compile Include="Platform\Windows\Native\Internal\SW.cs" />
     <Compile Include="Platform\Windows\Native\Internal\TokenType.cs" />
+    <Compile Include="Platform\Windows\Native\WLanApi.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\WLanInterfaceInfo.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\WLanInterfaceInfoList.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\WLanInterfaceState.cs" />
     <Compile Include="Platform\Windows\Native\Kernel32.cs" />
     <Compile Include="Platform\Windows\Native\Internal\MonitorInfoEx.cs" />
     <Compile Include="Platform\Windows\Native\PowrProf.cs" />

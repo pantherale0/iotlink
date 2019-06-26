@@ -70,7 +70,8 @@ namespace IOTLinkService.Service.WebSockets.Server
                     return;
                 }
 
-                LoggerHelper.Trace("Message received from client {0}: {1}", e.ID, e.Message);
+                LoggerHelper.Trace("Message received from client {0}", e.ID);
+                LoggerHelper.DataDump("Message Payload: {0}", e.Message);
 
                 dynamic json = JsonConvert.DeserializeObject<dynamic>(e.Message);
                 if (json == null || json.messageType == null || json.content == null)

@@ -134,6 +134,24 @@ namespace IOTLinkService.Service.Engine
             webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_ADDON, data, username);
         }
 
+        public void ShowNotification(ServiceAddon sender, string title, string message, string iconUrl = null, string launchParams = null)
+        {
+            if (sender == null || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(message))
+                return;
+
+            WebSocketServerManager webSocketServerManager = WebSocketServerManager.GetInstance();
+            if (webSocketServerManager == null || !webSocketServerManager.IsConnected())
+                return;
+
+            dynamic data = new ExpandoObject();
+            data.title = title;
+            data.message = message;
+            data.iconUrl = iconUrl;
+            data.launchParams = launchParams;
+
+            webSocketServerManager.SendRequest(IOTLink.Platform.WebSocket.RequestTypeServer.REQUEST_SHOW_NOTIFICATION, data);
+        }
+
         /// <summary>
         /// Check if any addon exists with the given ID.
         /// </summary>
@@ -366,7 +384,7 @@ namespace IOTLinkService.Service.Engine
             if (addon == null)
                 return string.Empty;
 
-            topic = StringHelper.PascalToKebabCase(topic);
+            topic = topic.Split('/').Select(x => StringHelper.PascalToKebabCase(x)).Aggregate((x, y) => x + '/' + y);
             string addonId = StringHelper.PascalToKebabCase(addon.GetAppInfo().AddonId);
             return MQTTHelper.SanitizeTopic(string.Format("{0}/{1}", addonId, topic));
         }
@@ -428,6 +446,21 @@ namespace IOTLinkService.Service.Engine
             {
                 if (addonInfo.ServiceAddon != null)
                     addonInfo.ServiceAddon.Raise_OnMQTTDisconnected(sender, e);
+            }
+        }
+
+        /// <summary>
+        /// Broadcast Refresh Request
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e"><see cref="EventArgs"/> object</param>
+        internal void Raise_OnRefreshRequested(object sender, EventArgs e)
+        {
+            List<AddonInfo> addons = GetAddonsList();
+            foreach (AddonInfo addonInfo in addons)
+            {
+                if (addonInfo.ServiceAddon != null)
+                    addonInfo.ServiceAddon.Raise_OnRefreshRequested(sender, e);
             }
         }
 

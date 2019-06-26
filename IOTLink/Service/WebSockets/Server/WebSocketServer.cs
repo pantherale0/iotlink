@@ -182,6 +182,7 @@ namespace IOTLinkService.Service.WebSockets.Server
                     if (receiveResult.MessageType == WebSocketMessageType.Text)
                     {
                         string data = System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+                        data = data.Replace("\0", string.Empty);
                         OnMessageHandler?.Invoke(this, new WebSocketMessageEventArgs { ID = currentId, Message = data });
                     }
                     else
