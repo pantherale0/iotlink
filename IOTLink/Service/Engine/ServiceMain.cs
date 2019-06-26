@@ -139,12 +139,6 @@ namespace IOTLinkService.Service.Engine
                 Reason = reason
             };
 
-            if (reason == SessionChangeReason.SessionLogon || reason == SessionChangeReason.SessionUnlock || reason == SessionChangeReason.RemoteConnect)
-            {
-                AgentManager agentManager = AgentManager.GetInstance();
-                agentManager.StartAgent(sessionId, username);
-            }
-
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnSessionChange(this, args);
         }
