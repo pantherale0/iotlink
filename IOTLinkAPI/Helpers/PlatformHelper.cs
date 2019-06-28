@@ -303,40 +303,49 @@ namespace IOTLinkAPI.Helpers
         {
             List<NetworkInfo> networks = new List<NetworkInfo>();
 
-            NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
-            foreach (NetworkInterface network in networkInterfaces)
+            try
             {
-                IPInterfaceProperties properties = network.GetIPProperties();
-
-                if (network.OperationalStatus == OperationalStatus.Up && !network.Description.ToLower().Contains("virtual") && !network.Description.ToLower().Contains("pseudo"))
+                NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+                foreach (NetworkInterface network in networkInterfaces)
                 {
-                    if (network.NetworkInterfaceType != NetworkInterfaceType.Ethernet && network.NetworkInterfaceType != NetworkInterfaceType.Wireless80211)
+                    IPInterfaceProperties properties = network.GetIPProperties();
+                    if (properties == null)
                         continue;
 
-                    NetworkInfo networkInfo = new NetworkInfo();
-                    networkInfo.Wired = network.NetworkInterfaceType == NetworkInterfaceType.Ethernet;
-                    networkInfo.Speed = network.Speed / 1000000;
-
-                    foreach (IPAddressInformation address in properties.UnicastAddresses)
+                    if (network.OperationalStatus == OperationalStatus.Up && network.Description != null && !network.Description.ToLowerInvariant().Contains("virtual") && !network.Description.ToLowerInvariant().Contains("pseudo"))
                     {
-                        AddressFamily family = address.Address.AddressFamily;
-                        if (family != AddressFamily.InterNetwork && family != AddressFamily.InterNetworkV6)
+                        if (network.NetworkInterfaceType != NetworkInterfaceType.Ethernet && network.NetworkInterfaceType != NetworkInterfaceType.Wireless80211)
                             continue;
 
-                        if (IPAddress.IsLoopback(address.Address))
+                        NetworkInfo networkInfo = new NetworkInfo();
+                        networkInfo.Wired = network.NetworkInterfaceType == NetworkInterfaceType.Ethernet;
+                        networkInfo.Speed = network.Speed / 1000000;
+
+                        foreach (IPAddressInformation address in properties.UnicastAddresses)
+                        {
+                            AddressFamily family = address.Address.AddressFamily;
+                            if (family != AddressFamily.InterNetwork && family != AddressFamily.InterNetworkV6)
+                                continue;
+
+                            if (IPAddress.IsLoopback(address.Address))
+                                continue;
+
+                            if (family == AddressFamily.InterNetwork)
+                                networkInfo.IPv4Address = address.Address.ToString();
+                            else if (networkInfo.IPv6Address == null)
+                                networkInfo.IPv6Address = address.Address.ToString();
+                        }
+
+                        if (string.IsNullOrWhiteSpace(networkInfo.IPv4Address) && string.IsNullOrWhiteSpace(networkInfo.IPv6Address))
                             continue;
 
-                        if (family == AddressFamily.InterNetwork)
-                            networkInfo.IPv4Address = address.Address.ToString();
-                        else if (networkInfo.IPv6Address == null)
-                            networkInfo.IPv6Address = address.Address.ToString();
+                        networks.Add(networkInfo);
                     }
-
-                    if (string.IsNullOrWhiteSpace(networkInfo.IPv4Address) && string.IsNullOrWhiteSpace(networkInfo.IPv6Address))
-                        continue;
-
-                    networks.Add(networkInfo);
                 }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to get network information: {0}", ex.ToString());
             }
 
             return networks;
