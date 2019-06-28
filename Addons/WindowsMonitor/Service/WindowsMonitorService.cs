@@ -204,23 +204,37 @@ namespace IOTLinkAddon.Service
 
             foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
             {
-                if (driveInfo.DriveType != DriveType.Fixed)
+                if (!driveInfo.IsReady || driveInfo.DriveType != DriveType.Fixed)
                     continue;
 
-                string drive = driveInfo.Name.Remove(1, 2);
-                string topic = string.Format("Stats/HardDrive/{0}", drive);
+                try
+                {
+                    string drive = driveInfo.Name.Remove(1, 2);
+                    string topic = string.Format("Stats/HardDrive/{0}", drive);
 
-                long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
-                int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
+                    long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
+                    int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
 
-                SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
-                SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
-                SendMonitorValue(topic + "/TotalFreeSpace", GetSize(driveInfo.TotalFreeSpace).ToString(), configKey);
-                SendMonitorValue(topic + "/UsedSpace", GetSize(usedSpace).ToString(), configKey);
+                    SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
+                    SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
+                    SendMonitorValue(topic + "/TotalFreeSpace", GetSize(driveInfo.TotalFreeSpace).ToString(), configKey);
+                    SendMonitorValue(topic + "/UsedSpace", GetSize(usedSpace).ToString(), configKey);
 
-                SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat, configKey);
-                SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString(), configKey);
-                SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel, configKey);
+                    SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat, configKey);
+                    SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString(), configKey);
+                    SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel, configKey);
+                }
+                catch (Exception ex)
+                {
+                    if (ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
+                        LoggerHelper.Error("Access to drives not allowed. Error: {0}", ex.ToString());
+                    else if (ex is DriveNotFoundException)
+                        LoggerHelper.Error("Drive not found. Error: {0}", ex.ToString());
+                    else if (ex is IOException)
+                        LoggerHelper.Error("Drive inaccessible. Error: {0}", ex.ToString());
+                    else
+                        LoggerHelper.Error("Error while getting drive information: {0}", ex.ToString());
+                }
             }
         }
 
@@ -386,6 +400,9 @@ namespace IOTLinkAddon.Service
 
         private void SendMonitorValue(string topic, string value, string configKey = null)
         {
+            if (string.IsNullOrWhiteSpace(topic))
+                return;
+
             if (configKey != null && _config.Monitors != null && _config.Monitors.ContainsKey(configKey) && _config.Monitors[configKey].Cacheable)
             {
                 if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)

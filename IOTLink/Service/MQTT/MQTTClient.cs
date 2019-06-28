@@ -276,7 +276,15 @@ namespace IOTLinkService.Service.Engine.MQTT
                     return;
                 }
 
+                if (string.IsNullOrWhiteSpace(topic))
+                {
+                    LoggerHelper.Verbose("Empty or invalid topic name. Skipping.");
+                    return;
+                }
+
                 topic = GetFullTopicName(topic);
+                if (message == null)
+                    message = string.Empty;
 
                 LoggerHelper.Trace("Publishing to {0}: {1}", topic, message);
 
@@ -309,7 +317,15 @@ namespace IOTLinkService.Service.Engine.MQTT
                     return;
                 }
 
+                if (string.IsNullOrWhiteSpace(topic))
+                {
+                    LoggerHelper.Verbose("Empty or invalid topic name. Skipping.");
+                    return;
+                }
+
                 topic = GetFullTopicName(topic);
+                if (message == null)
+                    message = new byte[] { };
 
                 LoggerHelper.Trace("Publishing to {0}: ({1} bytes)", topic, message?.Length);
 

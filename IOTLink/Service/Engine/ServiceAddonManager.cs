@@ -127,6 +127,9 @@ namespace IOTLinkService.Service.Engine
             if (webSocketServerManager == null || !webSocketServerManager.IsConnected())
                 return;
 
+            if (username != null && string.Compare(username, "SYSTEM") == 0)
+                return;
+
             dynamic data = new ExpandoObject();
             data.addonId = sender.GetAppInfo().AddonId;
             data.addonData = addonData;

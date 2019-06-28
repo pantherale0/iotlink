@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -400,6 +401,13 @@ namespace IOTLinkAPI.Platform.Windows
             User32.mouse_event(MOUSEEVENTFMOVE, 0, 1, 0, 0);
             Thread.Sleep(100);
             User32.mouse_event(MOUSEEVENTFMOVE, 0, -1, 0, 0);
+        }
+
+        public static DateTimeOffset GetUptime()
+        {
+            ManagementObject mo = new ManagementObject(@"\\.\root\cimv2:Win32_OperatingSystem=@");
+            DateTime lastBootUpTime = DateTime.SpecifyKind(ManagementDateTimeConverter.ToDateTime(mo["LastBootUpTime"].ToString()), DateTimeKind.Utc);
+            return new DateTimeOffset(lastBootUpTime, TimeSpan.Zero);
         }
 
         public static uint GetIdleTime()
