@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Timers;
 using System.Windows.Forms;
@@ -25,6 +26,10 @@ namespace IOTLinkAddon.Service
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
         private string _currentUser = "SYSTEM";
+
+        //to store how much was transferred last time, initialized to prevent null reference exception
+        private long[] _lastBytesSent = new long[0];
+        private long[] _lastBytesReceived = new long[0];
 
         public override void Init(IAddonManager addonManager)
         {
@@ -213,7 +218,7 @@ namespace IOTLinkAddon.Service
                     string topic = string.Format("Stats/HardDrive/{0}", drive);
 
                     long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
-                    int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
+                    int driveUsage = (int) ((100.0 / driveInfo.TotalSize) * usedSpace);
 
                     SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
                     SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
@@ -258,18 +263,46 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             List<NetworkInfo> networks = PlatformHelper.GetNetworkInfos();
+
+            //Make sure the array for the lastBytes values are as big as numbers of networks
+            //By being checked every time, we should be able to handle like a wifi dongle installed while running
+            if (_lastBytesReceived.Length != networks.Count)
+            {
+                _lastBytesReceived = new long[networks.Count];
+                _lastBytesSent = new long[networks.Count];
+            }
+
             for (var i = 0; i < networks.Count; i++)
             {
                 NetworkInfo networkInfo = networks[i];
+
+                CalculateBytesPerSecond(networkInfo, configKey, i);
+
                 var topic = $"Stats/Network/{i}";
 
                 SendMonitorValue(topic + "/IPv4", networkInfo.IPv4Address, configKey);
                 SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
                 SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
                 SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
-                SendMonitorValue(topic + "/BytesSent", GetSize(networkInfo.BytesSent).ToString(), configKey);
-                SendMonitorValue(topic + "/BytesReceived", GetSize(networkInfo.BytesReceived).ToString(), configKey);
+                SendMonitorValue(topic + "/BytesSent", GetSize(networkInfo.BytesSent).ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/BytesReceived", GetSize(networkInfo.BytesReceived).ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/BytesSentPerSecond", networkInfo.BytesSentPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/BytesReceivedPerSecond", networkInfo.BytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
             }
+        }
+
+        private void CalculateBytesPerSecond(NetworkInfo networkInfo, string configKey, int i)
+        {
+            //Only calculate if we have stored last time value, else we can get some large peaks the first time
+            if (_lastBytesReceived[i] != 0 && _lastBytesSent[i] != 0)
+            {
+                var interval = _config.Monitors[configKey].Interval;
+                networkInfo.BytesReceivedPerSecond = (networkInfo.BytesReceived - _lastBytesReceived[i]) / interval;
+                networkInfo.BytesSentPerSecond = (networkInfo.BytesSent - _lastBytesSent[i]) / interval;
+            }
+
+            _lastBytesReceived[i] = networkInfo.BytesReceived;
+            _lastBytesSent[i] = networkInfo.BytesSent;
         }
 
         private void RequestAgentIdleTime()
@@ -341,7 +374,7 @@ namespace IOTLinkAddon.Service
                 return;
 
             const string configKey = "IdleTime";
-            uint idleTime = (uint)data.requestData;
+            uint idleTime = (uint) data.requestData;
 
             SendMonitorValue("Stats/IdleTime", idleTime.ToString(), configKey);
         }
