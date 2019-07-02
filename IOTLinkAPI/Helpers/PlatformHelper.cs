@@ -308,7 +308,7 @@ namespace IOTLinkAPI.Helpers
                 NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
                 foreach (NetworkInterface network in networkInterfaces)
                 {
-                    IPInterfaceProperties properties = network.GetIPProperties();
+                    var properties = network.GetIPProperties();
                     if (properties == null)
                         continue;
 
@@ -317,13 +317,18 @@ namespace IOTLinkAPI.Helpers
                         if (network.NetworkInterfaceType != NetworkInterfaceType.Ethernet && network.NetworkInterfaceType != NetworkInterfaceType.Wireless80211)
                             continue;
 
-                        NetworkInfo networkInfo = new NetworkInfo();
-                        networkInfo.Wired = network.NetworkInterfaceType == NetworkInterfaceType.Ethernet;
-                        networkInfo.Speed = network.Speed / 1000000;
-
-                        foreach (IPAddressInformation address in properties.UnicastAddresses)
+                        var networkInfo = new NetworkInfo
                         {
-                            AddressFamily family = address.Address.AddressFamily;
+                            Wired = network.NetworkInterfaceType == NetworkInterfaceType.Ethernet,
+                            Speed = network.Speed / 1000000,
+                            BytesReceived = network.GetIPStatistics().BytesReceived,
+                            BytesSent = network.GetIPStatistics().BytesSent
+                        };
+
+                        foreach (UnicastIPAddressInformation  address in properties.UnicastAddresses)
+                        {
+                            var family = address.Address.AddressFamily;
+                            
                             if (family != AddressFamily.InterNetwork && family != AddressFamily.InterNetworkV6)
                                 continue;
 

@@ -258,15 +258,17 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             List<NetworkInfo> networks = PlatformHelper.GetNetworkInfos();
-            for (int i = 0; i < networks.Count; i++)
+            for (var i = 0; i < networks.Count; i++)
             {
                 NetworkInfo networkInfo = networks[i];
-                string topic = string.Format("Stats/Network/{0}", i);
+                var topic = $"Stats/Network/{i}";
 
                 SendMonitorValue(topic + "/IPv4", networkInfo.IPv4Address, configKey);
                 SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
                 SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
                 SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
+                SendMonitorValue(topic + "/BytesSent", GetSize(networkInfo.BytesSent).ToString(), configKey);
+                SendMonitorValue(topic + "/BytesReceived", GetSize(networkInfo.BytesReceived).ToString(), configKey);
             }
         }
 
