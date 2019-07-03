@@ -218,7 +218,7 @@ namespace IOTLinkAddon.Service
                     string topic = string.Format("Stats/HardDrive/{0}", drive);
 
                     long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
-                    int driveUsage = (int) ((100.0 / driveInfo.TotalSize) * usedSpace);
+                    int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
 
                     SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
                     SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
@@ -276,7 +276,7 @@ namespace IOTLinkAddon.Service
             {
                 NetworkInfo networkInfo = networks[i];
 
-                CalculateBytesPerSecond(networkInfo, configKey, i);
+                var (bytesReceivedPerSecond, bytesSentPerSecond) = CalculateBytesPerSecond(networkInfo, configKey, i);
 
                 var topic = $"Stats/Network/{i}";
 
@@ -286,23 +286,29 @@ namespace IOTLinkAddon.Service
                 SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
                 SendMonitorValue(topic + "/BytesSent", GetSize(networkInfo.BytesSent).ToString(CultureInfo.InvariantCulture), configKey);
                 SendMonitorValue(topic + "/BytesReceived", GetSize(networkInfo.BytesReceived).ToString(CultureInfo.InvariantCulture), configKey);
-                SendMonitorValue(topic + "/BytesSentPerSecond", networkInfo.BytesSentPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
-                SendMonitorValue(topic + "/BytesReceivedPerSecond", networkInfo.BytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+
+                SendMonitorValue(topic + "/BytesSentPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/BytesReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
             }
         }
 
-        private void CalculateBytesPerSecond(NetworkInfo networkInfo, string configKey, int i)
+        private (long bytesReceivedPerSecond, long bytesSentPerSecond) CalculateBytesPerSecond(NetworkInfo networkInfo, string configKey, int i)
         {
+            var bytesReceivedPerSecond = networkInfo.BytesReceived;
+            var bytesSentPerSecond = networkInfo.BytesSent;
+
             //Only calculate if we have stored last time value, else we can get some large peaks the first time
             if (_lastBytesReceived[i] != 0 && _lastBytesSent[i] != 0)
             {
                 var interval = _config.Monitors[configKey].Interval;
-                networkInfo.BytesReceivedPerSecond = (networkInfo.BytesReceived - _lastBytesReceived[i]) / interval;
-                networkInfo.BytesSentPerSecond = (networkInfo.BytesSent - _lastBytesSent[i]) / interval;
+                bytesReceivedPerSecond = (networkInfo.BytesReceived - _lastBytesReceived[i]) / interval;
+                bytesSentPerSecond = (networkInfo.BytesSent - _lastBytesSent[i]) / interval;
             }
 
             _lastBytesReceived[i] = networkInfo.BytesReceived;
             _lastBytesSent[i] = networkInfo.BytesSent;
+
+            return (bytesReceivedPerSecond, bytesSentPerSecond);
         }
 
         private void RequestAgentIdleTime()
@@ -374,7 +380,7 @@ namespace IOTLinkAddon.Service
                 return;
 
             const string configKey = "IdleTime";
-            uint idleTime = (uint) data.requestData;
+            uint idleTime = (uint)data.requestData;
 
             SendMonitorValue("Stats/IdleTime", idleTime.ToString(), configKey);
         }
