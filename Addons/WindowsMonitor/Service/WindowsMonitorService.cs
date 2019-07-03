@@ -284,18 +284,21 @@ namespace IOTLinkAddon.Service
                 SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
                 SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
                 SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
-                SendMonitorValue(topic + "/BytesSent", GetSize(networkInfo.BytesSent).ToString(CultureInfo.InvariantCulture), configKey);
-                SendMonitorValue(topic + "/BytesReceived", GetSize(networkInfo.BytesReceived).ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/PacketsSent", networkInfo.BytesSent.ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/PacketsReceived", networkInfo.BytesReceived.ToString(CultureInfo.InvariantCulture), configKey);
 
-                SendMonitorValue(topic + "/BytesSentPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
-                SendMonitorValue(topic + "/BytesReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+                if (bytesSentPerSecond >= 0)
+                    SendMonitorValue(topic + "/PacketsSentPerSecond", bytesSentPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+
+                if (bytesReceivedPerSecond >= 0)
+                    SendMonitorValue(topic + "/PacketsReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
             }
         }
 
-        private (long bytesReceivedPerSecond, long bytesSentPerSecond) CalculateBytesPerSecond(NetworkInfo networkInfo, string configKey, int i)
+        private ValueTuple<long, long> CalculateBytesPerSecond(NetworkInfo networkInfo, string configKey, int i)
         {
-            var bytesReceivedPerSecond = networkInfo.BytesReceived;
-            var bytesSentPerSecond = networkInfo.BytesSent;
+            var bytesReceivedPerSecond = -1L;
+            var bytesSentPerSecond = -1L;
 
             //Only calculate if we have stored last time value, else we can get some large peaks the first time
             if (_lastBytesReceived[i] != 0 && _lastBytesSent[i] != 0)
