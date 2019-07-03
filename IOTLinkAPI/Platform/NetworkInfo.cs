@@ -8,9 +8,5 @@
         public bool Wired { get; set; }
         public long BytesSent { get; set; }
         public long BytesReceived { get; set; }
-
-        public long BytesSentPerSecond { get; set; }
-
-        public long BytesReceivedPerSecond { get; set; }
     }
 }
