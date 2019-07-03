@@ -285,14 +285,14 @@ namespace IOTLinkAddon.Service
                 SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
                 SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
                 SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
-                SendMonitorValue(topic + "/PacketsSent", networkInfo.BytesSent.ToString(CultureInfo.InvariantCulture), configKey);
-                SendMonitorValue(topic + "/PacketsReceived", networkInfo.BytesReceived.ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/BytesSent", networkInfo.BytesSent.ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/BytesReceived", networkInfo.BytesReceived.ToString(CultureInfo.InvariantCulture), configKey);
 
                 if (bytesSentPerSecond >= 0)
-                    SendMonitorValue(topic + "/PacketsSentPerSecond", bytesSentPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+                    SendMonitorValue(topic + "/BytesSentPerSecond", bytesSentPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
 
                 if (bytesReceivedPerSecond >= 0)
-                    SendMonitorValue(topic + "/PacketsReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+                    SendMonitorValue(topic + "/BytesReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
             }
         }
 
