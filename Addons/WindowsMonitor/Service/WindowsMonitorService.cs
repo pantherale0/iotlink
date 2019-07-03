@@ -276,8 +276,8 @@ namespace IOTLinkAddon.Service
             {
                 NetworkInfo networkInfo = networks[i];
 
-                var bytesSentPerSecond = CalculateBytesPerSecond(networkInfo.BytesSent, _lastBytesSent[i], configKey);
-                var bytesReceivedPerSecond = CalculateBytesPerSecond(networkInfo.BytesReceived, _lastBytesReceived[i], configKey);
+                var bytesSentPerSecond = CalculateBytesPerSecond(networkInfo.BytesSent, ref _lastBytesSent[i], configKey);
+                var bytesReceivedPerSecond = CalculateBytesPerSecond(networkInfo.BytesReceived, ref _lastBytesReceived[i], configKey);
 
                 var topic = $"Stats/Network/{i}";
 
@@ -296,7 +296,7 @@ namespace IOTLinkAddon.Service
             }
         }
 
-        private long CalculateBytesPerSecond(long bytesReceived, long lastBytes, string configKey)
+        private long CalculateBytesPerSecond(long bytesReceived, ref long lastBytes, string configKey)
         {
             var bytesPerSecond = -1L;
 
@@ -306,6 +306,7 @@ namespace IOTLinkAddon.Service
                 bytesPerSecond = (bytesReceived - lastBytes) / interval;
             }
 
+            lastBytes = bytesReceived;
             return bytesPerSecond;
         }
 
