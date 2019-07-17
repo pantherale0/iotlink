@@ -2,6 +2,8 @@
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace IOTLinkAddon.Agent
 {
@@ -35,6 +37,10 @@ namespace IOTLinkAddon.Agent
                     DisplayTurnOff();
                     break;
 
+                case AddonRequestType.REQUEST_SENDKEYS:
+                    SendKeys(e.Data.requestData);
+                    break;
+
                 default: break;
             }
         }
@@ -49,6 +55,19 @@ namespace IOTLinkAddon.Agent
         {
             LoggerHelper.Verbose("CommandsAgent::DisplayTurnOff");
             PlatformHelper.TurnOffDisplays();
+        }
+
+        private void SendKeys(dynamic data)
+        {
+            LoggerHelper.Verbose("CommandsAgent::SendKeys");
+            if (data is List<string> keys)
+            {
+                foreach (string key in keys)
+                {
+                    System.Windows.Forms.SendKeys.SendWait(key);
+                    Thread.Sleep(100);
+                }
+            }
         }
     }
 }

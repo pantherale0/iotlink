@@ -5,6 +5,7 @@ using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events.MQTT;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 
 namespace IOTLinkAddon.Service
@@ -27,6 +28,7 @@ namespace IOTLinkAddon.Service
             GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
             GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
             GetManager().SubscribeTopic(this, "notify", OnNotifyMessage);
+            GetManager().SubscribeTopic(this, "sendKeys", OnSendKeysMessage);
         }
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
@@ -149,6 +151,33 @@ namespace IOTLinkAddon.Service
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_DISPLAY_TURN_OFF;
             GetManager().SendAgentRequest(this, addonData);
+        }
+
+        private void OnSendKeysMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnSendKeysMessage: Message received");
+            string payload = e.Message.GetPayload();
+            if (string.IsNullOrWhiteSpace(payload))
+                return;
+
+            try
+            {
+                dynamic data;
+                if (payload.StartsWith("[") && payload.EndsWith("]"))
+                    data = JsonConvert.DeserializeObject<List<string>>(payload);
+                else
+                    data = new List<string> { payload };
+
+                dynamic addonData = new ExpandoObject();
+                addonData.requestType = AddonRequestType.REQUEST_SENDKEYS;
+                addonData.requestData = data;
+
+                GetManager().SendAgentRequest(this, addonData);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("OnSendKeysMessage failure: {0}", ex.Message);
+            }
         }
 
         private void OnNotifyMessage(object sender, MQTTMessageEventEventArgs e)
