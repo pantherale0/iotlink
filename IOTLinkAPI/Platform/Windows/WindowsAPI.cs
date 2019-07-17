@@ -17,7 +17,12 @@ namespace IOTLinkAPI.Platform.Windows
     {
         private static readonly uint WM_SYSCOMMAND = 0x0112;
         private static readonly uint SC_MONITORPOWER = 0xF170;
-        private static readonly uint MOUSEEVENTFMOVE = 0x0001;
+
+        private static readonly uint MOUSEEVENTF_MOVE = 0x0001;
+        private static readonly uint MOUSEEVENTF_LEFTDOWN = 0x0001;
+        private static readonly uint MOUSEEVENTF_LEFTUP = 0x0001;
+        private static readonly uint MOUSEEVENTF_RIGHTDOWN = 0x0001;
+        private static readonly uint MOUSEEVENTF_RIGHTUP = 0x0001;
 
         private static readonly uint CREATE_UNICODE_ENVIRONMENT = 0x00000400;
         private static readonly uint CREATE_NO_WINDOW = 0x08000000;
@@ -398,9 +403,15 @@ namespace IOTLinkAPI.Platform.Windows
 
         public static void TurnOnDisplays()
         {
-            User32.mouse_event(MOUSEEVENTFMOVE, 0, 1, 0, 0);
+            // Simulate mouse movement of one pixel.
+            User32.mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, 0);
             Thread.Sleep(100);
-            User32.mouse_event(MOUSEEVENTFMOVE, 0, -1, 0, 0);
+            User32.mouse_event(MOUSEEVENTF_MOVE, 0, -1, 0, 0);
+            Thread.Sleep(100);
+
+            // Simulate user click
+            MousePoint mousePoint = GetCursorPosition();
+            User32.mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, mousePoint.X, mousePoint.Y, 0, 0);
         }
 
         public static DateTimeOffset GetUptime()
@@ -461,6 +472,15 @@ namespace IOTLinkAPI.Platform.Windows
             {
                 WtsApi32.WTSCloseServer(server);
             }
+        }
+
+        public static MousePoint GetCursorPosition()
+        {
+            MousePoint mousePoint;
+            if (!User32.GetCursorPos(out mousePoint))
+                mousePoint = new MousePoint(0, 0);
+
+            return mousePoint;
         }
 
         private static bool GetSessionUserToken(IntPtr server, WindowsSessionInfo sessionInfo, ref IntPtr phUserToken)

@@ -26,5 +26,11 @@ namespace IOTLinkAPI.Platform.Windows.Native
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool GetCursorPos(out MousePoint lpMousePoint);
+
+        [DllImport("user32.dll", EntryPoint = "SetCursorPos")]
+        public static extern bool SetCursorPos(int x, int y);
     }
 }

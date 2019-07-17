@@ -146,6 +146,7 @@
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />
     <Compile Include="Platform\Windows\Native\Internal\LastInputInfo.cs" />
     <Compile Include="Platform\Windows\Native\Internal\MemoryStatusEx.cs" />
+    <Compile Include="Platform\Windows\Native\Internal\MousePoint.cs" />
     <Compile Include="Platform\Windows\Native\Internal\ProcessInformation.cs" />
     <Compile Include="Platform\Windows\Native\Internal\Rect.cs" />
     <Compile Include="Platform\Windows\Native\Internal\SecurityImpersonationLevel.cs" />
