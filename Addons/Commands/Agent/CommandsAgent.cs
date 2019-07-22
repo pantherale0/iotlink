@@ -77,7 +77,7 @@ namespace IOTLinkAddon.Agent
         private void PressKey(dynamic data)
         {
             LoggerHelper.Verbose("CommandsAgent::PressKey - {0}", data);
-            PlatformHelper.PressKey(data);
+            PlatformHelper.PressKey((byte)data);
         }
     }
 }
