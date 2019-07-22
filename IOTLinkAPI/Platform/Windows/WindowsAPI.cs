@@ -369,6 +369,12 @@ namespace IOTLinkAPI.Platform.Windows
             }
         }
 
+        public static bool GetAudioMute()
+        {
+            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
+            return defaultPlaybackDevice.IsMuted;
+        }
+
         public static bool SetAudioMute(bool mute)
         {
             CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;

@@ -195,6 +195,18 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Get primary audio device volume mute flag
+        /// </summary>
+        /// <returns>Boolean</returns>
+        public static bool GetAudioMute()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetAudioMute();
+        }
+
+        /// <summary>
         /// Set primary audio device volume mute flag
         /// </summary>
         /// <param name="mute">Boolean indicating the desired mute flag</param>

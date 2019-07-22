@@ -2,7 +2,7 @@
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
-using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using System.Threading;
 
 namespace IOTLinkAddon.Agent
@@ -59,14 +59,15 @@ namespace IOTLinkAddon.Agent
 
         private void SendKeys(dynamic data)
         {
-            LoggerHelper.Verbose("CommandsAgent::SendKeys");
-            if (data is List<string> keys)
+            LoggerHelper.Verbose("CommandsAgent::SendKeys", data);
+            JArray jArray = data;
+            string[] keys = jArray.ToObject<string[]>();
+
+            foreach (string key in keys)
             {
-                foreach (string key in keys)
-                {
-                    System.Windows.Forms.SendKeys.SendWait(key);
-                    Thread.Sleep(100);
-                }
+                LoggerHelper.Verbose("CommandsAgent::SendKeys: {0}", key);
+                System.Windows.Forms.SendKeys.SendWait(key);
+                Thread.Sleep(100);
             }
         }
     }

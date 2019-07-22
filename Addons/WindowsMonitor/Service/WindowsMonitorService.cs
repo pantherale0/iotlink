@@ -132,6 +132,7 @@ namespace IOTLinkAddon.Service
                 SendHardDriveInfo();
                 SendCurrentUserInfo();
                 SendNetworkInfo();
+                SendVolumeInfo();
                 RequestAgentIdleTime();
                 RequestAgentDisplayInfo();
                 RequestAgentDisplayScreenshot();
@@ -218,7 +219,7 @@ namespace IOTLinkAddon.Service
                     string topic = string.Format("Stats/HardDrive/{0}", drive);
 
                     long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
-                    int driveUsage = (int) ((100.0 / driveInfo.TotalSize) * usedSpace);
+                    int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
 
                     SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
                     SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
@@ -275,6 +276,8 @@ namespace IOTLinkAddon.Service
             for (var i = 0; i < networks.Count; i++)
             {
                 NetworkInfo networkInfo = networks[i];
+                if (networkInfo == null)
+                    continue; // Shouldn't happen, but...
 
                 var bytesSentPerSecond = CalculateBytesPerSecond(networkInfo.BytesSent, ref _lastBytesSent[i], configKey);
                 var bytesReceivedPerSecond = CalculateBytesPerSecond(networkInfo.BytesReceived, ref _lastBytesReceived[i], configKey);
@@ -294,6 +297,21 @@ namespace IOTLinkAddon.Service
                 if (bytesReceivedPerSecond >= 0)
                     SendMonitorValue(topic + "/BytesReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
             }
+        }
+
+        private void SendVolumeInfo()
+        {
+            const string configKey = "MediaInfo";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            string currentVolume = Math.Round(PlatformHelper.GetAudioVolume(), 0).ToString(CultureInfo.InvariantCulture);
+            string muteState = PlatformHelper.GetAudioMute().ToString(CultureInfo.InvariantCulture);
+
+            SendMonitorValue("Stats/Media/Volume", currentVolume, configKey);
+            SendMonitorValue("Stats/Media/Muted", muteState, configKey);
         }
 
         private long CalculateBytesPerSecond(long bytesReceived, ref long lastBytes, string configKey)
@@ -379,7 +397,7 @@ namespace IOTLinkAddon.Service
                 return;
 
             const string configKey = "IdleTime";
-            uint idleTime = (uint) data.requestData;
+            uint idleTime = (uint)data.requestData;
 
             SendMonitorValue("Stats/IdleTime", idleTime.ToString(), configKey);
         }
