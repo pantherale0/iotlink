@@ -210,7 +210,7 @@ namespace IOTLinkAddon.Service
 
             foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
             {
-                if (!driveInfo.IsReady || driveInfo.DriveType != DriveType.Fixed)
+                if (driveInfo == null || !driveInfo.IsReady || driveInfo.DriveType != DriveType.Fixed)
                     continue;
 
                 try

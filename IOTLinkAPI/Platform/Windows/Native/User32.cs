@@ -19,6 +19,9 @@ namespace IOTLinkAPI.Platform.Windows.Native
         public static extern void mouse_event(uint dwFlags, int dx, int dy, uint dwData, int dwExtraInfo);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetLastInputInfo(ref LastInputInfo plii);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]

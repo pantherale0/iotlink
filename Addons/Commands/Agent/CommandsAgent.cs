@@ -37,8 +37,12 @@ namespace IOTLinkAddon.Agent
                     DisplayTurnOff();
                     break;
 
-                case AddonRequestType.REQUEST_SENDKEYS:
+                case AddonRequestType.REQUEST_KEYS_SEND:
                     SendKeys(e.Data.requestData);
+                    break;
+
+                case AddonRequestType.REQUEST_KEYS_PRESS:
+                    PressKey(e.Data.requestData);
                     break;
 
                 default: break;
@@ -59,16 +63,21 @@ namespace IOTLinkAddon.Agent
 
         private void SendKeys(dynamic data)
         {
-            LoggerHelper.Verbose("CommandsAgent::SendKeys", data);
+            LoggerHelper.Verbose("CommandsAgent::SendKeys - {0}", data);
             JArray jArray = data;
             string[] keys = jArray.ToObject<string[]>();
 
             foreach (string key in keys)
             {
-                LoggerHelper.Verbose("CommandsAgent::SendKeys: {0}", key);
                 System.Windows.Forms.SendKeys.SendWait(key);
                 Thread.Sleep(100);
             }
+        }
+
+        private void PressKey(dynamic data)
+        {
+            LoggerHelper.Verbose("CommandsAgent::PressKey - {0}", data);
+            PlatformHelper.PressKey(data);
         }
     }
 }

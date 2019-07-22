@@ -24,6 +24,9 @@ namespace IOTLinkAPI.Platform.Windows
         private static readonly uint MOUSEEVENTF_RIGHTDOWN = 0x0001;
         private static readonly uint MOUSEEVENTF_RIGHTUP = 0x0001;
 
+        private static readonly uint KEYEVENTF_KEYDOWN = 0x0001;
+        private static readonly uint KEYEVENTF_KEYUP = 0x0002;
+
         private static readonly uint CREATE_UNICODE_ENVIRONMENT = 0x00000400;
         private static readonly uint CREATE_NO_WINDOW = 0x08000000;
         private static readonly uint CREATE_NEW_CONSOLE = 0x00000010;
@@ -419,6 +422,13 @@ namespace IOTLinkAPI.Platform.Windows
             MousePoint mousePoint = GetCursorPosition();
             User32.mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, mousePoint.X, mousePoint.Y, 0, 0);
         }
+
+        public static void PressKey(byte keyCode)
+        {
+            User32.keybd_event(keyCode, 0x45, KEYEVENTF_KEYDOWN, 0);
+            User32.keybd_event(keyCode, 0x45, KEYEVENTF_KEYUP, 0);
+        }
+
 
         public static DateTimeOffset GetUptime()
         {

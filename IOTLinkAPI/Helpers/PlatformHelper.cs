@@ -308,6 +308,19 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Simulate Key Press
+        /// <param name="keyCode">Byte representing the corresponding Windows key.</param>
+        /// </summary>
+        public static void PressKey(byte keyCode)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            WindowsAPI.PressKey(keyCode);
+        }
+
+
+        /// <summary>
         /// Get Network Information
         /// </summary>
         /// <returns></returns>

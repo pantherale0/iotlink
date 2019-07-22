@@ -4,6 +4,7 @@
     {
         REQUEST_DISPLAY_TURN_ON,
         REQUEST_DISPLAY_TURN_OFF,
-        REQUEST_SENDKEYS
+        REQUEST_KEYS_SEND,
+        REQUEST_KEYS_PRESS
     }
 }
