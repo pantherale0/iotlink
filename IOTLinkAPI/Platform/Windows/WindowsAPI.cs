@@ -15,6 +15,9 @@ namespace IOTLinkAPI.Platform.Windows
 #pragma warning disable 1591
     public static class WindowsAPI
     {
+        private static readonly IntPtr WTS_CURRENT_SERVER_HANDLE = IntPtr.Zero;
+        private static readonly int WTS_CURRENT_SESSION = -1;
+
         private static readonly uint WM_SYSCOMMAND = 0x0112;
         private static readonly uint SC_MONITORPOWER = 0xF170;
 
@@ -65,7 +68,7 @@ namespace IOTLinkAPI.Platform.Windows
 
         public static string GetUsername(int sessionId)
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             IntPtr buffer = IntPtr.Zero;
             string username = string.Empty;
             try
@@ -75,15 +78,18 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(buffer);
-                WtsApi32.WTSCloseServer(server);
+                if (buffer != IntPtr.Zero)
+                    WtsApi32.WTSFreeMemory(buffer);
+
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
             return username;
         }
 
         public static string GetCurrentUsername()
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 WindowsSessionInfo sessionInfo = GetFirstActiveSession(server);
@@ -98,13 +104,14 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
         public static uint GetCurrentSessionId()
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 WindowsSessionInfo sessionInfo = GetFirstActiveSession(server);
@@ -115,13 +122,14 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
         public static string GetDomainName(int sessionId)
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             IntPtr buffer = IntPtr.Zero;
             string domain = string.Empty;
             try
@@ -132,15 +140,18 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(buffer);
-                WtsApi32.WTSCloseServer(server);
+                if (buffer != IntPtr.Zero)
+                    WtsApi32.WTSFreeMemory(buffer);
+
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
             return domain;
         }
 
         public static void LockAll()
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 List<WindowsSessionInfo> sessionInfos = GetWindowsSessions(server);
@@ -151,13 +162,14 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
         public static bool LockUser(string username)
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 WindowsSessionInfo sessionInfo = GetWindowsSessions(server)
@@ -173,13 +185,14 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
         public static void LogoffAll()
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 List<WindowsSessionInfo> sessionInfos = GetWindowsSessions(server);
@@ -190,13 +203,14 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
         public static bool LogOffUser(string username)
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 WindowsSessionInfo sessionInfo = GetWindowsSessions(server)
@@ -212,7 +226,8 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
@@ -240,7 +255,7 @@ namespace IOTLinkAPI.Platform.Windows
             if (string.IsNullOrWhiteSpace(runInfo.WorkingDir))
                 runInfo.WorkingDir = null;
 
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             IntPtr hUserToken = IntPtr.Zero;
             IntPtr pEnv = IntPtr.Zero;
 
@@ -324,7 +339,8 @@ namespace IOTLinkAPI.Platform.Windows
                 if (hUserToken != IntPtr.Zero)
                     Kernel32.CloseHandle(hUserToken);
 
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
@@ -356,7 +372,7 @@ namespace IOTLinkAPI.Platform.Windows
             if (sessionId == INVALID_SESSION_ID)
                 return;
 
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 int response = 0;
@@ -368,7 +384,8 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
@@ -479,14 +496,15 @@ namespace IOTLinkAPI.Platform.Windows
 
         public static List<WindowsSessionInfo> GetWindowsSessions()
         {
-            IntPtr server = GetServerPtr();
+            IntPtr server = WTS_CURRENT_SERVER_HANDLE;
             try
             {
                 return GetWindowsSessions(server);
             }
             finally
             {
-                WtsApi32.WTSCloseServer(server);
+                if (server != IntPtr.Zero)
+                    WtsApi32.WTSCloseServer(server);
             }
         }
 
@@ -540,7 +558,8 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(pSessionInfo);
+                if (pSessionInfo != IntPtr.Zero)
+                    WtsApi32.WTSFreeMemory(pSessionInfo);
             }
 
             return sessionInfos;
@@ -577,7 +596,8 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(pSessionInfo);
+                if (pSessionInfo != IntPtr.Zero)
+                    WtsApi32.WTSFreeMemory(pSessionInfo);
             }
 
             return null;
@@ -621,15 +641,11 @@ namespace IOTLinkAPI.Platform.Windows
             }
             finally
             {
-                WtsApi32.WTSFreeMemory(pSessionInfo);
+                if (pSessionInfo != IntPtr.Zero)
+                    WtsApi32.WTSFreeMemory(pSessionInfo);
             }
 
             return null;
-        }
-
-        private static IntPtr GetServerPtr()
-        {
-            return WtsApi32.WTSOpenServer(Environment.MachineName);
         }
     }
 }

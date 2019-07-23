@@ -7,7 +7,7 @@ namespace IOTLinkAPI.Platform.Windows.Native
 #pragma warning disable 1591
     public class AdvApi32
     {
-        [DllImport("advapi32.dll", EntryPoint = "DuplicateTokenEx", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("advapi32.dll", EntryPoint = "DuplicateTokenEx", CharSet = CharSet.Auto)]
         public static extern bool DuplicateTokenEx(
             IntPtr ExistingTokenHandle,
             uint dwDesiredAccess,

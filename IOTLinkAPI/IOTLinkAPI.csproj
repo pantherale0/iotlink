@@ -153,7 +153,6 @@
     <Compile Include="Platform\Windows\Native\Internal\StartupInfo.cs" />
     <Compile Include="Platform\Windows\Native\Internal\SW.cs" />
     <Compile Include="Platform\Windows\Native\Internal\TokenType.cs" />
-    <Compile Include="Platform\Windows\Native\WLanApi.cs" />
     <Compile Include="Platform\Windows\Native\Internal\WLanInterfaceInfo.cs" />
     <Compile Include="Platform\Windows\Native\Internal\WLanInterfaceInfoList.cs" />
     <Compile Include="Platform\Windows\Native\Internal\WLanInterfaceState.cs" />
