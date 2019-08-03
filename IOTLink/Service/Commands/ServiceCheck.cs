@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.ServiceProcess;
 
-namespace IOTLinkService.Service.Commands
+namespace IOTLink.Service.Commands
 {
     class ServiceCheck : ICommand
     {

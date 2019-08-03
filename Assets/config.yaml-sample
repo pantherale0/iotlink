@@ -53,7 +53,9 @@ logging:
   ########################################################################
   # 0 (Disabled)
   # 1 (Critical), 2 (Error), 3 (Warning)
-  # 4 (Info), 5 (Debug), 6 (Trace)
+  # 4 (Info), 5 (Verbose), 6 (Debug)
+  # 7 (Debug Within Loops), 8 (Trace)
+  # 9 (Trace Within Loops), 10 (Data Dumping)
   ########################################################################
   # Type: Integer
   # Default: 4 (Info)
