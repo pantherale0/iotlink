@@ -132,7 +132,7 @@ namespace IOTLinkAddon.Service
                 SendHardDriveInfo();
                 SendCurrentUserInfo();
                 SendNetworkInfo();
-                SendVolumeInfo();
+                SendMediaInfo();
                 RequestAgentIdleTime();
                 RequestAgentDisplayInfo();
                 RequestAgentDisplayScreenshot();
@@ -299,7 +299,7 @@ namespace IOTLinkAddon.Service
             }
         }
 
-        private void SendVolumeInfo()
+        private void SendMediaInfo()
         {
             const string configKey = "MediaInfo";
             if (!CanRun(configKey))

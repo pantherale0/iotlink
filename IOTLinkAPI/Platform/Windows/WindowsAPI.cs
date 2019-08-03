@@ -43,6 +43,8 @@ namespace IOTLinkAPI.Platform.Windows
         private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
         private static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
 
+        private static readonly CoreAudioDevice AUDIO_DEFAULT_PLAYBACK_DEVICE = new CoreAudioController().DefaultPlaybackDevice;
+
         public enum DialogStyle
         {
             // Buttons
@@ -391,20 +393,17 @@ namespace IOTLinkAPI.Platform.Windows
 
         public static bool GetAudioMute()
         {
-            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
-            return defaultPlaybackDevice.IsMuted;
+            return AUDIO_DEFAULT_PLAYBACK_DEVICE.IsMuted;
         }
 
         public static bool SetAudioMute(bool mute)
         {
-            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
-            return defaultPlaybackDevice.Mute(mute);
+            return AUDIO_DEFAULT_PLAYBACK_DEVICE.Mute(mute);
         }
 
         public static bool ToggleAudioMute()
         {
-            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
-            return defaultPlaybackDevice.ToggleMute();
+            return AUDIO_DEFAULT_PLAYBACK_DEVICE.ToggleMute();
         }
 
         public static void SetAudioVolume(double volume)
@@ -412,14 +411,12 @@ namespace IOTLinkAPI.Platform.Windows
             if (volume < 0 || volume > 100)
                 throw new Exception("Volume level needs to be between 0 and 100");
 
-            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
-            defaultPlaybackDevice.Volume = volume;
+            AUDIO_DEFAULT_PLAYBACK_DEVICE.Volume = volume;
         }
 
         public static double GetAudioVolume()
         {
-            CoreAudioDevice defaultPlaybackDevice = new CoreAudioController().DefaultPlaybackDevice;
-            return defaultPlaybackDevice.Volume;
+            return AUDIO_DEFAULT_PLAYBACK_DEVICE.Volume;
         }
 
         public static void TurnOffDisplays()
@@ -449,9 +446,11 @@ namespace IOTLinkAPI.Platform.Windows
 
         public static DateTimeOffset GetUptime()
         {
-            ManagementObject mo = new ManagementObject(@"\\.\root\cimv2:Win32_OperatingSystem=@");
-            DateTime lastBootUpTime = DateTime.SpecifyKind(ManagementDateTimeConverter.ToDateTime(mo["LastBootUpTime"].ToString()), DateTimeKind.Utc);
-            return new DateTimeOffset(lastBootUpTime, TimeSpan.Zero);
+            using (ManagementObject mo = new ManagementObject(@"\\.\root\cimv2:Win32_OperatingSystem=@"))
+            {
+                DateTime lastBootUpTime = DateTime.SpecifyKind(ManagementDateTimeConverter.ToDateTime(mo["LastBootUpTime"].ToString()), DateTimeKind.Utc);
+                return new DateTimeOffset(lastBootUpTime, TimeSpan.Zero);
+            }
         }
 
         public static uint GetIdleTime()
