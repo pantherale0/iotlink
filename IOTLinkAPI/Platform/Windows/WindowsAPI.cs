@@ -444,13 +444,21 @@ namespace IOTLinkAPI.Platform.Windows
         }
 
 
-        public static DateTimeOffset GetUptime()
+        public static DateTimeOffset LastBootUpTime()
         {
             using (ManagementObject mo = new ManagementObject(@"\\.\root\cimv2:Win32_OperatingSystem=@"))
             {
                 DateTime lastBootUpTime = DateTime.SpecifyKind(ManagementDateTimeConverter.ToDateTime(mo["LastBootUpTime"].ToString()), DateTimeKind.Utc);
                 return new DateTimeOffset(lastBootUpTime, TimeSpan.Zero);
             }
+        }
+
+        public static long GetUptime()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            DateTimeOffset lastBootUpTime = PlatformHelper.LastBootUpTime();
+
+            return (now.ToUnixTimeSeconds() - lastBootUpTime.ToUnixTimeSeconds());
         }
 
         public static uint GetIdleTime()

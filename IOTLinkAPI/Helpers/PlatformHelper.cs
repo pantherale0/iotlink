@@ -296,6 +296,30 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Get System Last Boot Uptime
+        /// </summary>
+        /// <returns>DateTimeOffset</returns>
+        public static DateTimeOffset LastBootUpTime()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.LastBootUpTime();
+        }
+
+        /// <summary>
+        /// Get System Uptime (in seconds)
+        /// </summary>
+        /// <returns></returns>
+        public static long GetUptime()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetUptime();
+        }
+
+        /// <summary>
         /// Get Displays Information
         /// </summary>
         /// <returns></returns>
@@ -318,7 +342,6 @@ namespace IOTLinkAPI.Helpers
 
             WindowsAPI.PressKey(keyCode);
         }
-
 
         /// <summary>
         /// Get Network Information

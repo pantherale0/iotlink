@@ -133,6 +133,7 @@ namespace IOTLinkAddon.Service
                 SendCurrentUserInfo();
                 SendNetworkInfo();
                 SendMediaInfo();
+                SendUptimeInfo();
                 RequestAgentIdleTime();
                 RequestAgentDisplayInfo();
                 RequestAgentDisplayScreenshot();
@@ -312,6 +313,23 @@ namespace IOTLinkAddon.Service
 
             SendMonitorValue("Stats/Media/Volume", currentVolume, configKey);
             SendMonitorValue("Stats/Media/Muted", muteState, configKey);
+        }
+
+        private void SendUptimeInfo()
+        {
+            const string configKey = "Uptime";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            DateTimeOffset lastBootUpTime = PlatformHelper.LastBootUpTime();
+
+            string uptime = PlatformHelper.GetUptime().ToString(CultureInfo.InvariantCulture);
+            string bootTime = lastBootUpTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+            SendMonitorValue("Stats/System/BootTime", bootTime, configKey);
+            SendMonitorValue("Stats/System/Uptime", uptime, configKey);
         }
 
         private long CalculateBytesPerSecond(long bytesReceived, ref long lastBytes, string configKey)
