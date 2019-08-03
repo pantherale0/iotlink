@@ -195,15 +195,51 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
-        /// Get primary audio device volume mute flag
+        /// Is primary audio muted?
         /// </summary>
         /// <returns>Boolean</returns>
-        public static bool GetAudioMute()
+        public static bool IsAudioMuted()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
-            return WindowsAPI.GetAudioMute();
+            return WindowsAPI.IsAudioMuted();
+        }
+
+        /// <summary>
+        /// Is primary audio currently playing any media?
+        /// </summary>
+        /// <returns>Boolean</returns>
+        public static bool IsAudioPlaying()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.IsAudioPlaying();
+        }
+
+        /// <summary>
+        /// Get current primary audio device volume level
+        /// </summary>
+        /// <returns>Double</returns>
+        public static double GetAudioVolume()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetAudioVolume();
+        }
+
+        /// <summary>
+        /// Get current primary audio device peak level
+        /// </summary>
+        /// <returns>Double</returns>
+        public static double GetAudioPeakValue()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetAudioPeakValue();
         }
 
         /// <summary>
@@ -245,18 +281,6 @@ namespace IOTLinkAPI.Helpers
                 throw new PlatformNotSupportedException();
 
             WindowsAPI.SetAudioVolume(volume);
-        }
-
-        /// <summary>
-        /// Get current primary audio device volume level
-        /// </summary>
-        /// <returns>Double</returns>
-        public static double GetAudioVolume()
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.GetAudioVolume();
         }
 
         /// <summary>

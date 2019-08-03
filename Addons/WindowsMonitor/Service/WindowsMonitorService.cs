@@ -156,7 +156,7 @@ namespace IOTLinkAddon.Service
 
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
             string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
-            SendMonitorValue("Stats/CPU", cpuUsage, configKey);
+            SendMonitorValue("Stats/CPU/Usage", cpuUsage, configKey);
         }
 
         private void SendMemoryInfo()
@@ -253,7 +253,7 @@ namespace IOTLinkAddon.Service
 
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
-            SendMonitorValue("Stats/CurrentUser", _currentUser, configKey);
+            SendMonitorValue("Stats/System/CurrentUser", _currentUser, configKey);
         }
 
         private void SendNetworkInfo()
@@ -309,10 +309,13 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             string currentVolume = Math.Round(PlatformHelper.GetAudioVolume(), 0).ToString(CultureInfo.InvariantCulture);
-            string muteState = PlatformHelper.GetAudioMute().ToString(CultureInfo.InvariantCulture);
+
+            string muteState = PlatformHelper.IsAudioMuted().ToString(CultureInfo.InvariantCulture);
+            string playingState = PlatformHelper.IsAudioPlaying().ToString(CultureInfo.InvariantCulture);
 
             SendMonitorValue("Stats/Media/Volume", currentVolume, configKey);
             SendMonitorValue("Stats/Media/Muted", muteState, configKey);
+            SendMonitorValue("Stats/Media/Playing", playingState, configKey);
         }
 
         private void SendUptimeInfo()
@@ -417,7 +420,7 @@ namespace IOTLinkAddon.Service
             const string configKey = "IdleTime";
             uint idleTime = (uint)data.requestData;
 
-            SendMonitorValue("Stats/IdleTime", idleTime.ToString(), configKey);
+            SendMonitorValue("Stats/System/IdleTime", idleTime.ToString(), configKey);
         }
 
         private void ParseDisplayInfo(dynamic data, string username)

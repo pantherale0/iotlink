@@ -43,8 +43,6 @@ namespace IOTLinkAPI.Platform.Windows
         private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
         private static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
 
-        private static readonly CoreAudioDevice AUDIO_DEFAULT_PLAYBACK_DEVICE = new CoreAudioController().DefaultPlaybackDevice;
-
         public enum DialogStyle
         {
             // Buttons
@@ -391,32 +389,39 @@ namespace IOTLinkAPI.Platform.Windows
             }
         }
 
-        public static bool GetAudioMute()
+        public static bool IsAudioMuted()
         {
-            return AUDIO_DEFAULT_PLAYBACK_DEVICE.IsMuted;
+            return AudioController.GetInstance().IsAudioMuted();
         }
 
-        public static bool SetAudioMute(bool mute)
+        public static bool IsAudioPlaying()
         {
-            return AUDIO_DEFAULT_PLAYBACK_DEVICE.Mute(mute);
-        }
-
-        public static bool ToggleAudioMute()
-        {
-            return AUDIO_DEFAULT_PLAYBACK_DEVICE.ToggleMute();
-        }
-
-        public static void SetAudioVolume(double volume)
-        {
-            if (volume < 0 || volume > 100)
-                throw new Exception("Volume level needs to be between 0 and 100");
-
-            AUDIO_DEFAULT_PLAYBACK_DEVICE.Volume = volume;
+            return AudioController.GetInstance().IsAudioPlaying();
         }
 
         public static double GetAudioVolume()
         {
-            return AUDIO_DEFAULT_PLAYBACK_DEVICE.Volume;
+            return AudioController.GetInstance().GetAudioVolume();
+        }
+
+        public static double GetAudioPeakValue()
+        {
+            return AudioController.GetInstance().GetAudioPeakValue();
+        }
+
+        public static bool SetAudioMute(bool mute)
+        {
+            return AudioController.GetInstance().SetAudioMute(mute);
+        }
+
+        public static bool ToggleAudioMute()
+        {
+            return AudioController.GetInstance().ToggleAudioMute();
+        }
+
+        public static void SetAudioVolume(double volume)
+        {
+            AudioController.GetInstance().SetAudioVolume(volume);
         }
 
         public static void TurnOffDisplays()

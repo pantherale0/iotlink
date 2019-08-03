@@ -143,6 +143,7 @@
     <Compile Include="Platform\WebSocket\RequestTypeServer.cs" />
     <Compile Include="Platform\WebSocket\ResponseTypeClient.cs" />
     <Compile Include="Platform\WebSocket\ResponseTypeServer.cs" />
+    <Compile Include="Platform\Windows\AudioController.cs" />
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />
     <Compile Include="Platform\Windows\Native\Internal\LastInputInfo.cs" />
     <Compile Include="Platform\Windows\Native\Internal\MemoryStatusEx.cs" />

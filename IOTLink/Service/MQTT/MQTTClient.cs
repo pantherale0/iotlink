@@ -360,6 +360,9 @@ namespace IOTLinkService.Service.Engine.MQTT
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
             OnMQTTConnected?.Invoke(this, mqttEvent);
 
+            // System Message
+            LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", GetFullTopicName());
+
             // Subscribe to ALL Messages
             SubscribeTopic(GetFullTopicName("#"));
         }
