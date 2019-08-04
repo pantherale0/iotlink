@@ -6,5 +6,7 @@
         public string IPv6Address { get; set; }
         public long Speed { get; set; }
         public bool Wired { get; set; }
+        public long BytesSent { get; set; }
+        public long BytesReceived { get; set; }
     }
 }

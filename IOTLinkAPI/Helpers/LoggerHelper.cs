@@ -28,7 +28,8 @@ namespace IOTLinkAPI.Helpers
             DEBUG_LOOP,
             TRACE,
             TRACE_LOOP,
-            DATA_DUMP
+            DATA_DUMP,
+            SYSTEM
         }
 
         private LoggerHelper()
@@ -129,7 +130,7 @@ namespace IOTLinkAPI.Helpers
                 return;
 
             ApplicationConfig config = ConfigHelper.GetEngineConfig();
-            if (config == null || config.Logging == null || !config.Logging.Enabled || config.Logging.Level < logLevel)
+            if (config == null || config.Logging == null || !config.Logging.Enabled || config.Logging.Level < logLevel && logLevel != LogLevel.SYSTEM)
                 return;
 
             string formatedMessage;
@@ -194,6 +195,11 @@ namespace IOTLinkAPI.Helpers
         public static void DataDump(string message, params object[] args)
         {
             GetInstance().WriteLog(LogLevel.DATA_DUMP, GetCallerInformation(), message, args);
+        }
+
+        public static void System(string message, params object[] args)
+        {
+            GetInstance().WriteLog(LogLevel.SYSTEM, GetCallerInformation(), message, args);
         }
 
         public static void EmptyLine()

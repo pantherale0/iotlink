@@ -87,14 +87,16 @@ namespace IOTLinkAddon.Agent
         {
             try
             {
-                Bitmap bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
-                using (Graphics g = Graphics.FromImage(bmp))
+                using (Bitmap bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height))
                 {
-                    g.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y, 0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
-                    using (MemoryStream ms = new MemoryStream())
+                    using (Graphics g = Graphics.FromImage(bmp))
                     {
-                        bmp.Save(ms, ImageFormat.Png);
-                        return ms.ToArray();
+                        g.CopyFromScreen(screen.Bounds.X, screen.Bounds.Y, 0, 0, screen.Bounds.Size, CopyPixelOperation.SourceCopy);
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            bmp.Save(ms, ImageFormat.Png);
+                            return ms.ToArray();
+                        }
                     }
                 }
             }

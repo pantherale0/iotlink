@@ -5,6 +5,7 @@ using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events.MQTT;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 
 namespace IOTLinkAddon.Service
@@ -27,6 +28,11 @@ namespace IOTLinkAddon.Service
             GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
             GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
             GetManager().SubscribeTopic(this, "notify", OnNotifyMessage);
+            GetManager().SubscribeTopic(this, "sendKeys", OnSendKeysMessage);
+            GetManager().SubscribeTopic(this, "media/playpause", OnMediaPlayPauseMessage);
+            GetManager().SubscribeTopic(this, "media/stop", OnMediaStopMessage);
+            GetManager().SubscribeTopic(this, "media/next", OnMediaNextMessage);
+            GetManager().SubscribeTopic(this, "media/previous", OnMediaPreviousMessage);
         }
 
         private void OnShutdownMessage(object sender, MQTTMessageEventEventArgs e)
@@ -151,6 +157,57 @@ namespace IOTLinkAddon.Service
             GetManager().SendAgentRequest(this, addonData);
         }
 
+        private void OnMediaPlayPauseMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnMediaPlayPause: Message received");
+            RequestPressKey(0xB3);
+        }
+
+        private void OnMediaStopMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnMediaStopMessage: Message received");
+            RequestPressKey(0xB2);
+        }
+
+        private void OnMediaNextMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnMediaNextMessage: Message received");
+            RequestPressKey(0xB0);
+        }
+
+        private void OnMediaPreviousMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnMediaPreviousMessage: Message received");
+            RequestPressKey(0xB1);
+        }
+
+        private void OnSendKeysMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnSendKeysMessage: Message received");
+            string payload = e.Message.GetPayload();
+            if (string.IsNullOrWhiteSpace(payload))
+                return;
+
+            try
+            {
+                dynamic data;
+                if (payload.StartsWith("[") && payload.EndsWith("]"))
+                    data = JsonConvert.DeserializeObject<List<string>>(payload);
+                else
+                    data = new List<string> { payload };
+
+                dynamic addonData = new ExpandoObject();
+                addonData.requestType = AddonRequestType.REQUEST_KEYS_SEND;
+                addonData.requestData = data;
+
+                GetManager().SendAgentRequest(this, addonData);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("OnSendKeysMessage failure: {0}", ex.Message);
+            }
+        }
+
         private void OnNotifyMessage(object sender, MQTTMessageEventEventArgs e)
         {
             LoggerHelper.Verbose("OnNotifyMessage: Message received");
@@ -167,6 +224,17 @@ namespace IOTLinkAddon.Service
             {
                 LoggerHelper.Error("OnNotifyMessage failure: {0}", ex.Message);
             }
+        }
+
+        private void RequestPressKey(byte keyCode)
+        {
+            LoggerHelper.Verbose("PressKey: {0}", keyCode);
+
+            dynamic addonData = new ExpandoObject();
+            addonData.requestType = AddonRequestType.REQUEST_KEYS_PRESS;
+            addonData.requestData = keyCode;
+
+            GetManager().SendAgentRequest(this, addonData);
         }
     }
 }

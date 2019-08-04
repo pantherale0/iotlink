@@ -84,6 +84,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Service\Commands\ServiceStart.cs" />
     <Compile Include="Service\Engine\ServiceAddonManager.cs" />
     <Compile Include="Service\Commands\ICommand.cs" />
     <Compile Include="Service\Commands\ServiceCheck.cs" />

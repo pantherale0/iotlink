@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Timers;
 using System.Windows.Forms;
@@ -25,6 +26,10 @@ namespace IOTLinkAddon.Service
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
         private string _currentUser = "SYSTEM";
+
+        //to store how much was transferred last time, initialized to prevent null reference exception
+        private long[] _lastBytesSent = new long[0];
+        private long[] _lastBytesReceived = new long[0];
 
         public override void Init(IAddonManager addonManager)
         {
@@ -127,6 +132,8 @@ namespace IOTLinkAddon.Service
                 SendHardDriveInfo();
                 SendCurrentUserInfo();
                 SendNetworkInfo();
+                SendMediaInfo();
+                SendUptimeInfo();
                 RequestAgentIdleTime();
                 RequestAgentDisplayInfo();
                 RequestAgentDisplayScreenshot();
@@ -149,7 +156,7 @@ namespace IOTLinkAddon.Service
 
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
             string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
-            SendMonitorValue("Stats/CPU", cpuUsage, configKey);
+            SendMonitorValue("Stats/CPU/Usage", cpuUsage, configKey);
         }
 
         private void SendMemoryInfo()
@@ -204,7 +211,7 @@ namespace IOTLinkAddon.Service
 
             foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
             {
-                if (!driveInfo.IsReady || driveInfo.DriveType != DriveType.Fixed)
+                if (driveInfo == null || !driveInfo.IsReady || driveInfo.DriveType != DriveType.Fixed)
                     continue;
 
                 try
@@ -246,7 +253,7 @@ namespace IOTLinkAddon.Service
 
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
-            SendMonitorValue("Stats/CurrentUser", _currentUser, configKey);
+            SendMonitorValue("Stats/System/CurrentUser", _currentUser, configKey);
         }
 
         private void SendNetworkInfo()
@@ -258,16 +265,88 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
             List<NetworkInfo> networks = PlatformHelper.GetNetworkInfos();
-            for (int i = 0; i < networks.Count; i++)
+
+            //Make sure the array for the lastBytes values are as big as numbers of networks
+            //By being checked every time, we should be able to handle like a wifi dongle installed while running
+            if (_lastBytesReceived.Length != networks.Count)
+            {
+                _lastBytesReceived = new long[networks.Count];
+                _lastBytesSent = new long[networks.Count];
+            }
+
+            for (var i = 0; i < networks.Count; i++)
             {
                 NetworkInfo networkInfo = networks[i];
-                string topic = string.Format("Stats/Network/{0}", i);
+                if (networkInfo == null)
+                    continue; // Shouldn't happen, but...
+
+                var bytesSentPerSecond = CalculateBytesPerSecond(networkInfo.BytesSent, ref _lastBytesSent[i], configKey);
+                var bytesReceivedPerSecond = CalculateBytesPerSecond(networkInfo.BytesReceived, ref _lastBytesReceived[i], configKey);
+
+                var topic = $"Stats/Network/{i}";
 
                 SendMonitorValue(topic + "/IPv4", networkInfo.IPv4Address, configKey);
                 SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
                 SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
                 SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
+                SendMonitorValue(topic + "/BytesSent", networkInfo.BytesSent.ToString(CultureInfo.InvariantCulture), configKey);
+                SendMonitorValue(topic + "/BytesReceived", networkInfo.BytesReceived.ToString(CultureInfo.InvariantCulture), configKey);
+
+                if (bytesSentPerSecond >= 0)
+                    SendMonitorValue(topic + "/BytesSentPerSecond", bytesSentPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+
+                if (bytesReceivedPerSecond >= 0)
+                    SendMonitorValue(topic + "/BytesReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
             }
+        }
+
+        private void SendMediaInfo()
+        {
+            const string configKey = "MediaInfo";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            string currentVolume = Math.Round(PlatformHelper.GetAudioVolume(), 0).ToString(CultureInfo.InvariantCulture);
+
+            string muteState = PlatformHelper.IsAudioMuted().ToString(CultureInfo.InvariantCulture);
+            string playingState = PlatformHelper.IsAudioPlaying().ToString(CultureInfo.InvariantCulture);
+
+            SendMonitorValue("Stats/Media/Volume", currentVolume, configKey);
+            SendMonitorValue("Stats/Media/Muted", muteState, configKey);
+            SendMonitorValue("Stats/Media/Playing", playingState, configKey);
+        }
+
+        private void SendUptimeInfo()
+        {
+            const string configKey = "Uptime";
+            if (!CanRun(configKey))
+                return;
+
+            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+
+            DateTimeOffset lastBootUpTime = PlatformHelper.LastBootUpTime();
+
+            string uptime = PlatformHelper.GetUptime().ToString(CultureInfo.InvariantCulture);
+            string bootTime = lastBootUpTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+            SendMonitorValue("Stats/System/BootTime", bootTime, configKey);
+            SendMonitorValue("Stats/System/Uptime", uptime, configKey);
+        }
+
+        private long CalculateBytesPerSecond(long bytesReceived, ref long lastBytes, string configKey)
+        {
+            var bytesPerSecond = -1L;
+
+            if (lastBytes != 0)
+            {
+                var interval = _config.Monitors[configKey].Interval;
+                bytesPerSecond = (bytesReceived - lastBytes) / interval;
+            }
+
+            lastBytes = bytesReceived;
+            return bytesPerSecond;
         }
 
         private void RequestAgentIdleTime()
@@ -341,7 +420,7 @@ namespace IOTLinkAddon.Service
             const string configKey = "IdleTime";
             uint idleTime = (uint)data.requestData;
 
-            SendMonitorValue("Stats/IdleTime", idleTime.ToString(), configKey);
+            SendMonitorValue("Stats/System/IdleTime", idleTime.ToString(), configKey);
         }
 
         private void ParseDisplayInfo(dynamic data, string username)

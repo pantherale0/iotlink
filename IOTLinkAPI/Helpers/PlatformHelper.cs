@@ -195,6 +195,54 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Is primary audio muted?
+        /// </summary>
+        /// <returns>Boolean</returns>
+        public static bool IsAudioMuted()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.IsAudioMuted();
+        }
+
+        /// <summary>
+        /// Is primary audio currently playing any media?
+        /// </summary>
+        /// <returns>Boolean</returns>
+        public static bool IsAudioPlaying()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.IsAudioPlaying();
+        }
+
+        /// <summary>
+        /// Get current primary audio device volume level
+        /// </summary>
+        /// <returns>Double</returns>
+        public static double GetAudioVolume()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetAudioVolume();
+        }
+
+        /// <summary>
+        /// Get current primary audio device peak level
+        /// </summary>
+        /// <returns>Double</returns>
+        public static double GetAudioPeakValue()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetAudioPeakValue();
+        }
+
+        /// <summary>
         /// Set primary audio device volume mute flag
         /// </summary>
         /// <param name="mute">Boolean indicating the desired mute flag</param>
@@ -236,18 +284,6 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
-        /// Get current primary audio device volume level
-        /// </summary>
-        /// <returns>Double</returns>
-        public static double GetAudioVolume()
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.GetAudioVolume();
-        }
-
-        /// <summary>
         /// Turn on displays
         /// </summary>
         /// <returns>Double</returns>
@@ -284,6 +320,30 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Get System Last Boot Uptime
+        /// </summary>
+        /// <returns>DateTimeOffset</returns>
+        public static DateTimeOffset LastBootUpTime()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.LastBootUpTime();
+        }
+
+        /// <summary>
+        /// Get System Uptime (in seconds)
+        /// </summary>
+        /// <returns></returns>
+        public static long GetUptime()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetUptime();
+        }
+
+        /// <summary>
         /// Get Displays Information
         /// </summary>
         /// <returns></returns>
@@ -293,6 +353,18 @@ namespace IOTLinkAPI.Helpers
                 throw new PlatformNotSupportedException();
 
             return WindowsAPI.GetDisplays();
+        }
+
+        /// <summary>
+        /// Simulate Key Press
+        /// <param name="keyCode">Byte representing the corresponding Windows key.</param>
+        /// </summary>
+        public static void PressKey(byte keyCode)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            WindowsAPI.PressKey(keyCode);
         }
 
         /// <summary>
@@ -308,39 +380,64 @@ namespace IOTLinkAPI.Helpers
                 NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
                 foreach (NetworkInterface network in networkInterfaces)
                 {
-                    IPInterfaceProperties properties = network.GetIPProperties();
+                    // This shouldn't be possible, but appears to happen sometimes.
+                    if (network == null)
+                        continue;
+
+                    // Skip disabled or disconnected network(s)
+                    if (network.OperationalStatus != OperationalStatus.Up)
+                        continue;
+
+                    // Skip virtual network(s)
+                    if (network.Description != null && (network.Description.ToLowerInvariant().Contains("virtual") || network.Description.ToLowerInvariant().Contains("pseudo")))
+                        continue;
+
+                    // Skip network(s) without properties
+                    var properties = network.GetIPProperties();
                     if (properties == null)
                         continue;
 
-                    if (network.OperationalStatus == OperationalStatus.Up && network.Description != null && !network.Description.ToLowerInvariant().Contains("virtual") && !network.Description.ToLowerInvariant().Contains("pseudo"))
+                    // Skip network(s) which aren't LAN or WLAN
+                    if (network.NetworkInterfaceType != NetworkInterfaceType.Ethernet && network.NetworkInterfaceType != NetworkInterfaceType.Wireless80211)
+                        continue;
+
+                    var networkInfo = new NetworkInfo
                     {
-                        if (network.NetworkInterfaceType != NetworkInterfaceType.Ethernet && network.NetworkInterfaceType != NetworkInterfaceType.Wireless80211)
-                            continue;
+                        Wired = network.NetworkInterfaceType == NetworkInterfaceType.Ethernet,
+                        Speed = network.Speed / 1000000,
+                        BytesReceived = 0L,
+                        BytesSent = 0L
+                    };
 
-                        NetworkInfo networkInfo = new NetworkInfo();
-                        networkInfo.Wired = network.NetworkInterfaceType == NetworkInterfaceType.Ethernet;
-                        networkInfo.Speed = network.Speed / 1000000;
-
-                        foreach (IPAddressInformation address in properties.UnicastAddresses)
-                        {
-                            AddressFamily family = address.Address.AddressFamily;
-                            if (family != AddressFamily.InterNetwork && family != AddressFamily.InterNetworkV6)
-                                continue;
-
-                            if (IPAddress.IsLoopback(address.Address))
-                                continue;
-
-                            if (family == AddressFamily.InterNetwork)
-                                networkInfo.IPv4Address = address.Address.ToString();
-                            else if (networkInfo.IPv6Address == null)
-                                networkInfo.IPv6Address = address.Address.ToString();
-                        }
-
-                        if (string.IsNullOrWhiteSpace(networkInfo.IPv4Address) && string.IsNullOrWhiteSpace(networkInfo.IPv6Address))
-                            continue;
-
-                        networks.Add(networkInfo);
+                    if (network.GetIPStatistics() != null)
+                    {
+                        networkInfo.BytesReceived = network.GetIPStatistics().BytesReceived;
+                        networkInfo.BytesSent = network.GetIPStatistics().BytesSent;
                     }
+
+                    foreach (UnicastIPAddressInformation address in properties.UnicastAddresses)
+                    {
+                        if (address.Address == null)
+                            continue;
+
+                        var family = address.Address.AddressFamily;
+                        if (family != AddressFamily.InterNetwork && family != AddressFamily.InterNetworkV6)
+                            continue;
+
+                        if (IPAddress.IsLoopback(address.Address))
+                            continue;
+
+                        if (family == AddressFamily.InterNetwork)
+                            networkInfo.IPv4Address = address.Address.ToString();
+                        else if (networkInfo.IPv6Address == null)
+                            networkInfo.IPv6Address = address.Address.ToString();
+                    }
+
+                    // Skip network(s) without IP Address(es)
+                    if (string.IsNullOrWhiteSpace(networkInfo.IPv4Address) && string.IsNullOrWhiteSpace(networkInfo.IPv6Address))
+                        continue;
+
+                    networks.Add(networkInfo);
                 }
             }
             catch (Exception ex)

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 
-namespace IOTLinkService.Service.Commands
+namespace IOTLink.Service.Commands
 {
     class ServiceInstall : ICommand
     {

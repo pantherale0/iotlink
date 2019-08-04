@@ -58,7 +58,7 @@ namespace IOTLinkAPI.Platform.Windows.Native
             public WtsConnectStateClass State;
         }
 
-        [DllImport("wtsapi32.dll", SetLastError = true)]
+        [DllImport("wtsapi32.dll")]
         public static extern IntPtr WTSOpenServer([MarshalAs(UnmanagedType.LPStr)] String pServerName);
 
         [DllImport("wtsapi32.dll")]
@@ -70,19 +70,19 @@ namespace IOTLinkAPI.Platform.Windows.Native
         [DllImport("wtsapi32.dll")]
         public static extern void WTSFreeMemory(IntPtr pMemory);
 
-        [DllImport("wtsapi32.dll", SetLastError = true)]
+        [DllImport("wtsapi32.dll")]
         public static extern bool WTSLogoffSession(IntPtr hServer, int SessionId, bool bWait);
 
-        [DllImport("wtsapi32.dll", SetLastError = true)]
+        [DllImport("wtsapi32.dll")]
         public static extern bool WTSDisconnectSession(IntPtr hServer, int sessionId, bool bWait);
 
-        [DllImport("wtsapi32.dll", SetLastError = true)]
+        [DllImport("wtsapi32.dll")]
         public static extern Int32 WTSEnumerateSessions(IntPtr hServer, [MarshalAs(UnmanagedType.U4)] Int32 Reserved, [MarshalAs(UnmanagedType.U4)] Int32 Version, ref IntPtr ppSessionInfo, [MarshalAs(UnmanagedType.U4)] ref Int32 pCount);
 
-        [DllImport("wtsapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("wtsapi32.dll", CharSet = CharSet.Auto)]
         public static extern bool WTSQueryUserToken(Int32 sessionId, out IntPtr Token);
 
-        [DllImport("wtsapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("wtsapi32.dll", CharSet = CharSet.Auto)]
         public static extern bool WTSSendMessage(
             IntPtr hServer,
             [MarshalAs(UnmanagedType.I4)] int SessionId,
