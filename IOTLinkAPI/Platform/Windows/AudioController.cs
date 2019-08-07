@@ -35,18 +35,30 @@ namespace IOTLinkAPI.Platform.Windows
             LoggerHelper.Trace("AudioController instance created.");
 
             commsPlayback = audioController.DefaultPlaybackCommunicationsDevice;
-            commsPlayback.VolumeChanged.Subscribe(x => commsVolume = x.Volume);
-            commsPlayback.MuteChanged.Subscribe(x => commsMuted = x.IsMuted);
-            commsPlayback.PeakValueChanged.Subscribe(x => commsPeakValue = x.PeakValue);
-            commsVolume = commsPlayback.Volume;
-            commsMuted = commsPlayback.IsMuted;
+            if (commsPlayback != null)
+            {
+                commsPlayback.VolumeChanged.Subscribe(x => commsVolume = x.Volume);
+                commsPlayback.MuteChanged.Subscribe(x => commsMuted = x.IsMuted);
+                commsPlayback.PeakValueChanged.Subscribe(x => commsPeakValue = x.PeakValue);
+                commsVolume = commsPlayback.Volume;
+                commsMuted = commsPlayback.IsMuted;
+            }
 
             mediaPlayback = audioController.DefaultPlaybackDevice;
-            mediaPlayback.VolumeChanged.Subscribe(x => mediaVolume = x.Volume);
-            mediaPlayback.MuteChanged.Subscribe(x => mediaMuted = x.IsMuted);
-            mediaPlayback.PeakValueChanged.Subscribe(x => mediaPeakValue = x.PeakValue);
-            mediaVolume = mediaPlayback.Volume;
-            mediaMuted = mediaPlayback.IsMuted;
+            if (mediaPlayback != null)
+            {
+                mediaPlayback.VolumeChanged.Subscribe(x => mediaVolume = x.Volume);
+                mediaPlayback.MuteChanged.Subscribe(x => mediaMuted = x.IsMuted);
+                mediaPlayback.PeakValueChanged.Subscribe(x => mediaPeakValue = x.PeakValue);
+                mediaVolume = mediaPlayback.Volume;
+                mediaMuted = mediaPlayback.IsMuted;
+            }
+
+            if (commsPlayback == null)
+                LoggerHelper.Info("No communication audio device found.");
+
+            if (mediaPlayback == null)
+                LoggerHelper.Info("No playback audio device found.");
         }
 
         public bool IsAudioMuted()
@@ -71,16 +83,25 @@ namespace IOTLinkAPI.Platform.Windows
 
         public bool SetAudioMute(bool mute)
         {
+            if (mediaPlayback == null)
+                return false;
+
             return mediaPlayback.Mute(mute);
         }
 
         public bool ToggleAudioMute()
         {
+            if (mediaPlayback == null)
+                return false;
+
             return mediaPlayback.ToggleMute();
         }
 
         public void SetAudioVolume(double volume)
         {
+            if (mediaPlayback == null)
+                return;
+
             if (volume < 0 || volume > 100)
                 throw new Exception("Volume level needs to be between 0 and 100");
 
