@@ -1,15 +1,21 @@
-﻿using IOTLinkAPI.Helpers;
+﻿using IOTLink.Service.Commands;
+using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Windows;
-using IOTLink.Service.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceProcess;
+using System.Threading;
 
 namespace IOTLink
 {
     public static class Program
     {
+        /// <summary>
+        /// Define if the application is running as a service
+        /// </summary>
+        public static bool IsService { get; set; }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -17,16 +23,29 @@ namespace IOTLink
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
 
-            // Service Run
             if (!Environment.UserInteractive)
             {
+                // Running as a service
+                IsService = true;
                 ServiceBase service = new IOTLinkService();
                 ServiceBase.Run(service);
                 return 0;
             }
-
-            if (args.Length == 0)
+            else if (Environment.UserInteractive && Array.IndexOf(args, "--debug") > -1)
             {
+                // Service debug mode
+                IsService = true;
+                IOTLinkService service = new IOTLinkService();
+                service.OnDebug();
+                while (true)
+                {
+                    Thread.Sleep(60000);
+                }
+                return 0;
+            }
+            else if (args.Length == 0)
+            {
+                // No debug mode, no arguments.
                 WindowsAPI.ShowMessage("IOT Link", "Missing command-line parameters.");
                 return 1;
             }

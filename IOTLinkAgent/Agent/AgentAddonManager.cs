@@ -120,7 +120,7 @@ namespace IOTLinkAgent.Agent
             _addons.Clear();
             LoadInternalAddons();
 
-            if (ConfigHelper.GetEngineConfig().Addons?.Enabled == true)
+            if (ApplicationConfigHelper.GetEngineConfig().GetValue("addons:enabled", true) == true)
                 LoadExternalAddons();
         }
 

@@ -1,5 +1,6 @@
 ﻿using IOTLinkAddon.Common;
 using IOTLinkAPI.Addons;
+using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
@@ -16,11 +17,13 @@ namespace IOTLinkAddon.Service
 {
     public class WindowsMonitorService : ServiceAddon
     {
+        private static readonly int DEFAULT_INTERVAL = 60;
+
         private System.Timers.Timer _monitorTimer;
         private uint _monitorCounter = 0;
 
         private string _configPath;
-        private WindowsMonitorConfig _config;
+        private Configuration _config;
 
         private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
@@ -35,10 +38,11 @@ namespace IOTLinkAddon.Service
         {
             base.Init(addonManager);
 
+            var cfgManager = ConfigurationManager.GetInstance();
             _configPath = Path.Combine(this._currentPath, "config.yaml");
-            ConfigHelper.SetReloadHandler<WindowsMonitorConfig>(_configPath, OnConfigReload);
+            _config = cfgManager.GetConfiguration(_configPath);
+            cfgManager.SetReloadHandler(_configPath, OnConfigReload);
 
-            _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
             _currentUser = PlatformHelper.GetCurrentUsername();
 
             _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
@@ -61,9 +65,15 @@ namespace IOTLinkAddon.Service
 
         private void SetupTimers()
         {
-            if (_config == null || !_config.Enabled)
+            if (_config == null || !_config.GetValue("enabled", false))
             {
                 LoggerHelper.Info("System monitor is disabled.");
+                if (_monitorTimer != null)
+                {
+                    _monitorTimer.Stop();
+                    _monitorTimer = null;
+                }
+
                 return;
             }
 
@@ -85,7 +95,7 @@ namespace IOTLinkAddon.Service
             if (e.ConfigType != ConfigType.CONFIGURATION_ADDON)
                 return;
 
-            _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
+            _config = ConfigurationManager.GetInstance().GetConfiguration(_configPath);
             SetupTimers();
         }
 
@@ -341,7 +351,8 @@ namespace IOTLinkAddon.Service
 
             if (lastBytes != 0)
             {
-                var interval = _config.Monitors[configKey].Interval;
+                var key = string.Format("Monitors:{0}:Interval", configKey);
+                var interval = _config.GetValue(key, DEFAULT_INTERVAL);
                 bytesPerSecond = (bytesReceived - lastBytes) / interval;
             }
 
@@ -448,7 +459,7 @@ namespace IOTLinkAddon.Service
 
         private double GetSize(long sizeInBytes)
         {
-            switch (_config.SizeFormat)
+            switch (_config.GetValue("sizeFormat", "GB"))
             {
                 default:
                 case "MB":
@@ -464,14 +475,15 @@ namespace IOTLinkAddon.Service
 
         private bool CanRun(string configKey)
         {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey(configKey) || !_config.Monitors[configKey].Enabled)
+            var key = string.Format("monitors:{0}:enabled", configKey);
+            if (_config.GetValue(key, false) == false)
             {
                 LoggerHelper.Verbose("{0} monitor disabled.", configKey);
                 return false;
             }
 
-            MonitorConfig monitor = _config.Monitors[configKey];
-            if ((_monitorCounter % monitor.Interval) != 0)
+            key = string.Format("monitors:{0}:interval", configKey);
+            if ((_monitorCounter % _config.GetValue(key, DEFAULT_INTERVAL)) != 0)
                 return false;
 
             return true;
@@ -482,7 +494,8 @@ namespace IOTLinkAddon.Service
             if (string.IsNullOrWhiteSpace(topic))
                 return;
 
-            if (configKey != null && _config.Monitors != null && _config.Monitors.ContainsKey(configKey) && _config.Monitors[configKey].Cacheable)
+            var key = string.Format("monitors:{0}:cacheable", configKey);
+            if (configKey != null && _config.GetValue(key, false) == true)
             {
                 if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)
                     return;

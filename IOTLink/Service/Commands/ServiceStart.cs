@@ -14,7 +14,7 @@ namespace IOTLink.Service.Commands
 
         public int ExecuteCommand(string[] args)
         {
-            if (!Environment.UserInteractive)
+            if (Program.IsService)
             {
                 LoggerHelper.Verbose("Command {0} - Running on non-interactive mode. Skipping", COMMAND_LINE);
                 return -1;

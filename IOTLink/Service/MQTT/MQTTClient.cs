@@ -47,7 +47,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// <returns>Boolean</returns>
         internal bool Init()
         {
-            _config = ConfigHelper.GetEngineConfig().MQTT;
+            _config = MqttConfig.FromConfiguration(ApplicationConfigHelper.GetEngineConfig().GetValue("mqtt"));
 
             // Configuration not found
             if (_config == null)

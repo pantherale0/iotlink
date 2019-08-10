@@ -115,7 +115,9 @@
     <Compile Include="Addons\IAddonManager.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
+    <Compile Include="Configs\Configuration.cs" />
     <Compile Include="Configs\ConfigInfo.cs" />
+    <Compile Include="Configs\ConfigurationManager.cs" />
     <Compile Include="Configs\MqttConfig.cs" />
     <Compile Include="Helpers\MathHelper.cs" />
     <Compile Include="Platform\ConfigType.cs" />

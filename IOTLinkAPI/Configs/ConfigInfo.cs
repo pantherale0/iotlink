@@ -1,13 +1,14 @@
 ﻿using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
+using System.Collections.Generic;
 using System.IO;
-using static IOTLinkAPI.Helpers.ConfigHelper;
+using static IOTLinkAPI.Configs.ConfigurationManager;
 
 namespace IOTLinkAPI.Configs
 {
-    internal class ConfigInfo
+    public class ConfigInfo
     {
-        public object Config { get; set; }
+        public Configuration Config { get; set; }
 
         public FileSystemWatcher FileSystemWatcher { get; set; }
 
@@ -18,6 +19,11 @@ namespace IOTLinkAPI.Configs
         public void Raise_OnConfigReloadHandler(object sender, ConfigReloadEventArgs e)
         {
             OnConfigReloadHandler?.Invoke(sender, e);
+        }
+
+        public ConfigInfo(object config)
+        {
+            Config = new Configuration((Dictionary<object, object>)config);
         }
     }
 }
