@@ -28,7 +28,7 @@ namespace IOTLinkAPI.Helpers
                 return;
 
             string path = Path.Combine(PathHelper.ConfigPath(), ENGINE_CONF_FILE);
-            ConfigurationManager.GetInstance().SetReloadHandler(path, configReloadedHandler);
+            ConfigurationManager.GetInstance().SetReloadHandler(path, configReloadedHandler, Platform.ConfigType.CONFIGURATION_ENGINE);
         }
     }
 }

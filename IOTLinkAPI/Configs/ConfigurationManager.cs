@@ -67,14 +67,20 @@ namespace IOTLinkAPI.Configs
         /// <param name="path">String containing the configuration file path</param>
         /// <param name="configReloadedHandler">ConfigReloadedHandler delegate</param>
         /// <param name="configType">Configuration Type</param>
-        private void SetReloadHandler(string path, ConfigReloadedHandler configReloadedHandler, ConfigType configType)
+        internal void SetReloadHandler(string path, ConfigReloadedHandler configReloadedHandler, ConfigType configType)
         {
             if (string.IsNullOrWhiteSpace(path))
+            {
+                LoggerHelper.Warn("Trying to set a reload handler for empty path.");
                 return;
+            }
 
             path = Path.GetFullPath(path);
             if (!_configs.ContainsKey(path))
+            {
+                LoggerHelper.Warn("Trying to set a reload handler for a key which doesn't exists: {0}", path);
                 return;
+            }
 
             ConfigInfo configInfo = _configs[path];
             configInfo.ConfigType = configType;
@@ -196,7 +202,8 @@ namespace IOTLinkAPI.Configs
             finally
             {
                 // Enable Watcher
-                _configs[path].FileSystemWatcher.EnableRaisingEvents = false;
+                if (_configs[path].FileSystemWatcher != null)
+                    _configs[path].FileSystemWatcher.EnableRaisingEvents = true;
             }
         }
     }
