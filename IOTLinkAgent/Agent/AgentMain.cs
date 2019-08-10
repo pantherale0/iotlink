@@ -24,7 +24,8 @@ namespace IOTLinkAgent.Agent
         private AgentMain()
         {
             LoggerHelper.Trace("AgentMain instance created.");
-            ConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
+            ApplicationConfigHelper.Init();
+            ApplicationConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
         }
 
         internal void Init(List<string> args)
