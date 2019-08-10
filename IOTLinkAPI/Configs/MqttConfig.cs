@@ -91,6 +91,7 @@
                 cfg.DisconnectMessage = config.GetValue("disconnectMsg", "OFF");
                 cfg.QoS = config.GetValue("qos", 1);
                 cfg.Retain = config.GetValue("retain", false);
+                cfg.Enabled = config.GetValue("enabled", true);
 
                 return cfg;
             }
