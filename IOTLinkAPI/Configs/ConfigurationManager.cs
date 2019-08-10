@@ -86,17 +86,16 @@ namespace IOTLinkAPI.Configs
             configInfo.ConfigType = configType;
             configInfo.OnConfigReloadHandler += configReloadedHandler;
 
+            LoggerHelper.Verbose("Setting up file system watcher: {0}", path);
             if (configInfo.FileSystemWatcher == null)
             {
-                LoggerHelper.Debug("Adding file system watcher for {0}", path);
+                LoggerHelper.Debug("Creating new watcher for {0}", path);
 
-                FileSystemWatcher configWatcher = new FileSystemWatcher(Path.GetDirectoryName(path), Path.GetFileName(path));
-                configWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.CreationTime;
-                configWatcher.Changed += OnConfigChanged;
-                configWatcher.Created += OnConfigChanged;
-                configWatcher.EnableRaisingEvents = true;
-
-                configInfo.FileSystemWatcher = configWatcher;
+                configInfo.FileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(path), Path.GetFileName(path));
+                configInfo.FileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.CreationTime;
+                configInfo.FileSystemWatcher.Changed += OnConfigChanged;
+                configInfo.FileSystemWatcher.Created += OnConfigChanged;
+                configInfo.FileSystemWatcher.EnableRaisingEvents = true;
             }
         }
 
@@ -122,12 +121,10 @@ namespace IOTLinkAPI.Configs
                 return null;
             }
 
-            var cfgInfo = new ConfigInfo(config);
-
             if (!_configs.ContainsKey(path))
-                _configs.Add(path, cfgInfo);
+                _configs.Add(path, new ConfigInfo(config));
             else
-                _configs[path] = cfgInfo;
+                _configs[path].SetConfig(config);
 
             return _configs[path];
         }
@@ -202,8 +199,7 @@ namespace IOTLinkAPI.Configs
             finally
             {
                 // Enable Watcher
-                if (_configs[path].FileSystemWatcher != null)
-                    _configs[path].FileSystemWatcher.EnableRaisingEvents = true;
+                _configs[path].FileSystemWatcher.EnableRaisingEvents = true;
             }
         }
     }

@@ -4,6 +4,7 @@ using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
+using IOTLinkAPI.Platform.Events.MQTT;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,9 +52,17 @@ namespace IOTLinkAddon.Service
             OnSessionChangeHandler += OnSessionChange;
             OnConfigReloadHandler += OnConfigReload;
             OnAgentResponseHandler += OnAgentResponse;
+            OnMQTTConnectedHandler += OnMQTTConnected;
             OnRefreshRequestedHandler += OnRefreshRequested;
 
             SetupTimers();
+        }
+
+        private void OnMQTTConnected(object sender, MQTTEventEventArgs e)
+        {
+            LoggerHelper.Verbose("MQTT Connected");
+            _cache.Clear();
+            SendAllInformation();
         }
 
         private void OnRefreshRequested(object sender, EventArgs e)
@@ -94,6 +103,8 @@ namespace IOTLinkAddon.Service
         {
             if (e.ConfigType != ConfigType.CONFIGURATION_ADDON)
                 return;
+
+            LoggerHelper.Verbose("Reloading configuration");
 
             _config = ConfigurationManager.GetInstance().GetConfiguration(_configPath);
             SetupTimers();

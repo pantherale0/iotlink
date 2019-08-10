@@ -23,6 +23,11 @@ namespace IOTLinkAPI.Configs
 
         public ConfigInfo(object config)
         {
+            SetConfig(config);
+        }
+
+        public void SetConfig(object config)
+        {
             Config = new Configuration((Dictionary<object, object>)config);
         }
     }

@@ -401,14 +401,22 @@ namespace IOTLinkService.Service.Engine.MQTT
             MQTTMessage message = GetMQTTMessage(arg);
             if (string.Compare(message.Topic, "refresh", StringComparison.InvariantCultureIgnoreCase) == 0)
             {
-                SendLWTConnect();
-                OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
+                SendRefresh();
             }
             else
             {
                 MQTTMessageEventEventArgs mqttEvent = new MQTTMessageEventEventArgs(MQTTEventEventArgs.MQTTEventType.MessageReceived, message, arg);
                 OnMQTTMessageReceived?.Invoke(this, mqttEvent);
             }
+        }
+
+        /// <summary>
+        /// Send refresh request event
+        /// </summary>
+        private void SendRefresh()
+        {
+            SendLWTConnect();
+            OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
