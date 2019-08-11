@@ -453,7 +453,7 @@ namespace IOTLinkAPI.Platform.Windows
         {
             using (ManagementObject mo = new ManagementObject(@"\\.\root\cimv2:Win32_OperatingSystem=@"))
             {
-                DateTime lastBootUpTime = DateTime.SpecifyKind(ManagementDateTimeConverter.ToDateTime(mo["LastBootUpTime"].ToString()), DateTimeKind.Local);
+                DateTime lastBootUpTime = DateTime.SpecifyKind(ManagementDateTimeConverter.ToDateTime(mo["LastBootUpTime"].ToString()), DateTimeKind.Unspecified);
                 return new DateTimeOffset(lastBootUpTime, TimeZoneInfo.Local.BaseUtcOffset);
             }
         }
