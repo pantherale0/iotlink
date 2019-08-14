@@ -57,6 +57,19 @@
   <ItemGroup>
     <Compile Include="Agent\WindowsMonitorAgent.cs" />
     <Compile Include="Common\AddonRequestType.cs" />
+    <Compile Include="Service\MonitorItem.cs" />
+    <Compile Include="Service\MonitorItemType.cs" />
+    <Compile Include="Service\Monitors\BaseMonitor.cs" />
+    <Compile Include="Service\Monitors\DisplayMonitor.cs" />
+    <Compile Include="Service\Monitors\SystemMonitor.cs" />
+    <Compile Include="Service\Monitors\UptimeMonitor.cs" />
+    <Compile Include="Service\Monitors\NetworkMonitor.cs" />
+    <Compile Include="Service\Monitors\MediaMonitor.cs" />
+    <Compile Include="Service\Monitors\StorageMonitor.cs" />
+    <Compile Include="Service\Monitors\PowerMonitor.cs" />
+    <Compile Include="Service\Monitors\MemoryMonitor.cs" />
+    <Compile Include="Service\Monitors\CPUMonitor.cs" />
+    <Compile Include="Service\Monitors\IMonitor.cs" />
     <Compile Include="Service\WindowsMonitorService.cs" />
   </ItemGroup>
   <ItemGroup>

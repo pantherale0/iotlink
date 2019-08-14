@@ -1,6 +1,6 @@
-﻿using System;
+﻿using IOTLinkAPI.Helpers;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace IOTLinkAPI.Configs
@@ -52,72 +52,41 @@ namespace IOTLinkAPI.Configs
 
         public string GetValue(string key, string defaultValue = null)
         {
-            return (string)ReadConfigKey(key, defaultValue);
+            object result = ReadConfigKey(key, defaultValue);
+            if (result == null)
+                return defaultValue;
+
+            return result.ToString();
         }
 
         public bool GetValue(string key, bool defaultValue = false)
         {
-            try
-            {
-                object result = ReadConfigKey(key, defaultValue);
-                return Convert.ToBoolean(result);
-            }
-            catch (Exception)
-            {
-                return defaultValue;
-            }
+            object result = ReadConfigKey(key, defaultValue);
+            return MathHelper.ToBoolean(result, defaultValue);
         }
 
         public int GetValue(string key, int defaultValue = 0)
         {
-            try
-            {
-                object result = ReadConfigKey(key, defaultValue);
-                return Convert.ToInt32(result);
-            }
-            catch (Exception)
-            {
-                return defaultValue;
-            }
+            object result = ReadConfigKey(key, defaultValue);
+            return MathHelper.ToInteger(result, defaultValue);
         }
 
         public long GetValue(string key, long defaultValue = 0L)
         {
-            try
-            {
-                object result = ReadConfigKey(key, defaultValue);
-                return Convert.ToInt64(result);
-            }
-            catch (Exception)
-            {
-                return defaultValue;
-            }
+            object result = ReadConfigKey(key, defaultValue);
+            return MathHelper.ToLong(result, defaultValue);
         }
 
         public double GetValue(string key, double defaultValue = 0d)
         {
-            try
-            {
-                object result = ReadConfigKey(key, defaultValue);
-                return Convert.ToDouble(result);
-            }
-            catch (Exception)
-            {
-                return defaultValue;
-            }
+            object result = ReadConfigKey(key, defaultValue);
+            return MathHelper.ToDouble(result, defaultValue);
         }
 
         public float GetValue(string key, float defaultValue = 0f)
         {
-            try
-            {
-                string result = (string)ReadConfigKey(key, defaultValue);
-                return float.Parse(result, CultureInfo.InvariantCulture.NumberFormat);
-            }
-            catch (Exception)
-            {
-                return defaultValue;
-            }
+            object result = ReadConfigKey(key, defaultValue);
+            return MathHelper.ToFloat(result, defaultValue);
         }
 
         public int GetListCount(string key)

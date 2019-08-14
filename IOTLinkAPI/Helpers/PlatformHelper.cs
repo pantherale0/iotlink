@@ -47,7 +47,7 @@ namespace IOTLinkAPI.Helpers
         public static string GetCurrentUsername()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return WindowsAPI.GetCurrentUsername();
+                return WindowsAPI.GetCurrentUser();
 
             throw new PlatformNotSupportedException();
         }

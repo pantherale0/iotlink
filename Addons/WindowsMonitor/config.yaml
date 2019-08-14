@@ -31,7 +31,7 @@ sizeFormat: GB
 # Power             : Power (Status, Battery Status, Remaning Time, etc).
 # NetworkInfo       : Network Information (IPv4, IPv6, Speed, Wired).
 # MediaInfo         : Media Information (Volume, Muted).
-# CurrentUser       : Current user logged in physically into machine.
+# SystemInfo        : System Info (Current user physically logged in).
 # IdleTime          : Idle Time (Current user physically logged in).
 # Uptime            : Uptime information (Boot time, Uptime).
 # Display-Info      : Screen Width and Height (Per Display).
@@ -62,7 +62,7 @@ monitors:
     enabled: true
     interval: 10
     cacheable: true
-  CurrentUser:
+  SystemInfo:
     enabled: true
     interval: 10
     cacheable: true

@@ -1,33 +1,68 @@
 ﻿using System;
+using System.Globalization;
 
 namespace IOTLinkAPI.Helpers
 {
     public abstract class MathHelper
     {
-
-        public static double BytesToMegabytes(long bytes)
+        public static bool ToBoolean(object value, bool defaultValue = false)
         {
-            return Math.Round(bytes / (1024f * 1024f), 2);
+            try
+            {
+                return Convert.ToBoolean(value);
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            }
         }
 
-        public static double BytesToGigabytes(long bytes)
+        public static int ToInteger(object value, int defaultValue = 0)
         {
-            return Math.Round(bytes / (1024f * 1024f * 1024f), 2);
+            try
+            {
+                return Convert.ToInt32(value);
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            }
         }
 
-        public static double BytesToTerabytes(long bytes)
+        public static long ToLong(object value, long defaultValue = 0L)
         {
-            return Math.Round(bytes / (1024f * 1024f * 1024f * 1024f), 2);
+            try
+            {
+                return Convert.ToInt64(value);
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            }
         }
 
-        public static double MegabytesToGigabytes(long megabytes)
+        public static double ToDouble(object value, double defaultValue = 0d)
         {
-            return Math.Round(megabytes / 1024f, 2);
+            try
+            {
+                return Convert.ToDouble(value);
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            }
         }
 
-        public static double MegabytesToTerabytes(long megabytes)
+        public static float ToFloat(object value, float defaultValue = 0f)
         {
-            return Math.Round(megabytes / (1024f * 1024f), 2);
+            try
+            {
+                return float.Parse(value.ToString(), CultureInfo.InvariantCulture.NumberFormat);
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            }
         }
     }
 }

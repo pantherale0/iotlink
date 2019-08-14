@@ -1,4 +1,3 @@
-using AudioSwitcher.AudioApi.CoreAudio;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Windows.Native;
 using IOTLinkAPI.Platform.Windows.Native.Internal;
@@ -448,6 +447,29 @@ namespace IOTLinkAPI.Platform.Windows
             User32.keybd_event(keyCode, 0x45, KEYEVENTF_KEYUP, 0);
         }
 
+        public static string GetCurrentUser()
+        {
+            try
+            {
+                using (ManagementClass mc = new ManagementClass("Win32_ComputerSystem"))
+                {
+                    using (ManagementObjectCollection moc = mc.GetInstances())
+                    {
+                        foreach (ManagementObject mo in moc)
+                        {
+                            string value = mo.Properties["UserName"].Value.ToString();
+                            return value.Substring(value.LastIndexOf('\\') + 1);
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return "SYSTEM";
+            }
+
+            return "SYSTEM";
+        }
 
         public static DateTimeOffset LastBootUpTime()
         {
