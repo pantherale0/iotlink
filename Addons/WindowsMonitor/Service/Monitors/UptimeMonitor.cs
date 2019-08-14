@@ -22,7 +22,7 @@ namespace IOTLinkAddon.Service.Monitors
             return CONFIG_KEY;
         }
 
-        public override List<MonitorItem> GetMonitorItems(Configuration _config, int interval)
+        public override List<MonitorItem> GetMonitorItems(Configuration config, int interval)
         {
             List<MonitorItem> result = new List<MonitorItem>();
 
@@ -41,7 +41,7 @@ namespace IOTLinkAddon.Service.Monitors
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_UPTIME,
+                Type = config.GetValue("inSeconds", false) ? MonitorItemType.TYPE_RAW : MonitorItemType.TYPE_UPTIME,
                 Topic = "Stats/System/Uptime",
                 Value = Math.Round(_uptimePerformanceCounter.NextValue(), 0)
             });

@@ -1,4 +1,5 @@
 ﻿using IOTLinkAddon.Common;
+using IOTLinkAPI.Configs;
 using IOTLinkAPI.Platform;
 using System.Collections.Generic;
 
@@ -24,7 +25,7 @@ namespace IOTLinkAddon.Service.Monitors
             return AGENT_REQUESTS;
         }
 
-        public override List<MonitorItem> OnAgentResponse(AddonRequestType type, dynamic data, string username)
+        public override List<MonitorItem> OnAgentResponse(Configuration config, AddonRequestType type, dynamic data, string username)
         {
             switch (type)
             {

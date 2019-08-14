@@ -18,7 +18,7 @@ namespace IOTLinkAddon.Service.Monitors
             return CONFIG_KEY;
         }
 
-        public override List<MonitorItem> GetMonitorItems(Configuration _config, int interval)
+        public override List<MonitorItem> GetMonitorItems(Configuration config, int interval)
         {
             List<MonitorItem> result = new List<MonitorItem>();
 

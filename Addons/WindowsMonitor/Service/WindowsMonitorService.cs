@@ -176,7 +176,7 @@ namespace IOTLinkAddon.Service
             {
                 LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
-                List<MonitorItem> items = monitor.GetMonitorItems(_config, GetMonitorInterval(configKey));
+                List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
                 if (items == null)
                     return;
 
@@ -270,7 +270,7 @@ namespace IOTLinkAddon.Service
                 if (string.IsNullOrWhiteSpace(configKey) || !CanRun(configKey))
                     continue;
 
-                List<MonitorItem> items = monitor.OnAgentResponse(requestType, e.Data, e.Username);
+                List<MonitorItem> items = monitor.OnAgentResponse(GetMonitorConfiguration(configKey), requestType, e.Data, e.Username);
                 if (items == null)
                     continue;
 
@@ -327,6 +327,14 @@ namespace IOTLinkAddon.Service
                 return DEFAULT_INTERVAL;
 
             return _config.GetValue($"monitors:{configKey}:interval", DEFAULT_INTERVAL);
+        }
+
+        private Configuration GetMonitorConfiguration(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return null;
+
+            return _config.GetValue($"monitors:{configKey}");
         }
 
         private void SendMonitorValue(string topic, string value, string configKey = null)

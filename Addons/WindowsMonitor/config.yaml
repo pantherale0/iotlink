@@ -90,6 +90,7 @@ monitors:
     enabled: true
     interval: 10
     cacheable: true
+    inSeconds: true
   Uptime:
     enabled: true
     interval: 60

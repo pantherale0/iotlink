@@ -24,7 +24,7 @@ namespace IOTLinkAddon.Service.Monitors
             return AGENT_REQUESTS;
         }
 
-        public override List<MonitorItem> GetMonitorItems(Configuration _config, int interval)
+        public override List<MonitorItem> GetMonitorItems(Configuration config, int interval)
         {
             List<MonitorItem> result = new List<MonitorItem>();
 
@@ -39,12 +39,12 @@ namespace IOTLinkAddon.Service.Monitors
             return result;
         }
 
-        public override List<MonitorItem> OnAgentResponse(AddonRequestType type, dynamic data, string username)
+        public override List<MonitorItem> OnAgentResponse(Configuration config, AddonRequestType type, dynamic data, string username)
         {
             switch (type)
             {
                 case AddonRequestType.REQUEST_IDLE_TIME:
-                    return ParseIdleTimeInformation(data, username);
+                    return ParseIdleTimeInformation(config, data, username);
 
                 default: break;
             }
@@ -52,14 +52,14 @@ namespace IOTLinkAddon.Service.Monitors
             return null;
         }
 
-        private List<MonitorItem> ParseIdleTimeInformation(dynamic data, string username)
+        private List<MonitorItem> ParseIdleTimeInformation(Configuration config, dynamic data, string username)
         {
             List<MonitorItem> result = new List<MonitorItem>();
 
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_RAW,
+                Type = config.GetValue("inSeconds", false) ? MonitorItemType.TYPE_RAW : MonitorItemType.TYPE_UPTIME,
                 Topic = "Stats/System/IdleTime",
                 Value = data.requestData
             });
