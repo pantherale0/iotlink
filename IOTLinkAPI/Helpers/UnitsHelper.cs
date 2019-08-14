@@ -4,6 +4,24 @@ namespace IOTLinkAPI.Helpers
 {
     public abstract class UnitsHelper
     {
+        public static double ConvertSize(long sizeInBytes, string format)
+        {
+            switch (format)
+            {
+                default:
+                case "B":
+                    return sizeInBytes;
+                case "KB":
+                    return BytesToKilobytes(sizeInBytes);
+                case "MB":
+                    return BytesToMegabytes(sizeInBytes);
+                case "GB":
+                    return BytesToGigabytes(sizeInBytes);
+                case "TB":
+                    return BytesToTerabytes(sizeInBytes);
+            }
+        }
+
         public static double BytesToKilobytes(long bytes)
         {
             return Math.Round(bytes / 1024f, 2);

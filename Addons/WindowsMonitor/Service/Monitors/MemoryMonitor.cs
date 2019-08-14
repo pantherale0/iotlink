@@ -33,7 +33,7 @@ namespace IOTLinkAddon.Service.Monitors
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_RAW,
+                Type = MonitorItemType.TYPE_MEMORY_SIZE,
                 Topic = "Stats/Memory/Available",
                 Value = memoryInfo.AvailPhysical
             });
@@ -42,7 +42,7 @@ namespace IOTLinkAddon.Service.Monitors
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_RAW,
+                Type = MonitorItemType.TYPE_MEMORY_SIZE,
                 Topic = "Stats/Memory/Used",
                 Value = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical)
             });
@@ -51,7 +51,7 @@ namespace IOTLinkAddon.Service.Monitors
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_RAW,
+                Type = MonitorItemType.TYPE_MEMORY_SIZE,
                 Topic = "Stats/Memory/Total",
                 Value = memoryInfo.TotalPhysical
             });

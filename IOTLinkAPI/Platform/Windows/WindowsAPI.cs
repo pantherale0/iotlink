@@ -351,13 +351,13 @@ namespace IOTLinkAPI.Platform.Windows
                 MemoryInfo memoryInfo = new MemoryInfo
                 {
                     MemoryLoad = memoryStatusEx.dwMemoryLoad,
-                    AvailPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPhys / MemoryInfo.MEMORY_DIVISOR, 0),
-                    AvailVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailVirtual / MemoryInfo.MEMORY_DIVISOR),
-                    AvailExtendedVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullAvailExtendedVirtual / MemoryInfo.MEMORY_DIVISOR),
-                    AvailPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullAvailPageFile / MemoryInfo.MEMORY_DIVISOR),
-                    TotalPhysical = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPhys / MemoryInfo.MEMORY_DIVISOR),
-                    TotalVirtual = (uint)Math.Round((decimal)memoryStatusEx.ullTotalVirtual / MemoryInfo.MEMORY_DIVISOR),
-                    TotalPageFile = (uint)Math.Round((decimal)memoryStatusEx.ullTotalPageFile / MemoryInfo.MEMORY_DIVISOR),
+                    AvailPhysical = memoryStatusEx.ullAvailPhys,
+                    AvailVirtual = memoryStatusEx.ullAvailVirtual,
+                    AvailExtendedVirtual = memoryStatusEx.ullAvailExtendedVirtual,
+                    AvailPageFile = memoryStatusEx.ullAvailPageFile,
+                    TotalPhysical = memoryStatusEx.ullTotalPhys,
+                    TotalVirtual = memoryStatusEx.ullTotalVirtual,
+                    TotalPageFile = memoryStatusEx.ullTotalPageFile,
                 };
 
                 return memoryInfo;

@@ -19,6 +19,13 @@ namespace IOTLinkAddon.Service
     {
         private static readonly int DEFAULT_INTERVAL = 60;
 
+        private static readonly string DEFAULT_FORMAT_DISK_SIZE = "GB";
+        private static readonly string DEFAULT_FORMAT_MEMORY_SIZE = "MB";
+
+        private static readonly string DEFAULT_FORMAT_DATE = "yyyy-MM-dd";
+        private static readonly string DEFAULT_FORMAT_TIME = "HH:mm:ss";
+        private static readonly string DEFAULT_FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
+
         private Timer _monitorTimer;
         private uint _monitorCounter = 0;
 
@@ -187,7 +194,11 @@ namespace IOTLinkAddon.Service
             switch (item.Type)
             {
                 case MonitorItemType.TYPE_DISK_SIZE:
-                    value = GetSize(MathHelper.ToLong(item.Value, 0L)).ToString(CultureInfo.InvariantCulture);
+                    value = FormatSizeObject(item.ConfigKey, "diskFormat", DEFAULT_FORMAT_DISK_SIZE, item.Value);
+                    break;
+
+                case MonitorItemType.TYPE_MEMORY_SIZE:
+                    value = FormatSizeObject(item.ConfigKey, "memoryFormat", DEFAULT_FORMAT_MEMORY_SIZE, item.Value);
                     break;
 
                 case MonitorItemType.TYPE_NETWORK_SPEED:
@@ -196,13 +207,13 @@ namespace IOTLinkAddon.Service
                     break;
 
                 case MonitorItemType.TYPE_DATE:
-                    value = FormatDateObject(item.Value, "yyyy-MM-dd");
+                    value = FormatDateObject(item.Value, GetMonitorFormat(item.ConfigKey, "dateFormat", DEFAULT_FORMAT_DATE));
                     break;
                 case MonitorItemType.TYPE_TIME:
-                    value = FormatDateObject(item.Value, "HH:mm:ss");
+                    value = FormatDateObject(item.Value, GetMonitorFormat(item.ConfigKey, "timeFormat", DEFAULT_FORMAT_TIME));
                     break;
                 case MonitorItemType.TYPE_DATETIME:
-                    value = FormatDateObject(item.Value, "yyyy-MM-dd HH:mm:ss");
+                    value = FormatDateObject(item.Value, GetMonitorFormat(item.ConfigKey, "dateTimeFormat", DEFAULT_FORMAT_DATETIME));
                     break;
 
                 case MonitorItemType.TYPE_RAW:
@@ -216,6 +227,18 @@ namespace IOTLinkAddon.Service
             }
 
             SendMonitorValue(item.Topic, value, item.ConfigKey);
+        }
+
+        private string FormatSizeObject(string configKey, string formatKey, string defaultFormat, object value)
+        {
+            long sizeInBytes = MathHelper.ToLong(value, 0L);
+            string formatStr = GetMonitorFormat(configKey, formatKey, defaultFormat);
+
+            string format = formatStr.Contains(":") ? formatStr.Split(':')[0] : formatStr;
+            int roundDigits = formatStr.Contains(":") ? MathHelper.ToInteger(formatStr.Split(':')[1]) : 0;
+
+            double size = UnitsHelper.ConvertSize(sizeInBytes, format);
+            return Math.Round(size, roundDigits).ToString(CultureInfo.InvariantCulture);
         }
 
         private string FormatDateObject(object value, string format)
@@ -256,41 +279,54 @@ namespace IOTLinkAddon.Service
             }
         }
 
-        private double GetSize(long sizeInBytes)
-        {
-            switch (_config.GetValue("sizeFormat", "GB"))
-            {
-                default:
-                case "MB":
-                    return UnitsHelper.BytesToMegabytes(sizeInBytes);
-
-                case "GB":
-                    return UnitsHelper.BytesToGigabytes(sizeInBytes);
-
-                case "TB":
-                    return UnitsHelper.BytesToTerabytes(sizeInBytes);
-            }
-        }
-
         private bool CanRun(string configKey)
         {
-            var key = string.Format("monitors:{0}:enabled", configKey);
-            if (_config.GetValue(key, false) == false)
+            if (!GetMonitorEnabled(configKey))
             {
                 LoggerHelper.Verbose("{0} monitor disabled.", configKey);
                 return false;
             }
 
-            if ((_monitorCounter % GetMonitorInterval(key)) != 0)
+            if ((_monitorCounter % GetMonitorInterval(configKey)) != 0)
                 return false;
 
             return true;
         }
 
+        private string GetMonitorFormat(string configKey, string formatKey, string defaultValue)
+        {
+            if (string.IsNullOrWhiteSpace(configKey) || string.IsNullOrWhiteSpace(formatKey))
+                return defaultValue;
+
+            string value = _config.GetValue($"monitors:{configKey}:formats:{formatKey}", null);
+            if (string.IsNullOrWhiteSpace(value))
+                value = _config.GetValue($"formats:{formatKey}", defaultValue);
+
+            return value;
+        }
+
+        private bool GetMonitorEnabled(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return false;
+
+            return _config.GetValue($"monitors:{configKey}:enabled", false);
+        }
+
+        private bool GetMonitorCacheable(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return false;
+
+            return _config.GetValue($"monitors:{configKey}:cacheable", false);
+        }
+
         private int GetMonitorInterval(string configKey)
         {
-            var key = string.Format("monitors:{0}:interval", configKey);
-            return _config.GetValue(key, DEFAULT_INTERVAL);
+            if (string.IsNullOrWhiteSpace(configKey))
+                return DEFAULT_INTERVAL;
+
+            return _config.GetValue($"monitors:{configKey}:interval", DEFAULT_INTERVAL);
         }
 
         private void SendMonitorValue(string topic, string value, string configKey = null)
@@ -298,8 +334,7 @@ namespace IOTLinkAddon.Service
             if (string.IsNullOrWhiteSpace(topic))
                 return;
 
-            var key = string.Format("monitors:{0}:cacheable", configKey);
-            if (configKey != null && _config.GetValue(key, false) == true)
+            if (GetMonitorCacheable(configKey))
             {
                 if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)
                     return;
