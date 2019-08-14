@@ -41,7 +41,7 @@ namespace IOTLinkAddon.Service.Monitors
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_TIME,
+                Type = MonitorItemType.TYPE_UPTIME,
                 Topic = "Stats/System/Uptime",
                 Value = Math.Round(_uptimePerformanceCounter.NextValue(), 0)
             });

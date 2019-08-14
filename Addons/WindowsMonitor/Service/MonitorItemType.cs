@@ -10,6 +10,7 @@
         TYPE_NETWORK_SIZE,
         TYPE_DATE,
         TYPE_TIME,
-        TYPE_DATETIME
+        TYPE_DATETIME,
+        TYPE_UPTIME
     }
 }

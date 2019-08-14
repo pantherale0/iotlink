@@ -216,6 +216,11 @@ namespace IOTLinkAddon.Service
                     value = FormatDateObject(item.Value, GetMonitorFormat(item.ConfigKey, "dateTimeFormat", DEFAULT_FORMAT_DATETIME));
                     break;
 
+                case MonitorItemType.TYPE_UPTIME:
+                    TimeSpan uptime = TimeSpan.FromSeconds(MathHelper.ToDouble(item.Value));
+                    value = uptime.ToString(@"dd\:hh\:mm\:ss", CultureInfo.InvariantCulture);
+                    break;
+
                 case MonitorItemType.TYPE_RAW:
                 default:
                     value = item.Value.ToString();
@@ -248,11 +253,6 @@ namespace IOTLinkAddon.Service
 
             if (value is DateTimeOffset)
                 return ((DateTimeOffset)value).ToString(format, CultureInfo.InvariantCulture);
-
-            if (value is long || value is int)
-            {
-                long v = (value is int) ? (long)value : (long)value;
-            }
 
             return value.ToString();
         }
