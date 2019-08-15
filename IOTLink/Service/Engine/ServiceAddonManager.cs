@@ -489,8 +489,12 @@ namespace IOTLinkService.Service.Engine
         {
             AddonInfo addonInfo = GetAddonById(addonId);
             if (addonInfo == null)
+            {
+                LoggerHelper.Debug("Raise_OnAgentResponse - AddonId {0} not found", addonId);
                 return;
+            }
 
+            LoggerHelper.Debug("Raise_OnAgentResponse - AddonId {0} receiving response from agent", addonId);
             addonInfo.ServiceAddon.Raise_OnAgentResponse(this, new AgentAddonResponseEventArgs
             {
                 Username = username,

@@ -270,12 +270,7 @@ namespace IOTLinkService.Service.WebSockets.Server
         private void ParsePingResponse(string clientId)
         {
             if (!HasClient(clientId))
-            {
-                LoggerHelper.Warn("ParsePingResponse - Received ping response from an unknown client: {0}", clientId);
                 return;
-            }
-
-            LoggerHelper.Debug("ParsePingResponse - Ping received from client {0}", clientId);
 
             WebSocketClient client = GetClientById(clientId);
             client.LastAck = DateTime.Now;

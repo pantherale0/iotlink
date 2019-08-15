@@ -213,7 +213,7 @@ namespace IOTLinkAgent.Agent.WSClient
             }
 
             RequestTypeServer type = content.type;
-            if(content.data == null && type != RequestTypeServer.REQUEST_PING)
+            if (content.data == null && type != RequestTypeServer.REQUEST_PING)
             {
                 LoggerHelper.Trace("ParseServerRequest - Invalid message content.");
                 return;
@@ -302,7 +302,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
 
-            LoggerHelper.Verbose("Sending message to server (Type: {0})", messageType.ToString());
+            LoggerHelper.Verbose("Sending message to server (Type: {0})", contentType.ToString());
             LoggerHelper.DataDump("Message Payload: {0}", payload);
 
             _client.Send(payload);

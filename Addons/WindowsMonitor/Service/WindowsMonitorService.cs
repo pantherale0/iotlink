@@ -158,10 +158,10 @@ namespace IOTLinkAddon.Service
             {
                 foreach (KeyValuePair<string, AddonRequestType> entry in agentRequests)
                 {
-                    if (!CanRun(entry.Key))
+                    if (!CheckMonitorEnabled(entry.Key) || !CheckMonitorInterval(entry.Key))
                         continue;
 
-                    LoggerHelper.Debug("{0} Monitor - Requesting Agent information", entry.Key);
+                    LoggerHelper.Debug("{0} Monitor - Requesting Agent information ({1})", entry.Key, entry.Value.ToString());
 
                     dynamic addonData = new ExpandoObject();
                     addonData.requestType = entry.Value;
@@ -172,7 +172,7 @@ namespace IOTLinkAddon.Service
 
             // Get monitor sensors
             string configKey = monitor.GetConfigKey();
-            if (CanRun(configKey))
+            if (CheckMonitorEnabled(configKey) && CheckMonitorInterval(configKey))
             {
                 LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
@@ -267,11 +267,12 @@ namespace IOTLinkAddon.Service
 
                 AddonRequestType requestType = (AddonRequestType)e.Data.requestType;
                 string configKey = agentRequests.FirstOrDefault(x => x.Value == requestType).Key;
-                if (string.IsNullOrWhiteSpace(configKey) || !CanRun(configKey))
+
+                if (string.IsNullOrWhiteSpace(configKey) || !CheckMonitorEnabled(configKey))
                     continue;
 
                 List<MonitorItem> items = monitor.OnAgentResponse(GetMonitorConfiguration(configKey), requestType, e.Data, e.Username);
-                if (items == null)
+                if (items == null || items.Count == 0)
                     continue;
 
                 foreach (MonitorItem item in items)
@@ -279,13 +280,18 @@ namespace IOTLinkAddon.Service
             }
         }
 
-        private bool CanRun(string configKey)
+        private bool CheckMonitorEnabled(string configKey)
         {
-            if (!GetMonitorEnabled(configKey))
-            {
-                LoggerHelper.Verbose("{0} monitor disabled.", configKey);
+            if (string.IsNullOrWhiteSpace(configKey))
                 return false;
-            }
+
+            return GetMonitorEnabled(configKey);
+        }
+
+        private bool CheckMonitorInterval(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return false;
 
             if ((_monitorCounter % GetMonitorInterval(configKey)) != 0)
                 return false;

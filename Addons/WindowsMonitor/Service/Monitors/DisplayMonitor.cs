@@ -1,5 +1,6 @@
 ﻿using IOTLinkAddon.Common;
 using IOTLinkAPI.Configs;
+using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using System.Collections.Generic;
 
@@ -45,6 +46,7 @@ namespace IOTLinkAddon.Service.Monitors
         {
             List<MonitorItem> result = new List<MonitorItem>();
 
+            LoggerHelper.Verbose("DisplayMonitor - Received Display Informations");
             List<DisplayInfo> displayInfos = data.requestData.ToObject<List<DisplayInfo>>();
             for (var i = 0; i < displayInfos.Count; i++)
             {
@@ -76,6 +78,7 @@ namespace IOTLinkAddon.Service.Monitors
         {
             List<MonitorItem> result = new List<MonitorItem>();
 
+            LoggerHelper.Verbose("DisplayMonitor - Received Display Screenshot");
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
