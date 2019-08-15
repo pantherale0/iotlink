@@ -2,6 +2,7 @@
 {
     public enum ResponseTypeClient
     {
+        RESPONSE_PING,
         RESPONSE_ADDON
     }
 }

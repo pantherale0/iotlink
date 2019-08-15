@@ -1,6 +1,7 @@
 ﻿using IOTLinkAPI.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
@@ -92,20 +93,39 @@ namespace IOTLinkService.Service.WebSockets.Server
             }
         }
 
+        internal async void DisconnectClient(string clientId)
+        {
+            var entries = _clients.Where(x => x.Value.CompareTo(clientId) == 0);
+
+            foreach (var entry in entries)
+            {
+                try
+                {
+                    WebSocket client = entry.Key;
+                    await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Error("Error while trying to disconnect client: {0}", ex);
+                }
+            }
+
+            _clients = _clients.Except(entries).ToDictionary(x => x.Key, x => x.Value);
+        }
+
         internal void Broadcast(string payload)
         {
-            foreach (KeyValuePair<WebSocket, string> client in _clients)
-            {
-                SendMessage(client.Key, payload);
-            }
+            foreach (WebSocket client in _clients.Keys)
+                SendMessage(client, payload);
         }
 
         internal void SendMessage(string clientId, string payload)
         {
-            foreach (KeyValuePair<WebSocket, string> client in _clients)
+            var entries = _clients.Where(x => x.Value.CompareTo(clientId) == 0);
+            foreach (var entry in entries)
             {
-                if (client.Value.CompareTo(clientId) == 0)
-                    SendMessage(client.Key, payload);
+                WebSocket client = entry.Key;
+                SendMessage(client, payload);
             }
         }
 

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Timers;
 
 namespace IOTLinkService.Service.WebSockets.Server
 {
@@ -18,7 +19,9 @@ namespace IOTLinkService.Service.WebSockets.Server
 
         private WebSocketServer _server;
 
-        private Dictionary<string, string> _clients = new Dictionary<string, string>();
+        private List<WebSocketClient> _clients = new List<WebSocketClient>();
+
+        private Timer _pingTimer;
 
         public static WebSocketServerManager GetInstance()
         {
@@ -44,6 +47,8 @@ namespace IOTLinkService.Service.WebSockets.Server
             _server = new WebSocketServer();
             _server.OnMessageHandler += OnMessage;
             _server.Start(WEBSOCKET_URI);
+
+            SetupTimer();
         }
 
         internal void Disconnect()
@@ -58,6 +63,75 @@ namespace IOTLinkService.Service.WebSockets.Server
         internal bool IsConnected()
         {
             return _server != null;
+        }
+
+        protected void SetupTimer()
+        {
+            if (_pingTimer == null)
+            {
+                _pingTimer = new Timer();
+                _pingTimer.Elapsed += new ElapsedEventHandler(OnPingTimerElapsed);
+            }
+
+            _pingTimer.Stop();
+            _pingTimer.Interval = 10000;
+            _pingTimer.Start();
+        }
+
+        private void OnPingTimerElapsed(object sender, ElapsedEventArgs e)
+        {
+            if (!IsConnected())
+                return;
+
+            try
+            {
+                _pingTimer.Stop();
+
+                // Send ping request for all clients
+                SendRequest(RequestTypeServer.REQUEST_PING);
+
+                // Handle all clients which doesn't respond for about 30 seconds.
+                List<WebSocketClient> timedOutClients = _clients.FindAll(x => (DateTime.Now - x.LastAck).TotalSeconds > 30);
+                if (timedOutClients != null && timedOutClients.Count > 0)
+                {
+                    foreach (WebSocketClient client in timedOutClients)
+                    {
+                        LoggerHelper.Verbose("Disconnecting {0} - Ping timeout", client.ClientId);
+                        _server.DisconnectClient(client.ClientId);
+                    }
+
+                    // New list without the removed clients
+                    _clients = _clients.Except(timedOutClients).ToList();
+                }
+            }
+            finally
+            {
+                _pingTimer.Start();
+            }
+        }
+
+        protected bool HasClient(string clientId)
+        {
+            if (string.IsNullOrWhiteSpace(clientId))
+                return false;
+
+            return _clients.Any(x => string.Compare(x.ClientId, clientId) == 0);
+        }
+
+        protected WebSocketClient GetClientById(string clientId)
+        {
+            if (string.IsNullOrWhiteSpace(clientId))
+                return null;
+
+            return _clients.FirstOrDefault(x => string.Compare(x.ClientId, clientId) == 0);
+        }
+
+        protected WebSocketClient GetClientByUsername(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return null;
+
+            return _clients.FirstOrDefault(x => string.Compare(x.UserName, username) == 0);
         }
 
         protected void OnMessage(object sender, WebSocketMessageEventArgs e)
@@ -135,11 +209,19 @@ namespace IOTLinkService.Service.WebSockets.Server
         internal void ParseClientConnected(string clientId, dynamic data)
         {
             string username = data.username;
-            if (!string.IsNullOrWhiteSpace(username))
+            if (string.IsNullOrWhiteSpace(username) || HasClient(clientId))
+                return;
+
+            username = username.Trim().ToLowerInvariant();
+            WebSocketClient client = new WebSocketClient
             {
-                username = username.Trim().ToLowerInvariant();
-                _clients[username] = clientId;
-            }
+                ClientId = clientId,
+                UserName = username,
+                State = WebSocketClientState.STATE_CONNECTED,
+                LastAck = DateTime.Now
+            };
+
+            _clients.Add(client);
         }
 
         internal void ParsePublishMessage(dynamic data)
@@ -155,16 +237,26 @@ namespace IOTLinkService.Service.WebSockets.Server
 
         internal void ParseClientResponse(string clientId, dynamic content)
         {
-            if (content == null || content.type == null || content.data == null)
+            if (content == null || content.type == null)
+            {
+                LoggerHelper.Trace("ParseClientResponse - Invalid message.");
+                return;
+            }
+
+            ResponseTypeClient type = content.type;
+            if (content.data == null && type != ResponseTypeClient.RESPONSE_PING)
             {
                 LoggerHelper.Trace("ParseClientResponse - Invalid message content.");
                 return;
             }
 
-            ResponseTypeClient type = content.type;
             dynamic data = content.data;
             switch (type)
             {
+                case ResponseTypeClient.RESPONSE_PING:
+                    ParsePingResponse(clientId);
+                    break;
+
                 case ResponseTypeClient.RESPONSE_ADDON:
                     ParseAddonResponse(clientId, data);
                     break;
@@ -175,6 +267,20 @@ namespace IOTLinkService.Service.WebSockets.Server
             }
         }
 
+        private void ParsePingResponse(string clientId)
+        {
+            if (!HasClient(clientId))
+            {
+                LoggerHelper.Warn("ParsePingResponse - Received ping response from an unknown client: {0}", clientId);
+                return;
+            }
+
+            LoggerHelper.Debug("ParsePingResponse - Ping received from client {0}", clientId);
+
+            WebSocketClient client = GetClientById(clientId);
+            client.LastAck = DateTime.Now;
+        }
+
         private void ParseAddonResponse(string clientId, dynamic data)
         {
             string addonId = data.addonId;
@@ -183,10 +289,10 @@ namespace IOTLinkService.Service.WebSockets.Server
             if (string.IsNullOrWhiteSpace(addonId))
                 return;
 
-            if (!_clients.ContainsValue(clientId))
+            if (!HasClient(clientId))
                 return;
 
-            string username = _clients.First(x => x.Value == clientId).Key;
+            string username = GetClientById(clientId).UserName;
             ServiceAddonManager.GetInstance().Raise_OnAgentResponse(username, addonId, addonData);
         }
 
@@ -212,15 +318,23 @@ namespace IOTLinkService.Service.WebSockets.Server
             msg.content.data = data;
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
-            LoggerHelper.Verbose("Sending message to clients");
+            LoggerHelper.Verbose("Sending message to clients (Type: {0})", type.ToString());
             LoggerHelper.DataDump("Message Payload: {0}", payload);
 
             if (username == null)
+            {
                 _server.Broadcast(payload);
-            else if (_clients.ContainsKey(username))
-                _server.SendMessage(_clients[username], payload);
-            else
+                return;
+            }
+
+            WebSocketClient client = GetClientByUsername(username);
+            if (client == null)
+            {
                 LoggerHelper.Warn("WebSocketServer - Agent from {0} not found.", username);
+                return;
+            }
+
+            _server.SendMessage(client.ClientId, payload);
         }
     }
 }

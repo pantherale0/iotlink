@@ -109,6 +109,8 @@
     <Compile Include="Service\Loaders\AssemblyLoader.cs" />
     <Compile Include="Service\Engine\ServiceMain.cs" />
     <Compile Include="Service\MQTT\MQTTClient.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketClient.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketClientState.cs" />
     <Compile Include="Service\WebSockets\Server\WebSocketHandlers.cs" />
     <Compile Include="Service\WebSockets\Server\WebSocketMessageEventArgs.cs" />
     <Compile Include="Service\WebSockets\Server\WebSocketServer.cs" />
