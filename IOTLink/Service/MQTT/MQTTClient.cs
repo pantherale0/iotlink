@@ -234,13 +234,15 @@ namespace IOTLinkService.Service.Engine.MQTT
                     _client.DisconnectAsync().ConfigureAwait(false);
                     Task.Delay(TimeSpan.FromSeconds(5));
                 }
-
-                // Remove client reference.
-                _client = null;
             }
             catch (Exception ex)
             {
                 LoggerHelper.Error("Error while trying to disconnect. {0}", ex.Message);
+            }
+            finally
+            {
+                // Remove client reference.
+                _client = null;
             }
         }
 
