@@ -228,6 +228,7 @@ namespace IOTLinkService.Service.Engine.MQTT
                     {
                         LoggerHelper.Verbose("Sending LWT message before disconnecting.");
                         SendLWTDisconnect();
+                        Task.Delay(TimeSpan.FromSeconds(1));
                     }
 
                     _client.DisconnectAsync().ConfigureAwait(false);
@@ -481,7 +482,10 @@ namespace IOTLinkService.Service.Engine.MQTT
         {
             try
             {
-                if (IsLastWillEnabled() && _client.IsConnected && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                if (_client == null || !_client.IsConnected)
+                    return;
+
+                if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
                     _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
             }
             catch (Exception ex)
