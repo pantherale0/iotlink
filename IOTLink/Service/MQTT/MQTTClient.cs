@@ -6,6 +6,7 @@ using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Exceptions;
 using System;
 using System.Text;
 using System.Threading.Tasks;
@@ -186,7 +187,11 @@ namespace IOTLinkService.Service.Engine.MQTT
                 }
                 catch (Exception ex)
                 {
-                    LoggerHelper.Info("Connection failed: {0}", ex.ToString());
+                    if (ex is MqttCommunicationException)
+                        LoggerHelper.Info("Connection to the broker failed.");
+                    else
+                        LoggerHelper.Info("Connection failed: {0}", ex.ToString());
+
                     tries++;
 
                     double waitTime = Math.Min(5 * tries, 60);
@@ -294,6 +299,15 @@ namespace IOTLinkService.Service.Engine.MQTT
                 MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
                 await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
             }
+            catch (MqttCommunicationTimedOutException)
+            {
+                LoggerHelper.Debug("MQTT connection with the server has been timed out.");
+                if (!_preventReconnect)
+                {
+                    LoggerHelper.Verbose("Reconnecting...");
+                    Connect();
+                }
+            }
             catch (Exception ex)
             {
                 LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
@@ -334,6 +348,15 @@ namespace IOTLinkService.Service.Engine.MQTT
 
                 MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
                 await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                LoggerHelper.Debug("MQTT connection with the server has been timed out.");
+                if (!_preventReconnect)
+                {
+                    LoggerHelper.Verbose("Reconnecting...");
+                    Connect();
+                }
             }
             catch (Exception ex)
             {
