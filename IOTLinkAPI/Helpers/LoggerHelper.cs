@@ -129,8 +129,8 @@ namespace IOTLinkAPI.Helpers
             if (string.IsNullOrWhiteSpace(messageTag) || string.IsNullOrWhiteSpace(message))
                 return;
 
-            ApplicationConfig config = ConfigHelper.GetEngineConfig();
-            if (config == null || config.Logging == null || !config.Logging.Enabled || config.Logging.Level < logLevel && logLevel != LogLevel.SYSTEM)
+            Configuration config = ApplicationConfigHelper.GetEngineConfig();
+            if (config == null || config.GetValue("logging:enabled", true) == false || (LogLevel)config.GetValue("logging:level", 4) < logLevel && logLevel != LogLevel.SYSTEM)
                 return;
 
             string formatedMessage;

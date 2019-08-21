@@ -115,9 +115,12 @@
     <Compile Include="Addons\IAddonManager.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
+    <Compile Include="Configs\Configuration.cs" />
     <Compile Include="Configs\ConfigInfo.cs" />
+    <Compile Include="Configs\ConfigurationManager.cs" />
     <Compile Include="Configs\MqttConfig.cs" />
     <Compile Include="Helpers\MathHelper.cs" />
+    <Compile Include="Helpers\UnitsHelper.cs" />
     <Compile Include="Platform\ConfigType.cs" />
     <Compile Include="Platform\Events\AgentAddonRequestEventArgs.cs" />
     <Compile Include="Platform\Events\AgentAddonResponseEventArgs.cs" />

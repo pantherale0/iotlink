@@ -50,7 +50,7 @@ namespace IOTLinkAgent.Agent.WSClient
         {
             if (string.IsNullOrWhiteSpace(_webSocketUri) || _connecting)
             {
-                LoggerHelper.Verbose("WebSocketURI is empty/null or client is already connecting. Skipping");
+                LoggerHelper.Verbose("WebSocketURI is empty, null or client is already connecting. Skipping");
                 return;
             }
 
@@ -81,10 +81,16 @@ namespace IOTLinkAgent.Agent.WSClient
                         break;
                 }
 
-                int waitTime = Math.Min(5 * tries++, 60);
-                LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
-                Thread.Sleep(waitTime * 1000);
-            } while (true);
+                LoggerHelper.Info("Waiting {0} seconds before trying again...", 5);
+                Thread.Sleep(5000);
+            } while (tries < 5);
+
+            if (!_client.IsAlive)
+            {
+                LoggerHelper.Verbose("Connection not successful after 5 tries. Killing agent.");
+                Environment.Exit(-1);
+                return;
+            }
 
             _connecting = false;
             _preventReconnect = false;
@@ -133,25 +139,20 @@ namespace IOTLinkAgent.Agent.WSClient
         private void OnClose(object sender, CloseEventArgs arg)
         {
             LoggerHelper.Debug("WebSocketClient - Connection Closed (Clean: {0}).", arg.WasClean);
-            if (!_preventReconnect)
-            {
-                LoggerHelper.Verbose("Reconnecting...");
-                Connect();
-            }
+            Environment.Exit(arg.WasClean ? 0 : -1);
         }
 
         private void OnError(object sender, ErrorEventArgs arg)
         {
             LoggerHelper.Error("WebSocketClient - Error: {0}", arg.Message);
-            if (!_preventReconnect)
-            {
-                LoggerHelper.Verbose("Reconnecting...");
-                Connect();
-            }
+            Environment.Exit(-1);
         }
 
         private void OnMessageReceived(object sender, MessageEventArgs e)
         {
+            if (e.Type == Opcode.Close)
+                return;
+
             if (e.RawData == null || e.RawData.Length == 0 || !e.IsText || string.IsNullOrWhiteSpace(e.Data))
             {
                 LoggerHelper.Trace("OnMessageReceived - Invalid message content [1].");
@@ -205,16 +206,26 @@ namespace IOTLinkAgent.Agent.WSClient
 
         private void ParseServerRequest(dynamic content)
         {
-            if (content == null || content.type == null || content.data == null)
+            if (content == null || content.type == null)
+            {
+                LoggerHelper.Trace("ParseServerRequest - Invalid message.");
+                return;
+            }
+
+            RequestTypeServer type = content.type;
+            if (content.data == null && type != RequestTypeServer.REQUEST_PING)
             {
                 LoggerHelper.Trace("ParseServerRequest - Invalid message content.");
                 return;
             }
 
-            RequestTypeServer type = content.type;
             dynamic data = content.data;
             switch (type)
             {
+                case RequestTypeServer.REQUEST_PING:
+                    ParsePingRequest();
+                    break;
+
                 case RequestTypeServer.REQUEST_SHOW_MESSAGE:
                     ParseShowMessage(data);
                     break;
@@ -231,6 +242,13 @@ namespace IOTLinkAgent.Agent.WSClient
                     LoggerHelper.Warn("ParseServerRequest - Invalid Request Type: {0}", type);
                     break;
             }
+        }
+
+        private void ParsePingRequest()
+        {
+            LoggerHelper.Verbose("ParsePingRequest - Ping request received.");
+
+            SendResponse(ResponseTypeClient.RESPONSE_PING);
         }
 
         private void ParseShowMessage(dynamic data)
@@ -284,7 +302,7 @@ namespace IOTLinkAgent.Agent.WSClient
 
             string payload = JsonConvert.SerializeObject(msg, Formatting.None);
 
-            LoggerHelper.Verbose("Sending message to server");
+            LoggerHelper.Verbose("Sending message to server (Type: {0})", contentType.ToString());
             LoggerHelper.DataDump("Message Payload: {0}", payload);
 
             _client.Send(payload);

@@ -28,7 +28,8 @@ namespace IOTLinkService.Service.Engine
         private ServiceMain()
         {
             LoggerHelper.Trace("ServiceMain instance created.");
-            ConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
+            ApplicationConfigHelper.Init();
+            ApplicationConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
         }
 
         private void OnProcessMonitorTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -42,7 +43,6 @@ namespace IOTLinkService.Service.Engine
         {
             if (_processMonitorTimer == null)
             {
-                // Agent Monitor
                 _processMonitorTimer = new System.Timers.Timer();
                 _processMonitorTimer.Interval = 5 * 1000;
                 _processMonitorTimer.Elapsed += OnProcessMonitorTimerElapsed;
@@ -55,6 +55,12 @@ namespace IOTLinkService.Service.Engine
 
         public void StopApplication()
         {
+            if (_processMonitorTimer != null)
+            {
+                _processMonitorTimer.Stop();
+                _processMonitorTimer = null;
+            }
+
             AgentManager.GetInstance().StopAgents();
             LoggerHelper.GetInstance().Flush();
         }

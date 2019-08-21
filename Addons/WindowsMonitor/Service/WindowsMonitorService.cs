@@ -1,75 +1,95 @@
 ﻿using IOTLinkAddon.Common;
+using IOTLinkAddon.Service.Monitors;
 using IOTLinkAPI.Addons;
+using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Timers;
-using System.Windows.Forms;
 
 namespace IOTLinkAddon.Service
 {
     public class WindowsMonitorService : ServiceAddon
     {
-        private System.Timers.Timer _monitorTimer;
+        private static readonly int DEFAULT_INTERVAL = 60;
+
+        private static readonly string DEFAULT_FORMAT_DISK_SIZE = "GB";
+        private static readonly string DEFAULT_FORMAT_MEMORY_SIZE = "MB";
+
+        private static readonly string DEFAULT_FORMAT_DATE = "yyyy-MM-dd";
+        private static readonly string DEFAULT_FORMAT_TIME = "HH:mm:ss";
+        private static readonly string DEFAULT_FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
+
+        private Timer _monitorTimer;
         private uint _monitorCounter = 0;
 
         private string _configPath;
-        private WindowsMonitorConfig _config;
+        private Configuration _config;
 
-        private PerformanceCounter _cpuPerformanceCounter;
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
-        private string _currentUser = "SYSTEM";
-
-        //to store how much was transferred last time, initialized to prevent null reference exception
-        private long[] _lastBytesSent = new long[0];
-        private long[] _lastBytesReceived = new long[0];
+        private readonly List<IMonitor> monitors = new List<IMonitor>()
+        {
+            new CPUMonitor(),
+            new MemoryMonitor(),
+            new PowerMonitor(),
+            new MediaMonitor(),
+            new NetworkMonitor(),
+            new StorageMonitor(),
+            new SystemMonitor(),
+            new UptimeMonitor(),
+            new DisplayMonitor()
+        };
 
         public override void Init(IAddonManager addonManager)
         {
             base.Init(addonManager);
 
+            var cfgManager = ConfigurationManager.GetInstance();
             _configPath = Path.Combine(this._currentPath, "config.yaml");
-            ConfigHelper.SetReloadHandler<WindowsMonitorConfig>(_configPath, OnConfigReload);
-
-            _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
-            _currentUser = PlatformHelper.GetCurrentUsername();
-
-            _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-            _cpuPerformanceCounter.NextValue();
+            _config = cfgManager.GetConfiguration(_configPath);
+            cfgManager.SetReloadHandler(_configPath, OnConfigReload);
 
             OnSessionChangeHandler += OnSessionChange;
             OnConfigReloadHandler += OnConfigReload;
             OnAgentResponseHandler += OnAgentResponse;
-            OnRefreshRequestedHandler += OnRefreshRequested;
+            OnMQTTConnectedHandler += OnClearEvent;
+            OnRefreshRequestedHandler += OnClearEvent;
 
             SetupTimers();
         }
 
-        private void OnRefreshRequested(object sender, EventArgs e)
+        private void OnClearEvent(object sender, EventArgs e)
         {
-            LoggerHelper.Verbose("Refresh requested");
+            LoggerHelper.Verbose("Event {0} Received. Clearing cache and resending information.", e.GetType().ToString());
+
             _cache.Clear();
             SendAllInformation();
         }
 
         private void SetupTimers()
         {
-            if (_config == null || !_config.Enabled)
+            if (_config == null || !_config.GetValue("enabled", false))
             {
                 LoggerHelper.Info("System monitor is disabled.");
+                if (_monitorTimer != null)
+                {
+                    _monitorTimer.Stop();
+                    _monitorTimer = null;
+                }
+
                 return;
             }
 
             if (_monitorTimer == null)
             {
-                _monitorTimer = new System.Timers.Timer();
+                _monitorTimer = new Timer();
                 _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
             }
 
@@ -85,7 +105,9 @@ namespace IOTLinkAddon.Service
             if (e.ConfigType != ConfigType.CONFIGURATION_ADDON)
                 return;
 
-            _config = ConfigHelper.GetConfiguration<WindowsMonitorConfig>(_configPath);
+            LoggerHelper.Verbose("Reloading configuration");
+
+            _config = ConfigurationManager.GetInstance().GetConfiguration(_configPath);
             SetupTimers();
         }
 
@@ -94,18 +116,6 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
 
             GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
-
-            if (e.Reason == System.ServiceProcess.SessionChangeReason.SessionLogon || e.Reason == System.ServiceProcess.SessionChangeReason.SessionUnlock)
-            {
-                _currentUser = e.Username;
-                SendCurrentUserInfo();
-            }
-
-            if (e.Reason == System.ServiceProcess.SessionChangeReason.SessionLogoff || e.Reason == System.ServiceProcess.SessionChangeReason.SessionLock)
-            {
-                _currentUser = "SYSTEM";
-                SendCurrentUserInfo();
-            }
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
@@ -126,17 +136,9 @@ namespace IOTLinkAddon.Service
             {
                 _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
 
-                SendCPUInfo();
-                SendMemoryInfo();
-                SendPowerInfo();
-                SendHardDriveInfo();
-                SendCurrentUserInfo();
-                SendNetworkInfo();
-                SendMediaInfo();
-                SendUptimeInfo();
-                RequestAgentIdleTime();
-                RequestAgentDisplayInfo();
-                RequestAgentDisplayScreenshot();
+                // Execute Monitors
+                foreach (IMonitor monitor in monitors)
+                    ExecuteMonitor(monitor);
             }
             catch (Exception ex)
             {
@@ -148,333 +150,197 @@ namespace IOTLinkAddon.Service
             }
         }
 
-        private void SendCPUInfo()
+        private void ExecuteMonitor(IMonitor monitor)
         {
-            const string configKey = "CPU";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-            string cpuUsage = Math.Round(_cpuPerformanceCounter.NextValue(), 0).ToString();
-            SendMonitorValue("Stats/CPU/Usage", cpuUsage, configKey);
-        }
-
-        private void SendMemoryInfo()
-        {
-            const string configKey = "Memory";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            MemoryInfo memoryInfo = PlatformHelper.GetMemoryInformation();
-            string memoryUsage = memoryInfo.MemoryLoad.ToString();
-            string memoryTotal = memoryInfo.TotalPhysical.ToString();
-            string memoryAvailable = memoryInfo.AvailPhysical.ToString();
-            string memoryUsed = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical).ToString();
-
-            SendMonitorValue("Stats/Memory/Usage", memoryUsage, configKey);
-            SendMonitorValue("Stats/Memory/Available", memoryAvailable, configKey);
-            SendMonitorValue("Stats/Memory/Used", memoryUsed, configKey);
-            SendMonitorValue("Stats/Memory/Total", memoryTotal, configKey);
-        }
-
-        private void SendPowerInfo()
-        {
-            const string configKey = "Power";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            PowerStatus powerStatus = SystemInformation.PowerStatus;
-            string powerLineStatus = powerStatus.PowerLineStatus.ToString();
-            string batteryChargeStatus = powerStatus.BatteryChargeStatus.ToString();
-            string batteryFullLifetime = powerStatus.BatteryFullLifetime.ToString();
-            string batteryLifePercent = (powerStatus.BatteryLifePercent * 100).ToString();
-            string batteryLifeRemaining = powerStatus.BatteryLifeRemaining.ToString();
-
-            SendMonitorValue("Stats/Power/Status", powerLineStatus, configKey);
-            SendMonitorValue("Stats/Battery/Status", batteryChargeStatus, configKey);
-            SendMonitorValue("Stats/Battery/FullLifetime", batteryFullLifetime, configKey);
-            SendMonitorValue("Stats/Battery/RemainingTime", batteryLifeRemaining, configKey);
-            SendMonitorValue("Stats/Battery/RemainingPercent", batteryLifePercent, configKey);
-        }
-
-        private void SendHardDriveInfo()
-        {
-            const string configKey = "HardDrive";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
+            // Execute agent requests first
+            Dictionary<string, AddonRequestType> agentRequests = monitor.GetAgentRequests();
+            if (agentRequests != null)
             {
-                if (driveInfo == null || !driveInfo.IsReady || driveInfo.DriveType != DriveType.Fixed)
-                    continue;
-
-                try
+                foreach (KeyValuePair<string, AddonRequestType> entry in agentRequests)
                 {
-                    string drive = driveInfo.Name.Remove(1, 2);
-                    string topic = string.Format("Stats/HardDrive/{0}", drive);
+                    if (!CheckMonitorEnabled(entry.Key) || !CheckMonitorInterval(entry.Key))
+                        continue;
 
-                    long usedSpace = driveInfo.TotalSize - driveInfo.TotalFreeSpace;
-                    int driveUsage = (int)((100.0 / driveInfo.TotalSize) * usedSpace);
+                    LoggerHelper.Debug("{0} Monitor - Requesting Agent information ({1})", entry.Key, entry.Value.ToString());
 
-                    SendMonitorValue(topic + "/TotalSize", GetSize(driveInfo.TotalSize).ToString(), configKey);
-                    SendMonitorValue(topic + "/AvailableFreeSpace", GetSize(driveInfo.AvailableFreeSpace).ToString(), configKey);
-                    SendMonitorValue(topic + "/TotalFreeSpace", GetSize(driveInfo.TotalFreeSpace).ToString(), configKey);
-                    SendMonitorValue(topic + "/UsedSpace", GetSize(usedSpace).ToString(), configKey);
+                    dynamic addonData = new ExpandoObject();
+                    addonData.requestType = entry.Value;
 
-                    SendMonitorValue(topic + "/DriveFormat", driveInfo.DriveFormat, configKey);
-                    SendMonitorValue(topic + "/DriveUsage", driveUsage.ToString(), configKey);
-                    SendMonitorValue(topic + "/VolumeLabel", driveInfo.VolumeLabel, configKey);
-                }
-                catch (Exception ex)
-                {
-                    if (ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
-                        LoggerHelper.Error("Access to drives not allowed. Error: {0}", ex.ToString());
-                    else if (ex is DriveNotFoundException)
-                        LoggerHelper.Error("Drive not found. Error: {0}", ex.ToString());
-                    else if (ex is IOException)
-                        LoggerHelper.Error("Drive inaccessible. Error: {0}", ex.ToString());
-                    else
-                        LoggerHelper.Error("Error while getting drive information: {0}", ex.ToString());
+                    GetManager().SendAgentRequest(this, addonData);
                 }
             }
-        }
 
-        private void SendCurrentUserInfo()
-        {
-            const string configKey = "CurrentUser";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            SendMonitorValue("Stats/System/CurrentUser", _currentUser, configKey);
-        }
-
-        private void SendNetworkInfo()
-        {
-            const string configKey = "NetworkInfo";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            List<NetworkInfo> networks = PlatformHelper.GetNetworkInfos();
-
-            //Make sure the array for the lastBytes values are as big as numbers of networks
-            //By being checked every time, we should be able to handle like a wifi dongle installed while running
-            if (_lastBytesReceived.Length != networks.Count)
+            // Get monitor sensors
+            string configKey = monitor.GetConfigKey();
+            if (CheckMonitorEnabled(configKey) && CheckMonitorInterval(configKey))
             {
-                _lastBytesReceived = new long[networks.Count];
-                _lastBytesSent = new long[networks.Count];
-            }
+                LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
 
-            for (var i = 0; i < networks.Count; i++)
-            {
-                NetworkInfo networkInfo = networks[i];
-                if (networkInfo == null)
-                    continue; // Shouldn't happen, but...
+                List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
+                if (items == null)
+                    return;
 
-                var bytesSentPerSecond = CalculateBytesPerSecond(networkInfo.BytesSent, ref _lastBytesSent[i], configKey);
-                var bytesReceivedPerSecond = CalculateBytesPerSecond(networkInfo.BytesReceived, ref _lastBytesReceived[i], configKey);
-
-                var topic = $"Stats/Network/{i}";
-
-                SendMonitorValue(topic + "/IPv4", networkInfo.IPv4Address, configKey);
-                SendMonitorValue(topic + "/IPv6", networkInfo.IPv6Address, configKey);
-                SendMonitorValue(topic + "/Speed", networkInfo.Speed.ToString(), configKey);
-                SendMonitorValue(topic + "/Wired", networkInfo.Wired.ToString(), configKey);
-                SendMonitorValue(topic + "/BytesSent", networkInfo.BytesSent.ToString(CultureInfo.InvariantCulture), configKey);
-                SendMonitorValue(topic + "/BytesReceived", networkInfo.BytesReceived.ToString(CultureInfo.InvariantCulture), configKey);
-
-                if (bytesSentPerSecond >= 0)
-                    SendMonitorValue(topic + "/BytesSentPerSecond", bytesSentPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
-
-                if (bytesReceivedPerSecond >= 0)
-                    SendMonitorValue(topic + "/BytesReceivedPerSecond", bytesReceivedPerSecond.ToString(CultureInfo.InvariantCulture), configKey);
+                foreach (MonitorItem item in items)
+                    PublishItem(item);
             }
         }
 
-        private void SendMediaInfo()
+        private void PublishItem(MonitorItem item)
         {
-            const string configKey = "MediaInfo";
-            if (!CanRun(configKey))
+            if (item == null || item.Value == null || string.IsNullOrWhiteSpace(item.Topic))
                 return;
 
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            string currentVolume = Math.Round(PlatformHelper.GetAudioVolume(), 0).ToString(CultureInfo.InvariantCulture);
-
-            string muteState = PlatformHelper.IsAudioMuted().ToString(CultureInfo.InvariantCulture);
-            string playingState = PlatformHelper.IsAudioPlaying().ToString(CultureInfo.InvariantCulture);
-
-            SendMonitorValue("Stats/Media/Volume", currentVolume, configKey);
-            SendMonitorValue("Stats/Media/Muted", muteState, configKey);
-            SendMonitorValue("Stats/Media/Playing", playingState, configKey);
-        }
-
-        private void SendUptimeInfo()
-        {
-            const string configKey = "Uptime";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            DateTimeOffset lastBootUpTime = PlatformHelper.LastBootUpTime();
-
-            string uptime = PlatformHelper.GetUptime().ToString(CultureInfo.InvariantCulture);
-            string bootTime = lastBootUpTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-
-            SendMonitorValue("Stats/System/BootTime", bootTime, configKey);
-            SendMonitorValue("Stats/System/Uptime", uptime, configKey);
-        }
-
-        private long CalculateBytesPerSecond(long bytesReceived, ref long lastBytes, string configKey)
-        {
-            var bytesPerSecond = -1L;
-
-            if (lastBytes != 0)
+            string value = string.Empty;
+            switch (item.Type)
             {
-                var interval = _config.Monitors[configKey].Interval;
-                bytesPerSecond = (bytesReceived - lastBytes) / interval;
+                case MonitorItemType.TYPE_DISK_SIZE:
+                    value = FormatSizeObject(item.ConfigKey, "diskFormat", DEFAULT_FORMAT_DISK_SIZE, item.Value);
+                    break;
+
+                case MonitorItemType.TYPE_MEMORY_SIZE:
+                    value = FormatSizeObject(item.ConfigKey, "memoryFormat", DEFAULT_FORMAT_MEMORY_SIZE, item.Value);
+                    break;
+
+                case MonitorItemType.TYPE_NETWORK_SPEED:
+                case MonitorItemType.TYPE_NETWORK_SIZE:
+                    value = item.Value.ToString();
+                    break;
+
+                case MonitorItemType.TYPE_DATE:
+                    value = FormatDateObject(item.Value, GetMonitorFormat(item.ConfigKey, "dateFormat", DEFAULT_FORMAT_DATE));
+                    break;
+                case MonitorItemType.TYPE_TIME:
+                    value = FormatDateObject(item.Value, GetMonitorFormat(item.ConfigKey, "timeFormat", DEFAULT_FORMAT_TIME));
+                    break;
+                case MonitorItemType.TYPE_DATETIME:
+                    value = FormatDateObject(item.Value, GetMonitorFormat(item.ConfigKey, "dateTimeFormat", DEFAULT_FORMAT_DATETIME));
+                    break;
+
+                case MonitorItemType.TYPE_UPTIME:
+                    TimeSpan uptime = TimeSpan.FromSeconds(MathHelper.ToDouble(item.Value));
+                    value = uptime.ToString(@"dd\:hh\:mm\:ss", CultureInfo.InvariantCulture);
+                    break;
+
+                case MonitorItemType.TYPE_RAW:
+                default:
+                    value = item.Value.ToString();
+                    break;
+
+                case MonitorItemType.TYPE_RAW_BYTES:
+                    GetManager().PublishMessage(this, item.Topic, (byte[])item.Value);
+                    return;
             }
 
-            lastBytes = bytesReceived;
-            return bytesPerSecond;
+            SendMonitorValue(item.Topic, value, item.ConfigKey);
         }
 
-        private void RequestAgentIdleTime()
+        private string FormatSizeObject(string configKey, string formatKey, string defaultFormat, object value)
         {
-            const string configKey = "IdleTime";
-            if (!CanRun(configKey))
-                return;
+            long sizeInBytes = MathHelper.ToLong(value, 0L);
+            string formatStr = GetMonitorFormat(configKey, formatKey, defaultFormat);
 
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+            string format = formatStr.Contains(":") ? formatStr.Split(':')[0] : formatStr;
+            int roundDigits = formatStr.Contains(":") ? MathHelper.ToInteger(formatStr.Split(':')[1]) : 0;
 
-            dynamic addonData = new ExpandoObject();
-            addonData.requestType = AddonRequestType.REQUEST_IDLE_TIME;
-
-            GetManager().SendAgentRequest(this, addonData, PlatformHelper.GetCurrentUsername());
+            double size = UnitsHelper.ConvertSize(sizeInBytes, format);
+            return Math.Round(size, roundDigits).ToString(CultureInfo.InvariantCulture);
         }
 
-        private void RequestAgentDisplayInfo()
+        private string FormatDateObject(object value, string format)
         {
-            const string configKey = "Display-Info";
-            if (!CanRun(configKey))
-                return;
+            if (value is DateTime)
+                return ((DateTime)value).ToString(format, CultureInfo.InvariantCulture);
 
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+            if (value is DateTimeOffset)
+                return ((DateTimeOffset)value).ToString(format, CultureInfo.InvariantCulture);
 
-            dynamic addonData = new ExpandoObject();
-            addonData.requestType = AddonRequestType.REQUEST_DISPLAY_INFORMATION;
-
-            GetManager().SendAgentRequest(this, addonData);
-        }
-
-        private void RequestAgentDisplayScreenshot()
-        {
-            const string configKey = "Display-Screenshot";
-            if (!CanRun(configKey))
-                return;
-
-            LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
-
-            dynamic addonData = new ExpandoObject();
-            addonData.requestType = AddonRequestType.REQUEST_DISPLAY_SCREENSHOT;
-
-            GetManager().SendAgentRequest(this, addonData);
+            return value.ToString();
         }
 
         private void OnAgentResponse(object sender, AgentAddonResponseEventArgs e)
         {
-            AddonRequestType requestType = e.Data.requestType;
-            switch (requestType)
+            foreach (IMonitor monitor in monitors)
             {
-                case AddonRequestType.REQUEST_IDLE_TIME:
-                    ParseIdleTime(e.Data, e.Username);
-                    break;
+                Dictionary<string, AddonRequestType> agentRequests = monitor.GetAgentRequests();
+                if (agentRequests == null || agentRequests.Count == 0)
+                    continue;
 
-                case AddonRequestType.REQUEST_DISPLAY_INFORMATION:
-                    ParseDisplayInfo(e.Data, e.Username);
-                    break;
+                AddonRequestType requestType = (AddonRequestType)e.Data.requestType;
+                string configKey = agentRequests.FirstOrDefault(x => x.Value == requestType).Key;
 
-                case AddonRequestType.REQUEST_DISPLAY_SCREENSHOT:
-                    ParseDisplayScreenshot(e.Data, e.Username);
-                    break;
+                if (string.IsNullOrWhiteSpace(configKey) || !CheckMonitorEnabled(configKey))
+                    continue;
 
-                default: break;
+                List<MonitorItem> items = monitor.OnAgentResponse(GetMonitorConfiguration(configKey), requestType, e.Data, e.Username);
+                if (items == null || items.Count == 0)
+                    continue;
+
+                foreach (MonitorItem item in items)
+                    PublishItem(item);
             }
         }
 
-        private void ParseIdleTime(dynamic data, string username)
+        private bool CheckMonitorEnabled(string configKey)
         {
-            if (string.Compare(PlatformHelper.GetCurrentUsername(), username) != 0)
-                return;
-
-            const string configKey = "IdleTime";
-            uint idleTime = (uint)data.requestData;
-
-            SendMonitorValue("Stats/System/IdleTime", idleTime.ToString(), configKey);
-        }
-
-        private void ParseDisplayInfo(dynamic data, string username)
-        {
-            const string configKey = "Display-Info";
-            List<DisplayInfo> displayInfos = data.requestData.ToObject<List<DisplayInfo>>();
-            for (var i = 0; i < displayInfos.Count; i++)
-            {
-                DisplayInfo displayInfo = displayInfos[i];
-
-                string topic = string.Format("Stats/Display/{0}", i);
-                SendMonitorValue(topic + "/ScreenWidth", displayInfo.ScreenWidth.ToString(), configKey);
-                SendMonitorValue(topic + "/ScreenHeight", displayInfo.ScreenHeight.ToString(), configKey);
-            }
-        }
-
-        private void ParseDisplayScreenshot(dynamic data, string username)
-        {
-            int displayIndex = data.requestData.displayIndex;
-            byte[] displayScreen = data.requestData.displayScreen;
-            string topic = string.Format("Stats/Display/{0}/Screen", displayIndex);
-
-            GetManager().PublishMessage(this, topic, displayScreen);
-        }
-
-        private double GetSize(long sizeInBytes)
-        {
-            switch (_config.SizeFormat)
-            {
-                default:
-                case "MB":
-                    return MathHelper.BytesToMegabytes(sizeInBytes);
-
-                case "GB":
-                    return MathHelper.BytesToGigabytes(sizeInBytes);
-
-                case "TB":
-                    return MathHelper.BytesToTerabytes(sizeInBytes);
-            }
-        }
-
-        private bool CanRun(string configKey)
-        {
-            if (_config.Monitors == null || !_config.Monitors.ContainsKey(configKey) || !_config.Monitors[configKey].Enabled)
-            {
-                LoggerHelper.Verbose("{0} monitor disabled.", configKey);
+            if (string.IsNullOrWhiteSpace(configKey))
                 return false;
-            }
 
-            MonitorConfig monitor = _config.Monitors[configKey];
-            if ((_monitorCounter % monitor.Interval) != 0)
+            return GetMonitorEnabled(configKey);
+        }
+
+        private bool CheckMonitorInterval(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return false;
+
+            if ((_monitorCounter % GetMonitorInterval(configKey)) != 0)
                 return false;
 
             return true;
+        }
+
+        private string GetMonitorFormat(string configKey, string formatKey, string defaultValue)
+        {
+            if (string.IsNullOrWhiteSpace(configKey) || string.IsNullOrWhiteSpace(formatKey))
+                return defaultValue;
+
+            string value = _config.GetValue($"monitors:{configKey}:formats:{formatKey}", null);
+            if (string.IsNullOrWhiteSpace(value))
+                value = _config.GetValue($"formats:{formatKey}", defaultValue);
+
+            return value;
+        }
+
+        private bool GetMonitorEnabled(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return false;
+
+            return _config.GetValue($"monitors:{configKey}:enabled", false);
+        }
+
+        private bool GetMonitorCacheable(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return false;
+
+            return _config.GetValue($"monitors:{configKey}:cacheable", false);
+        }
+
+        private int GetMonitorInterval(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return DEFAULT_INTERVAL;
+
+            return _config.GetValue($"monitors:{configKey}:interval", DEFAULT_INTERVAL);
+        }
+
+        private Configuration GetMonitorConfiguration(string configKey)
+        {
+            if (string.IsNullOrWhiteSpace(configKey))
+                return null;
+
+            return _config.GetValue($"monitors:{configKey}");
         }
 
         private void SendMonitorValue(string topic, string value, string configKey = null)
@@ -482,7 +348,7 @@ namespace IOTLinkAddon.Service
             if (string.IsNullOrWhiteSpace(topic))
                 return;
 
-            if (configKey != null && _config.Monitors != null && _config.Monitors.ContainsKey(configKey) && _config.Monitors[configKey].Cacheable)
+            if (GetMonitorCacheable(configKey))
             {
                 if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)
                     return;

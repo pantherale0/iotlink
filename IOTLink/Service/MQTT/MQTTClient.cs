@@ -6,6 +6,7 @@ using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Exceptions;
 using System;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,7 +48,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// <returns>Boolean</returns>
         internal bool Init()
         {
-            _config = ConfigHelper.GetEngineConfig().MQTT;
+            _config = MqttConfig.FromConfiguration(ApplicationConfigHelper.GetEngineConfig().GetValue("mqtt"));
 
             // Configuration not found
             if (_config == null)
@@ -186,7 +187,11 @@ namespace IOTLinkService.Service.Engine.MQTT
                 }
                 catch (Exception ex)
                 {
-                    LoggerHelper.Info("Connection failed: {0}", ex.ToString());
+                    if (ex is MqttCommunicationException)
+                        LoggerHelper.Info("Connection to the broker failed.");
+                    else
+                        LoggerHelper.Info("Connection failed: {0}", ex.ToString());
+
                     tries++;
 
                     double waitTime = Math.Min(5 * tries, 60);
@@ -228,18 +233,21 @@ namespace IOTLinkService.Service.Engine.MQTT
                     {
                         LoggerHelper.Verbose("Sending LWT message before disconnecting.");
                         SendLWTDisconnect();
+                        Task.Delay(TimeSpan.FromSeconds(1));
                     }
 
                     _client.DisconnectAsync().ConfigureAwait(false);
                     Task.Delay(TimeSpan.FromSeconds(5));
                 }
-
-                // Remove client reference.
-                _client = null;
             }
             catch (Exception ex)
             {
                 LoggerHelper.Error("Error while trying to disconnect. {0}", ex.Message);
+            }
+            finally
+            {
+                // Remove client reference.
+                _client = null;
             }
         }
 
@@ -291,6 +299,15 @@ namespace IOTLinkService.Service.Engine.MQTT
                 MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
                 await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
             }
+            catch (MqttCommunicationTimedOutException)
+            {
+                LoggerHelper.Debug("MQTT connection with the server has been timed out.");
+                if (!_preventReconnect)
+                {
+                    LoggerHelper.Verbose("Reconnecting...");
+                    Connect();
+                }
+            }
             catch (Exception ex)
             {
                 LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
@@ -331,6 +348,15 @@ namespace IOTLinkService.Service.Engine.MQTT
 
                 MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
                 await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                LoggerHelper.Debug("MQTT connection with the server has been timed out.");
+                if (!_preventReconnect)
+                {
+                    LoggerHelper.Verbose("Reconnecting...");
+                    Connect();
+                }
             }
             catch (Exception ex)
             {
@@ -401,14 +427,22 @@ namespace IOTLinkService.Service.Engine.MQTT
             MQTTMessage message = GetMQTTMessage(arg);
             if (string.Compare(message.Topic, "refresh", StringComparison.InvariantCultureIgnoreCase) == 0)
             {
-                SendLWTConnect();
-                OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
+                SendRefresh();
             }
             else
             {
                 MQTTMessageEventEventArgs mqttEvent = new MQTTMessageEventEventArgs(MQTTEventEventArgs.MQTTEventType.MessageReceived, message, arg);
                 OnMQTTMessageReceived?.Invoke(this, mqttEvent);
             }
+        }
+
+        /// <summary>
+        /// Send refresh request event
+        /// </summary>
+        private void SendRefresh()
+        {
+            SendLWTConnect();
+            OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -473,7 +507,10 @@ namespace IOTLinkService.Service.Engine.MQTT
         {
             try
             {
-                if (IsLastWillEnabled() && _client.IsConnected && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                if (_client == null || !_client.IsConnected)
+                    return;
+
+                if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
                     _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
             }
             catch (Exception ex)

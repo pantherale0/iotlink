@@ -9,14 +9,34 @@
 enabled: true
 
 ############################################################################
-# Size Format
+# Default Formats
 ############################################################################
-# Which size should be used to output hard-drive informations.
+# Define which formatting will be used by default in all monitors
 ############################################################################
-# Type: MB, GB or TB
-# Default: GB
+# Sizes: B (Bytes), KB (Kilobytes), GB (Gigabytes), TB (Terabytes)
+#  - You can define rounding with "XX:Y" where Y is the number of decimals.
+#  - Example: "GB:2" will display 2 decimal places
+#
+# Time/Date:
+# - See this link:
+# - https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings
+#
+# Important:
+# - You can override default format for each monitor by placing formats
+# - under their configuration. Example:
+#   Memory:
+#    enabled: true
+#    interval: 10
+#    cacheable: true
+#    formats:
+#      memoryFormat: GB:2
 ############################################################################
-sizeFormat: GB
+formats:
+  diskFormat: GB
+  memoryFormat: MB
+  dateFormat: yyyy-MM-dd
+  timeFormat: HH:mm:ss
+  dateTimeFormat: yyyy-MM-dd HH:mm:ss
 
 ############################################################################
 # Monitors
@@ -31,7 +51,7 @@ sizeFormat: GB
 # Power             : Power (Status, Battery Status, Remaning Time, etc).
 # NetworkInfo       : Network Information (IPv4, IPv6, Speed, Wired).
 # MediaInfo         : Media Information (Volume, Muted).
-# CurrentUser       : Current user logged in physically into machine.
+# SystemInfo        : System Info (Current user physically logged in).
 # IdleTime          : Idle Time (Current user physically logged in).
 # Uptime            : Uptime information (Boot time, Uptime).
 # Display-Info      : Screen Width and Height (Per Display).
@@ -62,7 +82,7 @@ monitors:
     enabled: true
     interval: 10
     cacheable: true
-  CurrentUser:
+  SystemInfo:
     enabled: true
     interval: 10
     cacheable: true
@@ -70,6 +90,7 @@ monitors:
     enabled: true
     interval: 10
     cacheable: true
+    inSeconds: true
   Uptime:
     enabled: true
     interval: 60

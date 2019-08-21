@@ -109,6 +109,8 @@
     <Compile Include="Service\Loaders\AssemblyLoader.cs" />
     <Compile Include="Service\Engine\ServiceMain.cs" />
     <Compile Include="Service\MQTT\MQTTClient.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketClient.cs" />
+    <Compile Include="Service\WebSockets\Server\WebSocketClientState.cs" />
     <Compile Include="Service\WebSockets\Server\WebSocketHandlers.cs" />
     <Compile Include="Service\WebSockets\Server\WebSocketMessageEventArgs.cs" />
     <Compile Include="Service\WebSockets\Server\WebSocketServer.cs" />
@@ -154,12 +156,11 @@
     <Error Condition="!Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets'))" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent>net stop IOTLink
-Exit /b 0</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)\Assets\images\icons" "$(TargetDir)\Icons" /i /s
-net start IOTLink
-Exit /b 0</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
