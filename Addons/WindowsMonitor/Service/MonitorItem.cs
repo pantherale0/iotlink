@@ -1,4 +1,6 @@
-﻿namespace IOTLinkAddon.Service
+﻿using IOTLinkAPI.Platform.HomeAssistant;
+
+namespace IOTLinkAddon.Service
 {
     class MonitorItem
     {
@@ -9,5 +11,7 @@
         public MonitorItemType Type { get; set; }
 
         public object Value { get; set; }
+
+        public HassDiscoveryOptions DiscoveryOptions { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using IOTLinkAddon.Common;
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System.Collections.Generic;
 
 namespace IOTLinkAddon.Service.Monitors
@@ -33,7 +34,13 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/System/CurrentUser",
-                Value = PlatformHelper.GetCurrentUsername()
+                Value = PlatformHelper.GetCurrentUsername(),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Name = "CurrentUsername",
+                    Icon = "mdi:account"
+                }
             });
 
             return result;
@@ -61,7 +68,14 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = config.GetValue("inSeconds", false) ? MonitorItemType.TYPE_RAW : MonitorItemType.TYPE_UPTIME,
                 Topic = "Stats/System/IdleTime",
-                Value = data.requestData
+                Value = data.requestData,
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Name = "IdleTime",
+                    Unit = "s",
+                    Icon = "mdi:timer"
+                }
             });
 
             return result;

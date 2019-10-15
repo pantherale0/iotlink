@@ -1,6 +1,7 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System.Collections.Generic;
 
 namespace IOTLinkAddon.Service.Monitors
@@ -26,7 +27,14 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Memory/Usage",
-                Value = memoryInfo.MemoryLoad
+                Value = memoryInfo.MemoryLoad,
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Name = "Usage",
+                    Unit = "%",
+                    Icon = "mdi:memory"
+                }
             });
 
             // Memory Available
@@ -35,7 +43,14 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_MEMORY_SIZE,
                 Topic = "Stats/Memory/Available",
-                Value = memoryInfo.AvailPhysical
+                Value = memoryInfo.AvailPhysical,
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Name = "Available",
+                    Unit = "MB",
+                    Icon = "mdi:memory"
+                }
             });
 
             // Memory Used
@@ -44,7 +59,14 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_MEMORY_SIZE,
                 Topic = "Stats/Memory/Used",
-                Value = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical)
+                Value = (memoryInfo.TotalPhysical - memoryInfo.AvailPhysical),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Name = "Used",
+                    Unit = "MB",
+                    Icon = "mdi:memory"
+                }
             });
 
             // Memory Total
@@ -53,7 +75,14 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_MEMORY_SIZE,
                 Topic = "Stats/Memory/Total",
-                Value = memoryInfo.TotalPhysical
+                Value = memoryInfo.TotalPhysical,
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Name = "Total",
+                    Unit = "MB",
+                    Icon = "mdi:memory"
+                }
             });
 
             return result;

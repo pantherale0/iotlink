@@ -10,7 +10,9 @@ using MQTTnet.Exceptions;
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
+using IOTLinkAPI.Platform.HomeAssistant;
 
 namespace IOTLinkService.Service.Engine.MQTT
 {
@@ -317,6 +319,62 @@ namespace IOTLinkService.Service.Engine.MQTT
                     Connect();
                 }
             }
+        }
+
+        internal async void PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
+        {
+            var topic = GetFullTopicName(stateTopic);
+            var fullName = PlatformHelper.GetFullMachineName().Replace("\\", "_").ToLower() + "_" + preffixName + "_" + discoveryOptions.Name;
+            var discoveryJson = new HassDiscoveryJsonClass
+            {
+                Name = fullName,
+                StateTopic = topic
+            };
+
+            if (!string.IsNullOrEmpty(discoveryOptions.Unit))
+                discoveryJson.UnitOfMeasurement = discoveryOptions.Unit;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.ValueTemplate))
+                discoveryJson.ValueTemplate = discoveryOptions.ValueTemplate;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.Icon))
+                discoveryJson.Icon = discoveryOptions.Icon;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.DeviceClass))
+                discoveryJson.DeviceClass = discoveryOptions.DeviceClass;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.PayloadOff))
+                discoveryJson.PayloadOff = discoveryOptions.PayloadOff;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.PayloadOn))
+                discoveryJson.PayloadOn = discoveryOptions.PayloadOn;
+
+            discoveryJson.UniqueId = fullName;
+            discoveryJson.Device = new Device()
+            {
+                Identifiers = new string[1]
+                {
+                    PlatformHelper.GetFullMachineName().Replace("\\", "_").ToLower() + "_" + preffixName
+                },
+                Manufacturer = "IOTLink",
+                Model = PlatformHelper.GetFullMachineName().Replace("\\", " "),
+                Name = PlatformHelper.GetFullMachineName().Replace("\\", " ") + " " + preffixName,
+            };
+
+            var configTopic = "homeassistant/" + discoveryOptions.Component.ToString().PascalToSnakeCase() + "/iotlink/" + fullName + "/config";
+            var msgConfig = new MqttConfig.MsgConfig()
+            {
+                Retain = true
+            };
+
+            var jsonString = JsonConvert.SerializeObject(discoveryJson, Formatting.Indented,
+                new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+
+            var mqttMsg = BuildMQTTMessage(configTopic, Encoding.UTF8.GetBytes(jsonString), msgConfig);
+            await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
         }
 
         /// <summary>

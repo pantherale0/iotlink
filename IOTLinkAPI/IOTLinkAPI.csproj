@@ -138,6 +138,9 @@
     <Compile Include="Helpers\PlatformHelper.cs" />
     <Compile Include="Helpers\StringHelper.cs" />
     <Compile Include="Platform\DisplayInfo.cs" />
+    <Compile Include="Platform\HomeAssistant\HassDiscoveryJsonClass.cs" />
+    <Compile Include="Platform\HomeAssistant\HassDiscoveryOptions.cs" />
+    <Compile Include="Platform\HomeAssistant\HomeAssistantComponent.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
     <Compile Include="Platform\NetworkInfo.cs" />
     <Compile Include="Platform\RunInfo.cs" />

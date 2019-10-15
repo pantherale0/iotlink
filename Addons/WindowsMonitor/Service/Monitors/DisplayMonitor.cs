@@ -2,6 +2,7 @@
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System.Collections.Generic;
 
 namespace IOTLinkAddon.Service.Monitors
@@ -59,7 +60,12 @@ namespace IOTLinkAddon.Service.Monitors
                     ConfigKey = CONFIG_KEY,
                     Type = MonitorItemType.TYPE_RAW,
                     Topic = topic + "/ScreenWidth",
-                    Value = displayInfo.ScreenWidth
+                    Value = displayInfo.ScreenWidth,
+                    DiscoveryOptions = new HassDiscoveryOptions()
+                    {
+                        Name = $"{i}_ScreenWidth",
+                        Component = HomeAssistantComponent.Sensor
+                    }
                 });
 
                 result.Add(new MonitorItem
@@ -67,7 +73,12 @@ namespace IOTLinkAddon.Service.Monitors
                     ConfigKey = CONFIG_KEY,
                     Type = MonitorItemType.TYPE_RAW,
                     Topic = topic + "/ScreenHeight",
-                    Value = displayInfo.ScreenHeight
+                    Value = displayInfo.ScreenHeight,
+                    DiscoveryOptions = new HassDiscoveryOptions()
+                    {
+                        Name = $"{i}_ScreenHeight",
+                        Component = HomeAssistantComponent.Sensor
+                    }
                 });
             }
 
@@ -84,7 +95,12 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW_BYTES,
                 Topic = string.Format("Stats/Display/{0}/Screen", data.requestData.displayIndex),
-                Value = (byte[])data.requestData.displayScreen
+                Value = (byte[])data.requestData.displayScreen,
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Name = string.Format("{0}_Screen", data.requestData.displayIndex),
+                    Component = HomeAssistantComponent.Camera
+                }
             });
 
             return result;

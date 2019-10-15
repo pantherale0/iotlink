@@ -19,6 +19,8 @@
 
         public bool CleanSession { get; set; }
 
+        public bool Discovery { get; set; }
+
         public class CredentialConfig
         {
             public string Username { get; set; }
@@ -124,6 +126,7 @@
             mqtt.WebSocket = WebSocketConfig.FromConfiguration(config.GetValue("websocket"));
             mqtt.Messages = MsgConfig.FromConfiguration(config.GetValue("messages"));
             mqtt.LWT = LWTConfig.FromConfiguration(config.GetValue("lwt"));
+            mqtt.Discovery = config.GetValue("discovery", false);
 
             return mqtt;
         }

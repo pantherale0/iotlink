@@ -1,4 +1,5 @@
-﻿using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
+﻿using IOTLinkAPI.Platform.HomeAssistant;
+using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
 namespace IOTLinkAPI.Addons
 {
@@ -11,6 +12,8 @@ namespace IOTLinkAPI.Addons
         void RemoveSubscription(ServiceAddon sender, string topic);
 
         void PublishMessage(ServiceAddon sender, string topic, string message);
+
+        void PublishDiscoveryMessage(ServiceAddon sender, string topic, string preffixName, HassDiscoveryOptions discoveryOptions);
 
         void PublishMessage(ServiceAddon sender, string topic, byte[] message);
 

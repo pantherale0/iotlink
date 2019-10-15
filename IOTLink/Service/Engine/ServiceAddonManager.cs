@@ -12,6 +12,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
+using IOTLinkAPI.Platform.HomeAssistant;
 
 namespace IOTLinkService.Service.Engine
 {
@@ -94,6 +95,15 @@ namespace IOTLinkService.Service.Engine
 
             string addonTopic = BuildTopicName(sender, topic);
             MQTTClient.GetInstance().PublishMessage(addonTopic, message);
+        }
+
+        public void PublishDiscoveryMessage(ServiceAddon sender, string topic, string preffixName, HassDiscoveryOptions discoveryOptions)
+        {
+            if (sender == null || string.IsNullOrWhiteSpace(discoveryOptions.Name))
+                return;
+            string addonTopic = BuildTopicName(sender, topic);
+            
+            MQTTClient.GetInstance().PublishDiscoveryMessage(addonTopic, preffixName, discoveryOptions);
         }
 
         /// <summary>
