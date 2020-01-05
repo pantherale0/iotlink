@@ -326,11 +326,15 @@ namespace IOTLinkService.Service.Engine.MQTT
             var topic = GetFullTopicName(stateTopic);
             var machineName = PlatformHelper.GetFullMachineName().Replace("\\", "_");
             var fullName = (machineName + "_" + preffixName + "_" + discoveryOptions.Name).ToLower();
-            var discoveryJson = new HassDiscoveryJsonClass
+            var discoveryJson = new HassDiscoveryJsonClass()
             {
-                Name = fullName,
-                StateTopic = topic
+                Name = fullName
             };
+
+            if (discoveryOptions.Component == HomeAssistantComponent.Camera)
+                discoveryJson.Topic = topic;
+            else
+                discoveryJson.StateTopic = topic;
 
             if (!string.IsNullOrEmpty(discoveryOptions.Unit))
                 discoveryJson.UnitOfMeasurement = discoveryOptions.Unit;

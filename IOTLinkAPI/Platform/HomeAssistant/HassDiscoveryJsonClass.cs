@@ -11,22 +11,34 @@ namespace IOTLinkAPI.Platform.HomeAssistant
     {
         [JsonProperty("unit_of_measurement")]
         public string UnitOfMeasurement { get; set; }
+
         [JsonProperty("value_template")]
         public string ValueTemplate { get; set; }
+
         [JsonProperty("icon")]
         public string Icon { get; set; }
+
         [JsonProperty("state_topic")]
         public string StateTopic { get; set; }
+
+        [JsonProperty("topic")]
+        public string Topic { get; set; }
+
         [JsonProperty("name")]
         public string Name { get; set; }
+
         [JsonProperty("unique_id")]
         public string UniqueId { get; set; }
+
         [JsonProperty("device_class")]
         public string DeviceClass { get; set; }
+
         [JsonProperty("payload_off")]
         public string PayloadOff { get; set; }
+
         [JsonProperty("payload_on")]
         public string PayloadOn { get; set; }
+
         [JsonProperty("device")]
         public Device Device { get; set; }
     }

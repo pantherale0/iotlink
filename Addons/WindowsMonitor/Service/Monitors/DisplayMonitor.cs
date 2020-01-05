@@ -9,17 +9,18 @@ namespace IOTLinkAddon.Service.Monitors
 {
     class DisplayMonitor : BaseMonitor
     {
-        private static readonly string CONFIG_KEY = "Display-Info";
+        private static readonly string CONFIG_KEY_INFO = "Display-Info";
+        private static readonly string CONFIG_KEY_SCREEN = "Display-Screenshot";
 
         private static readonly Dictionary<string, AddonRequestType> AGENT_REQUESTS = new Dictionary<string, AddonRequestType>
         {
-            { "Display-Info", AddonRequestType.REQUEST_DISPLAY_INFORMATION },
-            { "Display-Screenshot", AddonRequestType.REQUEST_DISPLAY_SCREENSHOT }
+            { CONFIG_KEY_INFO, AddonRequestType.REQUEST_DISPLAY_INFORMATION },
+            { CONFIG_KEY_SCREEN, AddonRequestType.REQUEST_DISPLAY_SCREENSHOT }
         };
 
         public override string GetConfigKey()
         {
-            return CONFIG_KEY;
+            return CONFIG_KEY_INFO;
         }
 
         public override Dictionary<string, AddonRequestType> GetAgentRequests()
@@ -57,7 +58,7 @@ namespace IOTLinkAddon.Service.Monitors
 
                 result.Add(new MonitorItem
                 {
-                    ConfigKey = CONFIG_KEY,
+                    ConfigKey = CONFIG_KEY_INFO,
                     Type = MonitorItemType.TYPE_RAW,
                     Topic = topic + "/ScreenWidth",
                     Value = displayInfo.ScreenWidth,
@@ -70,7 +71,7 @@ namespace IOTLinkAddon.Service.Monitors
 
                 result.Add(new MonitorItem
                 {
-                    ConfigKey = CONFIG_KEY,
+                    ConfigKey = CONFIG_KEY_INFO,
                     Type = MonitorItemType.TYPE_RAW,
                     Topic = topic + "/ScreenHeight",
                     Value = displayInfo.ScreenHeight,
@@ -92,7 +93,7 @@ namespace IOTLinkAddon.Service.Monitors
             LoggerHelper.Verbose("DisplayMonitor - Received Display Screenshot");
             result.Add(new MonitorItem
             {
-                ConfigKey = CONFIG_KEY,
+                ConfigKey = CONFIG_KEY_SCREEN,
                 Type = MonitorItemType.TYPE_RAW_BYTES,
                 Topic = string.Format("Stats/Display/{0}/Screen", data.requestData.displayIndex),
                 Value = (byte[])data.requestData.displayScreen,
