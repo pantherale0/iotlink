@@ -101,8 +101,8 @@ namespace IOTLinkService.Service.Engine
         {
             if (sender == null || string.IsNullOrWhiteSpace(discoveryOptions.Name))
                 return;
+
             string addonTopic = BuildTopicName(sender, topic);
-            
             MQTTClient.GetInstance().PublishDiscoveryMessage(addonTopic, preffixName, discoveryOptions);
         }
 

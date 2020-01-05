@@ -80,14 +80,15 @@ namespace IOTLinkAddon.Service
                 {
                     LoggerHelper.Debug("{0} Monitor - Sending config", configKey);
 
-                    List<MonitorItem> items =
-                        monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
+                    List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
                     if(items == null)
                         return;
 
                     foreach(var item in items)
                     {
-                        if(item.DiscoveryOptions == null)continue;
+                        if(item.DiscoveryOptions == null)
+                            continue;
+
                         item.DiscoveryOptions.Icon = GetDiscoveryOption(item.ConfigKey, item.DiscoveryOptions.Name, "icon", item.DiscoveryOptions.Icon);
                         item.DiscoveryOptions.ValueTemplate = GetDiscoveryOption(item.ConfigKey, item.DiscoveryOptions.Name, "valueTemplate", item.DiscoveryOptions.ValueTemplate);
                         item.DiscoveryOptions.Unit = GetDiscoveryOption(item.ConfigKey, item.DiscoveryOptions.Name, "unitOfMeasurement", item.DiscoveryOptions.Unit);

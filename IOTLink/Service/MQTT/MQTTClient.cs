@@ -324,7 +324,8 @@ namespace IOTLinkService.Service.Engine.MQTT
         internal async void PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
         {
             var topic = GetFullTopicName(stateTopic);
-            var fullName = PlatformHelper.GetFullMachineName().Replace("\\", "_").ToLower() + "_" + preffixName + "_" + discoveryOptions.Name;
+            var machineName = PlatformHelper.GetFullMachineName().Replace("\\", "_");
+            var fullName = (machineName + "_" + preffixName + "_" + discoveryOptions.Name).ToLower();
             var discoveryJson = new HassDiscoveryJsonClass
             {
                 Name = fullName,
@@ -354,11 +355,11 @@ namespace IOTLinkService.Service.Engine.MQTT
             {
                 Identifiers = new string[1]
                 {
-                    PlatformHelper.GetFullMachineName().Replace("\\", "_").ToLower() + "_" + preffixName
+                    machineName + "_" + preffixName
                 },
-                Manufacturer = "IOTLink",
-                Model = PlatformHelper.GetFullMachineName().Replace("\\", " "),
-                Name = PlatformHelper.GetFullMachineName().Replace("\\", " ") + " " + preffixName,
+                Manufacturer = "IOTLink " + AssemblyHelper.GetCurrentVersion(),
+                Model = Environment.UserDomainName,
+                Name = Environment.MachineName + " " + preffixName,
             };
 
             var configTopic = "homeassistant/" + discoveryOptions.Component.ToString().PascalToSnakeCase() + "/iotlink/" + fullName + "/config";

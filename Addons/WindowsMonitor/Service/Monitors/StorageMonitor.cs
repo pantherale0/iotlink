@@ -43,7 +43,7 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = "TotalStorage",
+                            Name = $"{drive}_TotalStorage",
                             Unit = "GB",
                             Icon = "mdi:harddisk"
                         }
