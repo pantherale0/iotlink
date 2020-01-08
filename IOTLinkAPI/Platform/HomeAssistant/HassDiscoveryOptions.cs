@@ -2,6 +2,7 @@
 {
     public class HassDiscoveryOptions
     {
+        public string Id { get; set; }
         public string Unit { get; set; }
         public string ValueTemplate { get; set; }
         public string Name { get; set; }

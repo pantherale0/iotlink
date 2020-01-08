@@ -35,8 +35,9 @@ namespace IOTLinkAddon.Service.Monitors
                 Value = Math.Round(_cpuPerformanceCounter.NextValue(), 0),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
+                    Id = "Usage",
                     Unit = "%",
-                    Name = "Usage",
+                    Name = "CPU Usage",
                     Component = HomeAssistantComponent.Sensor,
                     Icon = "mdi:speedometer"
                 }

@@ -31,7 +31,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "Usage",
+                    Id = "Usage",
+                    Name = "Memory Usage",
                     Unit = "%",
                     Icon = "mdi:memory"
                 }
@@ -47,7 +48,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "Available",
+                    Id = "Available",
+                    Name = "Memory Available",
                     Unit = "MB",
                     Icon = "mdi:memory"
                 }
@@ -63,7 +65,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "Used",
+                    Id = "Used",
+                    Name = "Memory Used",
                     Unit = "MB",
                     Icon = "mdi:memory"
                 }
@@ -79,7 +82,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "Total",
+                    Id = "Total",
+                    Name = "Memory Total",
                     Unit = "MB",
                     Icon = "mdi:memory"
                 }

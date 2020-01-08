@@ -56,7 +56,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{i}_IPv4Adress",
+                            Id = $"{i}_IPv4Adress",
+                            Name = $"Network #{i} - IPv4",
                             Icon = "mdi:lan"
                         }
                     });
@@ -74,7 +75,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{i}_IPv6Adress",
+                            Id = $"{i}_IPv6Adress",
+                            Name = $"Network #{i} - IPv6",
                             Icon = "mdi:lan"
                         }
                     });
@@ -90,7 +92,8 @@ namespace IOTLinkAddon.Service.Monitors
                     DiscoveryOptions = new HassDiscoveryOptions()
                     {
                         Component = HomeAssistantComponent.Sensor,
-                        Name = $"{i}_Speed",
+                        Id = $"{i}_Speed",
+                        Name = $"Network #{i} - Speed",
                         Unit = "Mbps",
                         Icon = "mdi:speedometer"
                     }
@@ -106,7 +109,8 @@ namespace IOTLinkAddon.Service.Monitors
                     DiscoveryOptions = new HassDiscoveryOptions()
                     {
                         Component = HomeAssistantComponent.BinarySensor,
-                        Name = $"{i}_Wired",
+                        Id = $"{i}_Wired",
+                        Name = $"Network #{i} - Wired",
                         PayloadOff = "False",
                         PayloadOn = "True"
                     }
@@ -122,7 +126,8 @@ namespace IOTLinkAddon.Service.Monitors
                     DiscoveryOptions = new HassDiscoveryOptions()
                     {
                         Component = HomeAssistantComponent.Sensor,
-                        Name = $"{i}_BytesSent",
+                        Id = $"{i}_BytesSent",
+                        Name = $"Network #{i} - Bytes Sent",
                         Unit = "B"
                     }
                 });
@@ -137,7 +142,8 @@ namespace IOTLinkAddon.Service.Monitors
                     DiscoveryOptions = new HassDiscoveryOptions()
                     {
                         Component = HomeAssistantComponent.Sensor,
-                        Name = $"{i}_BytesReceived",
+                        Id = $"{i}_BytesReceived",
+                        Name = $"Network #{i} - Bytes Received",
                         Unit = "B"
                     }
                 });
@@ -154,7 +160,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{i}_BytesSentPerSecond",
+                            Id = $"{i}_BytesSentPerSecond",
+                            Name = $"Network #{i} - BPS Sent",
                             Unit = "Bps"
                         }
                     });
@@ -172,7 +179,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{i}_BytesReceivedPerSecond",
+                            Id = $"{i}_BytesReceivedPerSecond",
+                            Name = $"Network #{i} - BPS Received",
                             Unit = "Bps"
                         }
                     });

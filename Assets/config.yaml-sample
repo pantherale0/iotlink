@@ -4,6 +4,9 @@
 # See https://gitlab.com/iotlink/iotlink/wikis/Configuration for details
 ########################################################################
 mqtt:
+  ########################################################################
+  # Credentials Settings
+  ########################################################################
   credentials:
     username: 
     password: 
@@ -23,7 +26,7 @@ mqtt:
     uri: 
     secure: false
   ########################################################################
-  # General Message Settings
+  # Message Settings
   ########################################################################
   messages:
     qos: 1
@@ -37,6 +40,16 @@ mqtt:
     retain: true
     connectMsg: "ON"
     disconnectMsg: "OFF"
+  ########################################################################
+  # Discovery Settings
+  ########################################################################
+  discovery:
+    enabled: true
+    topicPrefix: homeassistant
+	domainPrefix: false
+  ########################################################################
+  # General MQTT Settings
+  ########################################################################
   clientId: 
   prefix: IOTLink
   cleanSession: true
@@ -67,5 +80,3 @@ logging:
 ########################################################################
 addons:
   enabled: true
-  globalTopics:
-    - homeassistant/#

@@ -13,13 +13,13 @@
 
         public LWTConfig LWT { get; set; }
 
+        public DiscoveryConfig Discovery { get; set; }
+
         public string ClientId { get; set; }
 
         public string Prefix { get; set; }
 
         public bool CleanSession { get; set; }
-
-        public bool Discovery { get; set; }
 
         public class CredentialConfig
         {
@@ -115,6 +115,25 @@
             }
         }
 
+        public class DiscoveryConfig
+        {
+            public string TopicPrefix { get; set; }
+
+            public bool Enabled { get; set; }
+
+            public bool DomainPrefix { get; set; }
+
+            public static new DiscoveryConfig FromConfiguration(Configuration config)
+            {
+                DiscoveryConfig cfg = new DiscoveryConfig();
+                cfg.TopicPrefix = config.GetValue("topicPrefix", "homeassistant");
+                cfg.DomainPrefix = config.GetValue("domainPrefix", false);
+                cfg.Enabled = config.GetValue("enabled", true);
+
+                return cfg;
+            }
+        }
+
         public static MqttConfig FromConfiguration(Configuration config)
         {
             MqttConfig mqtt = new MqttConfig();
@@ -126,7 +145,7 @@
             mqtt.WebSocket = WebSocketConfig.FromConfiguration(config.GetValue("websocket"));
             mqtt.Messages = MsgConfig.FromConfiguration(config.GetValue("messages"));
             mqtt.LWT = LWTConfig.FromConfiguration(config.GetValue("lwt"));
-            mqtt.Discovery = config.GetValue("discovery", false);
+            mqtt.Discovery = DiscoveryConfig.FromConfiguration(config.GetValue("discovery"));
 
             return mqtt;
         }

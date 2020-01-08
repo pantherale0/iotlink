@@ -323,12 +323,25 @@ namespace IOTLinkService.Service.Engine.MQTT
 
         internal async void PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
         {
+            if (!_config.Discovery.Enabled)
+            {
+                LoggerHelper.Verbose("MQTT Discovery Disabled");
+                return;
+            }
+
             var topic = GetFullTopicName(stateTopic);
-            var machineName = PlatformHelper.GetFullMachineName().Replace("\\", "_");
-            var fullName = (machineName + "_" + preffixName + "_" + discoveryOptions.Name).ToLower();
+
+            var machineName = Environment.MachineName;
+            var machineFullName = PlatformHelper.GetFullMachineName().Replace("\\", " ");
+            if (_config.Discovery.DomainPrefix)
+                machineName = machineFullName;
+
+            var machineId = machineName.Replace(" ", "_");
+            var uniqueId = string.Format("{0}_{1}_{2}", machineFullName, preffixName, discoveryOptions.Id).Replace(" ", "_").ToLower();
             var discoveryJson = new HassDiscoveryJsonClass()
             {
-                Name = fullName
+                Name = string.Format("{0} {1}", machineName, discoveryOptions.Name),
+                UniqueId = uniqueId
             };
 
             if (discoveryOptions.Component == HomeAssistantComponent.Camera)
@@ -354,31 +367,27 @@ namespace IOTLinkService.Service.Engine.MQTT
             if (!string.IsNullOrEmpty(discoveryOptions.PayloadOn))
                 discoveryJson.PayloadOn = discoveryOptions.PayloadOn;
 
-            discoveryJson.UniqueId = fullName;
             discoveryJson.Device = new Device()
             {
                 Identifiers = new string[1]
                 {
-                    machineName + "_" + preffixName
+                    string.Format("{0}_{1}", machineId, preffixName)
                 },
                 Manufacturer = "IOTLink " + AssemblyHelper.GetCurrentVersion(),
                 Model = Environment.UserDomainName,
-                Name = Environment.MachineName + " " + preffixName,
+                Name = string.Format("{0} {1}", machineName, preffixName),
             };
 
-            var configTopic = "homeassistant/" + discoveryOptions.Component.ToString().PascalToSnakeCase() + "/iotlink/" + fullName + "/config";
+            var componentTopic = discoveryOptions.Component.ToString().PascalToSnakeCase();
+            var configTopic = string.Format("{0}/{1}/{2}/{3}/{4}", _config.Discovery.TopicPrefix, componentTopic, "iotlink", uniqueId, "config");
             var msgConfig = new MqttConfig.MsgConfig()
             {
                 Retain = true
             };
 
-            var jsonString = JsonConvert.SerializeObject(discoveryJson, Formatting.Indented,
-                new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore
-                });
-
+            var jsonString = JsonConvert.SerializeObject(discoveryJson, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
             var mqttMsg = BuildMQTTMessage(configTopic, Encoding.UTF8.GetBytes(jsonString), msgConfig);
+
             await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
         }
 

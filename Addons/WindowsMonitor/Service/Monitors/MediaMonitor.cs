@@ -27,7 +27,8 @@ namespace IOTLinkAddon.Service.Monitors
                 Value = Math.Round(PlatformHelper.GetAudioVolume(), 0),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
-                    Name = "Volume",
+                    Id = "Volume",
+                    Name = "Media Volume",
                     Component = HomeAssistantComponent.Sensor
                 }
             });
@@ -40,7 +41,8 @@ namespace IOTLinkAddon.Service.Monitors
                 Value = PlatformHelper.IsAudioMuted(),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
-                    Name = "Muted",
+                    Id = "Muted",
+                    Name = "Volume Muted",
                     Component = HomeAssistantComponent.BinarySensor,
                     PayloadOff = "False",
                     PayloadOn = "True"
@@ -55,7 +57,8 @@ namespace IOTLinkAddon.Service.Monitors
                 Value = PlatformHelper.IsAudioPlaying(),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
-                    Name = "Playing",
+                    Id = "Playing",
+                    Name = "Media Playing",
                     Component = HomeAssistantComponent.BinarySensor,
                     PayloadOff = "False",
                     PayloadOn = "True"

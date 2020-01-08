@@ -30,7 +30,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.BinarySensor,
-                    Name = "PowerStatus",
+                    Id = "PowerStatus",
+                    Name = "Power Status",
                     PayloadOff = "Offline",
                     PayloadOn = "Online",
                     DeviceClass = "plug"
@@ -47,7 +48,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.BinarySensor,
-                    Name = "BatteryStatus",
+                    Id = "BatteryStatus",
+                    Name = "Battery Status",
                     PayloadOff = "Offline",
                     PayloadOn = "Online",
                     DeviceClass = "plug"
@@ -64,7 +66,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "FullLifetime",
+                    Id = "FullLifetime",
+                    Name = "Battery Full Lifetime",
                     Unit = "minutes",
                     ValueTemplate = "{{ ( value | float / 60 ) | int }}",
                     Icon = "mdi:timer"
@@ -81,7 +84,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "RemainingTime",
+                    Id = "RemainingTime",
+                    Name = "Battery Remaining Time",
                     Unit = "minutes",
                     ValueTemplate = "{{ ( value | float / 60 ) | int }}",
                     Icon = "mdi:timer"
@@ -99,7 +103,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "Remaining",
+                    Id = "Remaining",
+                    Name = "Battery Remaining",
                     Unit = "%",
                     DeviceClass = "battery"
                 }

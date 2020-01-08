@@ -43,7 +43,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{drive}_TotalStorage",
+                            Id = $"{drive}_TotalStorage",
+                            Name = $"Storage {drive} - Total Storage",
                             Unit = "GB",
                             Icon = "mdi:harddisk"
                         }
@@ -59,7 +60,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{drive}_AvailableFreeSpace",
+                            Id = $"{drive}_AvailableFreeSpace",
+                            Name = $"Storage {drive} - Available Free Space",
                             Unit = "GB",
                             Icon = "mdi:harddisk"
                         }
@@ -75,7 +77,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{drive}_TotalFreeSpace",
+                            Id = $"{drive}_TotalFreeSpace",
+                            Name = $"Storage {drive} - Total Free Space",
                             Unit = "GB",
                             Icon = "mdi:harddisk"
                         }
@@ -91,7 +94,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{drive}_UsedSpace",
+                            Id = $"{drive}_UsedSpace",
+                            Name = $"Storage {drive} - Used Space",
                             Unit = "GB",
                             Icon = "mdi:harddisk"
                         }
@@ -107,7 +111,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{drive}_DriveFormat",
+                            Id = $"{drive}_DriveFormat",
+                            Name = $"Storage {drive} - Format",
                             Icon = "mdi:harddisk"
                         }
                     });
@@ -122,7 +127,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{drive}_DriveUsage",
+                            Id = $"{drive}_DriveUsage",
+                            Name = $"Storage {drive} - Usage",
                             Unit = "%",
                             Icon = "mdi:chart-donut"
                         }
@@ -138,7 +144,8 @@ namespace IOTLinkAddon.Service.Monitors
                         DiscoveryOptions = new HassDiscoveryOptions()
                         {
                             Component = HomeAssistantComponent.Sensor,
-                            Name = $"{drive}_VolumeLabel",
+                            Id = $"{drive}_VolumeLabel",
+                            Name = $"Storage {drive} - Label",
                             Icon = "mdi:harddisk"
                         }
                     });

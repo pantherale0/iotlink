@@ -38,7 +38,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "CurrentUsername",
+                    Id = "CurrentUsername",
+                    Name = "Current Username",
                     Icon = "mdi:account"
                 }
             });
@@ -72,7 +73,8 @@ namespace IOTLinkAddon.Service.Monitors
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.Sensor,
-                    Name = "IdleTime",
+                    Id = "IdleTime",
+                    Name = "System Idle Time",
                     Unit = "s",
                     Icon = "mdi:timer"
                 }

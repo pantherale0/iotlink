@@ -64,7 +64,8 @@ namespace IOTLinkAddon.Service.Monitors
                     Value = displayInfo.ScreenWidth,
                     DiscoveryOptions = new HassDiscoveryOptions()
                     {
-                        Name = $"{i}_ScreenWidth",
+                        Id = $"Screen_{i}_Width",
+                        Name = $"Screen #{i} - Width",
                         Component = HomeAssistantComponent.Sensor
                     }
                 });
@@ -77,7 +78,8 @@ namespace IOTLinkAddon.Service.Monitors
                     Value = displayInfo.ScreenHeight,
                     DiscoveryOptions = new HassDiscoveryOptions()
                     {
-                        Name = $"{i}_ScreenHeight",
+                        Id = $"Screen_{i}_Height",
+                        Name = $"Screen #{i} - Height",
                         Component = HomeAssistantComponent.Sensor
                     }
                 });
@@ -99,7 +101,8 @@ namespace IOTLinkAddon.Service.Monitors
                 Value = (byte[])data.requestData.displayScreen,
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
-                    Name = string.Format("{0}_Screen", data.requestData.displayIndex),
+                    Id = $"Screen_{data.requestData.displayIndex}",
+                    Name = $"Screen #{data.requestData.displayIndex}",
                     Component = HomeAssistantComponent.Camera
                 }
             });

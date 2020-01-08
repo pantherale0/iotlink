@@ -1,5 +1,6 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,7 +35,15 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_DATETIME,
                 Topic = "Stats/System/BootTime",
-                Value = PlatformHelper.LastBootUpTime()
+                Value = PlatformHelper.LastBootUpTime(),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Id = "BootTime",
+                    Name = "System Boot Time",
+                    Unit = "s",
+                    Icon = "mdi:timer"
+                }
             });
 
             // Uptime
@@ -43,7 +52,15 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = config.GetValue("inSeconds", false) ? MonitorItemType.TYPE_RAW : MonitorItemType.TYPE_UPTIME,
                 Topic = "Stats/System/Uptime",
-                Value = Math.Round(_uptimePerformanceCounter.NextValue(), 0)
+                Value = Math.Round(_uptimePerformanceCounter.NextValue(), 0),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Id = "Uptime",
+                    Name = "System Uptime",
+                    Unit = "s",
+                    Icon = "mdi:timer"
+                }
             });
 
             return result;
