@@ -46,7 +46,7 @@ mqtt:
   discovery:
     enabled: true
     topicPrefix: homeassistant
-	domainPrefix: false
+    domainPrefix: false
   ########################################################################
   # General MQTT Settings
   ########################################################################
