@@ -5,5 +5,5 @@ enabled: true
 id: Commands
 name: System Commands
 file: Commands.dll
-minApiVersion: 1.5.0
+minApiVersion: 2.0.0
 maxApiVersion: 

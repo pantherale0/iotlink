@@ -5,5 +5,5 @@ enabled: true
 id: WindowsMonitor
 name: Windows Monitor
 file: WindowsMonitor.dll
-minApiVersion: 1.5.0
+minApiVersion: 2.0.0
 maxApiVersion: 
