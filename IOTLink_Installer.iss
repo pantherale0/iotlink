@@ -6,7 +6,7 @@
 #define APP_DIR_NAME     "IOTLink"
 #define APP_AGENT_NAME   "IOTLinkAgent.exe"
 #define APP_SERVICE_NAME "IOTLinkService.exe"
-#define APP_VERSION      "1.4.1"
+#define APP_VERSION      "2.0.0"
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
 #define APP_AUTHOR_URL  "https://alexslx.com"
@@ -32,7 +32,7 @@ OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}
 WizardStyle=modern
 AllowNoIcons=yes
 LicenseFile=LICENSE.md
-UninstallDisplayIcon={app}\MyProg.exe    
+UninstallDisplayIcon={app}\IOTLinkAgent.exe    
 ; Compression
 Compression=lzma2
 SolidCompression=no

@@ -156,5 +156,21 @@ namespace IOTLinkAPI.Helpers
 
             return source.Trim().ToLowerInvariant();
         }
+        /// <summary>
+        /// Convert PascalCase to kebab-case.
+        /// Using https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/capitalization-conventions
+        /// </summary>
+        /// <param name="value">String using PascalCase</param>
+        /// <returns>String using kebab-case</returns>
+        public static string PascalToSnakeCase(this string source)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+                return source;
+
+            if (source.Length > 5)
+                return Regex.Replace(source, "(?<!^)(?<!/)([A-Z][a-z]|(?<=[a-z])[A-Z])", "_$1", RegexOptions.Compiled).Trim().ToLowerInvariant();
+
+            return source.Trim().ToLowerInvariant();
+        }
     }
 }

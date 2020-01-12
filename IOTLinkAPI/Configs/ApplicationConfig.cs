@@ -1,5 +1,4 @@
 ﻿using IOTLinkAPI.Helpers;
-using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
 namespace IOTLinkAPI.Configs
@@ -20,9 +19,6 @@ namespace IOTLinkAPI.Configs
         {
             [YamlMember(Alias = "enabled")]
             public bool Enabled { get; set; }
-
-            [YamlMember(Alias = "globalTopics")]
-            public List<string> GlobalTopics { get; set; }
         }
 
         public class LoggingConfiguration

@@ -34,6 +34,8 @@ namespace IOTLinkAddon.Service
 
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
+        private List<string> _discoveryItems = new List<string>();
+
         private readonly List<IMonitor> monitors = new List<IMonitor>()
         {
             new CPUMonitor(),
@@ -63,6 +65,33 @@ namespace IOTLinkAddon.Service
             OnRefreshRequestedHandler += OnClearEvent;
 
             SetupTimers();
+            SetupDiscovery();
+        }
+
+        private void SetupDiscovery()
+        {
+            if (_config == null)
+            {
+                LoggerHelper.Info("MQTT discovery is disabled.");
+                return;
+            }
+            foreach (var monitor in monitors)
+            {
+                string configKey = monitor.GetConfigKey();
+                if (CheckMonitorEnabled(configKey))
+                {
+                    LoggerHelper.Debug("{0} Monitor - Sending config", configKey);
+
+                    List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
+                    if (items == null)
+                        return;
+
+                    foreach (var item in items)
+                    {
+                        PublishDiscoveryItem(item);
+                    }
+                }
+            }
         }
 
         private void OnClearEvent(object sender, EventArgs e)
@@ -70,6 +99,7 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("Event {0} Received. Clearing cache and resending information.", e.GetType().ToString());
 
             _cache.Clear();
+            _discoveryItems.Clear();
             SendAllInformation();
         }
 
@@ -109,6 +139,7 @@ namespace IOTLinkAddon.Service
 
             _config = ConfigurationManager.GetInstance().GetConfiguration(_configPath);
             SetupTimers();
+            SetupDiscovery();
         }
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
@@ -181,7 +212,10 @@ namespace IOTLinkAddon.Service
                     return;
 
                 foreach (MonitorItem item in items)
+                {
+                    PublishDiscoveryItem(item);
                     PublishItem(item);
+                }
             }
         }
 
@@ -234,6 +268,23 @@ namespace IOTLinkAddon.Service
             SendMonitorValue(item.Topic, value, item.ConfigKey);
         }
 
+        private void PublishDiscoveryItem(MonitorItem item)
+        {
+            if (item == null || item.DiscoveryOptions == null || string.IsNullOrWhiteSpace(item.Topic))
+                return;
+
+            if (_discoveryItems.Contains(item.Topic))
+                return;
+
+            item.DiscoveryOptions.Icon = GetDiscoveryOption(item.ConfigKey, item.DiscoveryOptions.Id, "icon", item.DiscoveryOptions.Icon);
+            item.DiscoveryOptions.ValueTemplate = GetDiscoveryOption(item.ConfigKey, item.DiscoveryOptions.Id, "valueTemplate", item.DiscoveryOptions.ValueTemplate);
+            item.DiscoveryOptions.Unit = GetDiscoveryOption(item.ConfigKey, item.DiscoveryOptions.Id, "unitOfMeasurement", item.DiscoveryOptions.Unit);
+            item.DiscoveryOptions.Name = GetDiscoveryOption(item.ConfigKey, item.DiscoveryOptions.Id, "name", item.DiscoveryOptions.Name);
+
+            GetManager().PublishDiscoveryMessage(this, item.Topic, item.ConfigKey, item.DiscoveryOptions); //TODO: name should be combination of configkey and discoveryOptions.name
+            _discoveryItems.Add(item.Topic);
+        }
+
         private string FormatSizeObject(string configKey, string formatKey, string defaultFormat, object value)
         {
             long sizeInBytes = MathHelper.ToLong(value, 0L);
@@ -276,7 +327,10 @@ namespace IOTLinkAddon.Service
                     continue;
 
                 foreach (MonitorItem item in items)
+                {
+                    PublishDiscoveryItem(item);
                     PublishItem(item);
+                }
             }
         }
 
@@ -307,6 +361,17 @@ namespace IOTLinkAddon.Service
             string value = _config.GetValue($"monitors:{configKey}:formats:{formatKey}", null);
             if (string.IsNullOrWhiteSpace(value))
                 value = _config.GetValue($"formats:{formatKey}", defaultValue);
+
+            return value;
+        }
+
+        private string GetDiscoveryOption(string configKey, string subKey, string option, string defaultValue)
+        {
+            if (string.IsNullOrWhiteSpace(configKey) || string.IsNullOrWhiteSpace(option))
+                return defaultValue;
+            var value = _config.GetValue($"monitors:{configKey}:discoveryOptions:{subKey}:{option}", null);
+            if (string.IsNullOrWhiteSpace(value))
+                value = _config.GetValue($"discoveryOptions:{option}", defaultValue);
 
             return value;
         }

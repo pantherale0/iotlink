@@ -1,4 +1,5 @@
 ﻿using IOTLinkAPI.Configs;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,7 +32,15 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/CPU/Usage",
-                Value = Math.Round(_cpuPerformanceCounter.NextValue(), 0)
+                Value = Math.Round(_cpuPerformanceCounter.NextValue(), 0),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Id = "Usage",
+                    Unit = "%",
+                    Name = "CPU Usage",
+                    Component = HomeAssistantComponent.Sensor,
+                    Icon = "mdi:speedometer"
+                }
             });
 
             return result;
