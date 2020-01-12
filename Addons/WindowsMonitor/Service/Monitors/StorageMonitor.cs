@@ -1,5 +1,6 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,7 +39,15 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_DISK_SIZE,
                         Topic = topic + "/TotalSize",
-                        Value = driveInfo.TotalSize
+                        Value = driveInfo.TotalSize,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{drive}_TotalStorage",
+                            Name = $"Storage {drive} - Total Storage",
+                            Unit = "GB",
+                            Icon = "mdi:harddisk"
+                        }
                     });
 
                     // Available Free Space
@@ -47,7 +56,15 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_DISK_SIZE,
                         Topic = topic + "/AvailableFreeSpace",
-                        Value = driveInfo.AvailableFreeSpace
+                        Value = driveInfo.AvailableFreeSpace,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{drive}_AvailableFreeSpace",
+                            Name = $"Storage {drive} - Available Free Space",
+                            Unit = "GB",
+                            Icon = "mdi:harddisk"
+                        }
                     });
 
                     // Total Free Space
@@ -56,7 +73,15 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_DISK_SIZE,
                         Topic = topic + "/TotalFreeSpace",
-                        Value = driveInfo.TotalFreeSpace
+                        Value = driveInfo.TotalFreeSpace,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{drive}_TotalFreeSpace",
+                            Name = $"Storage {drive} - Total Free Space",
+                            Unit = "GB",
+                            Icon = "mdi:harddisk"
+                        }
                     });
 
                     // Used Space
@@ -65,7 +90,15 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_DISK_SIZE,
                         Topic = topic + "/UsedSpace",
-                        Value = usedSpace
+                        Value = usedSpace,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{drive}_UsedSpace",
+                            Name = $"Storage {drive} - Used Space",
+                            Unit = "GB",
+                            Icon = "mdi:harddisk"
+                        }
                     });
 
                     // Drive Format
@@ -74,7 +107,14 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_RAW,
                         Topic = topic + "/DriveFormat",
-                        Value = driveInfo.DriveFormat
+                        Value = driveInfo.DriveFormat,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{drive}_DriveFormat",
+                            Name = $"Storage {drive} - Format",
+                            Icon = "mdi:harddisk"
+                        }
                     });
 
                     // Drive Usage
@@ -83,7 +123,15 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_RAW,
                         Topic = topic + "/DriveUsage",
-                        Value = driveUsage
+                        Value = driveUsage,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{drive}_DriveUsage",
+                            Name = $"Storage {drive} - Usage",
+                            Unit = "%",
+                            Icon = "mdi:chart-donut"
+                        }
                     });
 
                     // Drive Label
@@ -92,7 +140,14 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_RAW,
                         Topic = topic + "/VolumeLabel",
-                        Value = driveInfo.VolumeLabel
+                        Value = driveInfo.VolumeLabel,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{drive}_VolumeLabel",
+                            Name = $"Storage {drive} - Label",
+                            Icon = "mdi:harddisk"
+                        }
                     });
                 }
                 catch (Exception ex)

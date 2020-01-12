@@ -1,5 +1,6 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System;
 using System.Collections.Generic;
 
@@ -23,7 +24,13 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Volume",
-                Value = Math.Round(PlatformHelper.GetAudioVolume(), 0)
+                Value = Math.Round(PlatformHelper.GetAudioVolume(), 0),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Id = "Volume",
+                    Name = "Media Volume",
+                    Component = HomeAssistantComponent.Sensor
+                }
             });
 
             result.Add(new MonitorItem
@@ -31,7 +38,15 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Muted",
-                Value = PlatformHelper.IsAudioMuted()
+                Value = PlatformHelper.IsAudioMuted(),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Id = "Muted",
+                    Name = "Volume Muted",
+                    Component = HomeAssistantComponent.BinarySensor,
+                    PayloadOff = "False",
+                    PayloadOn = "True"
+                }
             });
 
             result.Add(new MonitorItem
@@ -39,7 +54,15 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Playing",
-                Value = PlatformHelper.IsAudioPlaying()
+                Value = PlatformHelper.IsAudioPlaying(),
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Id = "Playing",
+                    Name = "Media Playing",
+                    Component = HomeAssistantComponent.BinarySensor,
+                    PayloadOff = "False",
+                    PayloadOn = "True"
+                }
             });
 
             return result;

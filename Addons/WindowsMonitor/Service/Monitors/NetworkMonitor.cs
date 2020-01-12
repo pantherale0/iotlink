@@ -1,6 +1,7 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.HomeAssistant;
 using System.Collections.Generic;
 
 namespace IOTLinkAddon.Service.Monitors
@@ -51,7 +52,14 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_RAW,
                         Topic = topic + "/IPv4",
-                        Value = networkInfo.IPv4Address
+                        Value = networkInfo.IPv4Address,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{i}_IPv4Adress",
+                            Name = $"Network #{i} - IPv4",
+                            Icon = "mdi:lan"
+                        }
                     });
                 }
 
@@ -63,7 +71,14 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_RAW,
                         Topic = topic + "/IPv6",
-                        Value = networkInfo.IPv6Address
+                        Value = networkInfo.IPv6Address,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{i}_IPv6Adress",
+                            Name = $"Network #{i} - IPv6",
+                            Icon = "mdi:lan"
+                        }
                     });
                 }
 
@@ -73,7 +88,15 @@ namespace IOTLinkAddon.Service.Monitors
                     ConfigKey = CONFIG_KEY,
                     Type = MonitorItemType.TYPE_RAW,
                     Topic = topic + "/Speed",
-                    Value = networkInfo.Speed
+                    Value = networkInfo.Speed,
+                    DiscoveryOptions = new HassDiscoveryOptions()
+                    {
+                        Component = HomeAssistantComponent.Sensor,
+                        Id = $"{i}_Speed",
+                        Name = $"Network #{i} - Speed",
+                        Unit = "Mbps",
+                        Icon = "mdi:speedometer"
+                    }
                 });
 
                 // Network Wired
@@ -82,7 +105,15 @@ namespace IOTLinkAddon.Service.Monitors
                     ConfigKey = CONFIG_KEY,
                     Type = MonitorItemType.TYPE_RAW,
                     Topic = topic + "/Wired",
-                    Value = networkInfo.Wired
+                    Value = networkInfo.Wired,
+                    DiscoveryOptions = new HassDiscoveryOptions()
+                    {
+                        Component = HomeAssistantComponent.BinarySensor,
+                        Id = $"{i}_Wired",
+                        Name = $"Network #{i} - Wired",
+                        PayloadOff = "False",
+                        PayloadOn = "True"
+                    }
                 });
 
                 // Network Bytes Sent
@@ -91,7 +122,14 @@ namespace IOTLinkAddon.Service.Monitors
                     ConfigKey = CONFIG_KEY,
                     Type = MonitorItemType.TYPE_NETWORK_SIZE,
                     Topic = topic + "/BytesSent",
-                    Value = networkInfo.BytesSent
+                    Value = networkInfo.BytesSent,
+                    DiscoveryOptions = new HassDiscoveryOptions()
+                    {
+                        Component = HomeAssistantComponent.Sensor,
+                        Id = $"{i}_BytesSent",
+                        Name = $"Network #{i} - Bytes Sent",
+                        Unit = "B"
+                    }
                 });
 
                 // Network Bytes Received
@@ -100,7 +138,14 @@ namespace IOTLinkAddon.Service.Monitors
                     ConfigKey = CONFIG_KEY,
                     Type = MonitorItemType.TYPE_NETWORK_SIZE,
                     Topic = topic + "/BytesReceived",
-                    Value = networkInfo.BytesReceived
+                    Value = networkInfo.BytesReceived,
+                    DiscoveryOptions = new HassDiscoveryOptions()
+                    {
+                        Component = HomeAssistantComponent.Sensor,
+                        Id = $"{i}_BytesReceived",
+                        Name = $"Network #{i} - Bytes Received",
+                        Unit = "B"
+                    }
                 });
 
                 // Bytes Sent per second
@@ -111,7 +156,14 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_NETWORK_SPEED,
                         Topic = topic + "/BytesSentPerSecond",
-                        Value = bytesSentPerSecond
+                        Value = bytesSentPerSecond,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{i}_BytesSentPerSecond",
+                            Name = $"Network #{i} - BPS Sent",
+                            Unit = "Bps"
+                        }
                     });
                 }
 
@@ -123,7 +175,14 @@ namespace IOTLinkAddon.Service.Monitors
                         ConfigKey = CONFIG_KEY,
                         Type = MonitorItemType.TYPE_NETWORK_SPEED,
                         Topic = topic + "/BytesReceivedPerSecond",
-                        Value = bytesReceivedPerSecond
+                        Value = bytesReceivedPerSecond,
+                        DiscoveryOptions = new HassDiscoveryOptions()
+                        {
+                            Component = HomeAssistantComponent.Sensor,
+                            Id = $"{i}_BytesReceivedPerSecond",
+                            Name = $"Network #{i} - BPS Received",
+                            Unit = "Bps"
+                        }
                     });
                 }
             }
