@@ -388,39 +388,39 @@ namespace IOTLinkAPI.Platform.Windows
             }
         }
 
-        public static bool IsAudioMuted()
+        public static bool IsAudioMuted(Guid guid)
         {
-            return AudioController.GetInstance().IsAudioMuted();
+            return AudioController.GetInstance().IsAudioMuted(guid);
         }
 
-        public static bool IsAudioPlaying()
+        public static bool IsAudioPlaying(Guid guid)
         {
-            return AudioController.GetInstance().IsAudioPlaying();
+            return AudioController.GetInstance().IsAudioPlaying(guid);
         }
 
-        public static double GetAudioVolume()
+        public static double GetAudioVolume(Guid guid)
         {
-            return AudioController.GetInstance().GetAudioVolume();
+            return AudioController.GetInstance().GetAudioVolume(guid);
         }
 
-        public static double GetAudioPeakValue()
+        public static double GetAudioPeakValue(Guid guid)
         {
-            return AudioController.GetInstance().GetAudioPeakValue();
+            return AudioController.GetInstance().GetAudioPeakValue(guid);
         }
 
-        public static bool SetAudioMute(bool mute)
+        public static bool SetAudioMute(Guid guid, bool mute)
         {
-            return AudioController.GetInstance().SetAudioMute(mute);
+            return AudioController.GetInstance().SetAudioMute(guid, mute);
         }
 
-        public static bool ToggleAudioMute()
+        public static bool ToggleAudioMute(Guid guid)
         {
-            return AudioController.GetInstance().ToggleAudioMute();
+            return AudioController.GetInstance().ToggleAudioMute(guid);
         }
 
-        public static void SetAudioVolume(double volume)
+        public static void SetAudioVolume(Guid guid, double volume)
         {
-            AudioController.GetInstance().SetAudioVolume(volume);
+            AudioController.GetInstance().SetAudioVolume(guid, volume);
         }
 
         public static void TurnOffDisplays()

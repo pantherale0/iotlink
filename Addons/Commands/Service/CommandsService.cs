@@ -105,9 +105,17 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("OnVolumeSet: Message received");
             try
             {
-                double volume = Convert.ToDouble(e.Message.GetPayload());
-                PlatformHelper.SetAudioVolume(volume);
+                if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
+                {
+                    LoggerHelper.Warn("OnVolumeSetMessage: Received an empty message payload");
+                    return;
+                }
 
+                string[] args = e.Message.GetPayload().Split(',');
+                double volume = Convert.ToDouble(args[args.Length == 2 ? 1 : 0]);
+                Guid guid = args.Length >= 2 ? Guid.Parse(args[0]) : Guid.Empty;
+
+                PlatformHelper.SetAudioVolume(guid, volume);
                 LoggerHelper.Debug("OnVolumeSet: Volume set to {0}", volume);
             }
             catch (Exception ex)
@@ -123,14 +131,16 @@ namespace IOTLinkAddon.Service
             {
                 if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
                 {
-                    PlatformHelper.ToggleAudioMute();
+                    PlatformHelper.ToggleAudioMute(Guid.Empty);
                     LoggerHelper.Debug("OnVolumeMute: Toggling current audio mute flag.");
                     return;
                 }
 
-                bool mute = Convert.ToBoolean(e.Message.GetPayload());
-                PlatformHelper.SetAudioMute(mute);
-
+                string[] args = e.Message.GetPayload().Split(',');
+                bool mute = Convert.ToBoolean(args[args.Length == 2 ? 1 : 0]);
+                Guid guid = args.Length >= 2 ? Guid.Parse(args[0]) : Guid.Empty;
+                
+                PlatformHelper.SetAudioMute(guid, mute);
                 LoggerHelper.Debug("OnVolumeMute: Mute flag set to {0}", mute);
             }
             catch (Exception ex)
