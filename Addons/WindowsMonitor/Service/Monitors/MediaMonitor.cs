@@ -1,5 +1,6 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.HomeAssistant;
 using System;
 using System.Collections.Generic;
@@ -19,12 +20,16 @@ namespace IOTLinkAddon.Service.Monitors
         {
             List<MonitorItem> result = new List<MonitorItem>();
 
+            AudioDeviceInfo audioDeviceInfo = PlatformHelper.GetAudioDeviceInfo(Guid.Empty);
+            if (audioDeviceInfo == null)
+                return result;
+
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Volume",
-                Value = Math.Round(PlatformHelper.GetAudioVolume(), 0),
+                Value = Math.Round(audioDeviceInfo.Volume, 0),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Id = "Volume",
@@ -38,7 +43,7 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Muted",
-                Value = PlatformHelper.IsAudioMuted(),
+                Value = audioDeviceInfo.IsMuted,
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Id = "Muted",
@@ -54,7 +59,7 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Playing",
-                Value = PlatformHelper.IsAudioPlaying(),
+                Value = audioDeviceInfo.IsAudioPlaying,
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Id = "Playing",

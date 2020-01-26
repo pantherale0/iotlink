@@ -195,51 +195,15 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
-        /// Is primary audio muted?
+        /// Return a <see cref="AudioDeviceInfo"/> object with all current device information.
         /// </summary>
-        /// <returns>Boolean</returns>
-        public static bool IsAudioMuted()
+        /// <returns><see cref="AudioDeviceInfo"/> object</returns>
+        public static AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
-            return WindowsAPI.IsAudioMuted();
-        }
-
-        /// <summary>
-        /// Is primary audio currently playing any media?
-        /// </summary>
-        /// <returns>Boolean</returns>
-        public static bool IsAudioPlaying()
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.IsAudioPlaying();
-        }
-
-        /// <summary>
-        /// Get current primary audio device volume level
-        /// </summary>
-        /// <returns>Double</returns>
-        public static double GetAudioVolume()
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.GetAudioVolume();
-        }
-
-        /// <summary>
-        /// Get current primary audio device peak level
-        /// </summary>
-        /// <returns>Double</returns>
-        public static double GetAudioPeakValue()
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.GetAudioPeakValue();
+            return WindowsAPI.GetAudioDeviceInfo(guid);
         }
 
         /// <summary>
@@ -247,12 +211,12 @@ namespace IOTLinkAPI.Helpers
         /// </summary>
         /// <param name="mute">Boolean indicating the desired mute flag</param>
         /// <returns>Boolean</returns>
-        public static bool SetAudioMute(bool mute)
+        public static bool SetAudioMute(Guid guid, bool mute)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
-            return WindowsAPI.SetAudioMute(mute);
+            return WindowsAPI.SetAudioMute(guid, mute);
         }
 
         /// <summary>
@@ -260,19 +224,19 @@ namespace IOTLinkAPI.Helpers
         /// </summary>
         /// <param name="mute">Boolean indicating the desired mute flag</param>
         /// <returns>Boolean</returns>
-        public static bool ToggleAudioMute()
+        public static bool ToggleAudioMute(Guid guid)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
-            return WindowsAPI.ToggleAudioMute();
+            return WindowsAPI.ToggleAudioMute(guid);
         }
 
         /// <summary>
         /// Set the primary audio device volume level
         /// </summary>
         /// <param name="volume">Desired volume level (0-100)</param>
-        public static void SetAudioVolume(double volume)
+        public static void SetAudioVolume(Guid guid, double volume)
         {
             if (volume < 0 || volume > 100)
                 throw new Exception("Volume level needs to be between 0 and 100");
@@ -280,7 +244,7 @@ namespace IOTLinkAPI.Helpers
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
-            WindowsAPI.SetAudioVolume(volume);
+            WindowsAPI.SetAudioVolume(guid, volume);
         }
 
         /// <summary>
