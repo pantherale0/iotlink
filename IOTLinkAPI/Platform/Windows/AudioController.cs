@@ -16,11 +16,11 @@ namespace IOTLinkAPI.Platform.Windows
         private CoreAudioDevice commsPlayback;
         private CoreAudioDevice mediaPlayback;
 
-        private Dictionary<Guid, CoreAudioDevice> devices;
-        private Dictionary<Guid, double> deviceVolume;
-        private Dictionary<Guid, double> devicePeakValue;
-        private Dictionary<Guid, bool> deviceMuted;
-        private Dictionary<Guid, string> deviceState;
+        private Dictionary<Guid, CoreAudioDevice> devices = new Dictionary<Guid, CoreAudioDevice>();
+        private Dictionary<Guid, double> deviceVolume = new Dictionary<Guid, double>();
+        private Dictionary<Guid, double> devicePeakValue = new Dictionary<Guid, double>();
+        private Dictionary<Guid, bool> deviceMuted = new Dictionary<Guid, bool>();
+        private Dictionary<Guid, string> deviceState = new Dictionary<Guid, string>();
 
         public static AudioController GetInstance()
         {
@@ -81,56 +81,94 @@ namespace IOTLinkAPI.Platform.Windows
 
         public bool IsAudioMuted(Guid guid)
         {
-            Guid deviceId = guid != null ? guid : mediaPlayback.Id;
-            return deviceMuted[deviceId];
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
+                return false;
+
+            return deviceMuted[device.Id];
         }
 
         public bool IsAudioPlaying(Guid guid)
         {
-            Guid deviceId = guid != null ? guid : mediaPlayback.Id;
-            return devicePeakValue[deviceId] > 0d;
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
+                return false;
+
+            return devicePeakValue[device.Id] > 0d;
         }
 
         public double GetAudioVolume(Guid guid)
         {
-            Guid deviceId = guid != null ? guid : mediaPlayback.Id;
-            return deviceVolume[deviceId];
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
+                return 0d;
+
+            return deviceVolume[device.Id];
         }
 
         public double GetAudioPeakValue(Guid guid)
         {
-            Guid deviceId = guid != null ? guid : mediaPlayback.Id;
-            return devicePeakValue[deviceId];
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
+                return 0d;
+
+            return devicePeakValue[device.Id];
         }
 
         public bool SetAudioMute(Guid guid, bool mute)
         {
-            if (guid == null && mediaPlayback == null || guid != null && !devices.ContainsKey(guid))
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
                 return false;
 
-            CoreAudioDevice device = guid == null ? mediaPlayback : devices[guid];
             return device.Mute(mute);
         }
 
         public bool ToggleAudioMute(Guid guid)
         {
-            if (guid == null && mediaPlayback == null || guid != null && !devices.ContainsKey(guid))
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
                 return false;
 
-            CoreAudioDevice device = guid == null ? mediaPlayback : devices[guid];
             return device.ToggleMute();
         }
 
         public void SetAudioVolume(Guid guid, double volume)
         {
-            if (guid == null && mediaPlayback == null || guid != null && !devices.ContainsKey(guid))
-                return;
-
             if (volume < 0 || volume > 100)
                 throw new Exception("Volume level needs to be between 0 and 100");
 
-            CoreAudioDevice device = guid == null ? mediaPlayback : devices[guid];
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
+                return;
+
             device.Volume = volume;
+        }
+
+        public void SetDefaultDevice(Guid guid)
+        {
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
+                return;
+
+            device.SetAsDefault();
+        }
+
+        public void SetDefaultCommunicationDevice(Guid guid)
+        {
+            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
+            if (device == null)
+                return;
+
+            device.SetAsDefaultCommunications();
+        }
+
+        private CoreAudioDevice GetDeviceByGuid(Guid guid, CoreAudioDevice defaultDevice)
+        {
+            if (guid == Guid.Empty || !devices.ContainsKey(guid))
+                return defaultDevice;
+
+            return devices[guid];
         }
     }
 }

@@ -110,7 +110,15 @@ namespace IOTLinkService.Service.WebSockets.Server
                 }
             }
 
-            _clients = _clients.Except(entries).ToDictionary(x => x.Key, x => x.Value);
+            try
+            {
+                var newClients = _clients.Except(entries).ToDictionary(x => x.Key, x => x.Value);
+                _clients = newClients;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error while trying to disconnect client: {0}", ex);
+            }
         }
 
         internal void Broadcast(string payload)

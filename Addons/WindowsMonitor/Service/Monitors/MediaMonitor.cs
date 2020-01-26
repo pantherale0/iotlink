@@ -24,7 +24,7 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Volume",
-                Value = Math.Round(PlatformHelper.GetAudioVolume(), 0),
+                Value = Math.Round(PlatformHelper.GetAudioVolume(Guid.Empty), 0),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Id = "Volume",
@@ -38,7 +38,7 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Muted",
-                Value = PlatformHelper.IsAudioMuted(),
+                Value = PlatformHelper.IsAudioMuted(Guid.Empty),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Id = "Muted",
@@ -54,7 +54,7 @@ namespace IOTLinkAddon.Service.Monitors
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Media/Playing",
-                Value = PlatformHelper.IsAudioPlaying(),
+                Value = PlatformHelper.IsAudioPlaying(Guid.Empty),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Id = "Playing",
