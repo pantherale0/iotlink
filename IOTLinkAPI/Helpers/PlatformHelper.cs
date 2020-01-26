@@ -195,51 +195,15 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
-        /// Is primary audio muted?
+        /// Return a <see cref="AudioDeviceInfo"/> object with all current device information.
         /// </summary>
-        /// <returns>Boolean</returns>
-        public static bool IsAudioMuted(Guid guid)
+        /// <returns><see cref="AudioDeviceInfo"/> object</returns>
+        public static AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
 
-            return WindowsAPI.IsAudioMuted(guid);
-        }
-
-        /// <summary>
-        /// Is primary audio currently playing any media?
-        /// </summary>
-        /// <returns>Boolean</returns>
-        public static bool IsAudioPlaying(Guid guid)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.IsAudioPlaying(guid);
-        }
-
-        /// <summary>
-        /// Get current primary audio device volume level
-        /// </summary>
-        /// <returns>Double</returns>
-        public static double GetAudioVolume(Guid guid)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.GetAudioVolume(guid);
-        }
-
-        /// <summary>
-        /// Get current primary audio device peak level
-        /// </summary>
-        /// <returns>Double</returns>
-        public static double GetAudioPeakValue(Guid guid)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
-            return WindowsAPI.GetAudioPeakValue(guid);
+            return WindowsAPI.GetAudioDeviceInfo(guid);
         }
 
         /// <summary>

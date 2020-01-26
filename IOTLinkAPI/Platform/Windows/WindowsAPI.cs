@@ -388,24 +388,9 @@ namespace IOTLinkAPI.Platform.Windows
             }
         }
 
-        public static bool IsAudioMuted(Guid guid)
+        public static AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
         {
-            return AudioController.GetInstance().IsAudioMuted(guid);
-        }
-
-        public static bool IsAudioPlaying(Guid guid)
-        {
-            return AudioController.GetInstance().IsAudioPlaying(guid);
-        }
-
-        public static double GetAudioVolume(Guid guid)
-        {
-            return AudioController.GetInstance().GetAudioVolume(guid);
-        }
-
-        public static double GetAudioPeakValue(Guid guid)
-        {
-            return AudioController.GetInstance().GetAudioPeakValue(guid);
+            return AudioController.GetInstance().GetAudioDeviceInfo(guid);
         }
 
         public static bool SetAudioMute(Guid guid, bool mute)

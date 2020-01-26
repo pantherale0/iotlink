@@ -70,31 +70,23 @@ namespace IOTLinkAPI.Platform.Windows
             }
         }
 
-        public bool IsAudioMuted(Guid guid)
+        public AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
         {
             CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
             if (device == null)
-                return false;
+                return null;
 
-            return device.IsMuted;
-        }
-
-        public bool IsAudioPlaying(Guid guid)
-        {
-            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
-            if (device == null || !devicePeakValue.ContainsKey(device.Id))
-                return false;
-
-            return devicePeakValue[device.Id] > 0d;
-        }
-
-        public double GetAudioVolume(Guid guid)
-        {
-            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
-            if (device == null)
-                return 0d;
-
-            return device.Volume;
+            return new AudioDeviceInfo
+            {
+                Guid = device.Id,
+                Name = device.FullName,
+                Volume = device.Volume,
+                PeakVolume = GetAudioPeakValue(device.Id),
+                IsAudioPlaying = GetAudioPeakValue(device.Id) > 0d,
+                IsDefaultDevice = device.IsDefaultDevice,
+                IsDefaultCommunicationsDevice = device.IsDefaultCommunicationsDevice,
+                IsCaptureDevice = device.IsCaptureDevice
+            };
         }
 
         public double GetAudioPeakValue(Guid guid)
