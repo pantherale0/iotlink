@@ -17,10 +17,7 @@ namespace IOTLinkAPI.Platform.Windows
         private CoreAudioDevice mediaPlayback;
 
         private Dictionary<Guid, CoreAudioDevice> devices = new Dictionary<Guid, CoreAudioDevice>();
-        private Dictionary<Guid, double> deviceVolume = new Dictionary<Guid, double>();
         private Dictionary<Guid, double> devicePeakValue = new Dictionary<Guid, double>();
-        private Dictionary<Guid, bool> deviceMuted = new Dictionary<Guid, bool>();
-        private Dictionary<Guid, string> deviceState = new Dictionary<Guid, string>();
 
         public static AudioController GetInstance()
         {
@@ -37,7 +34,7 @@ namespace IOTLinkAPI.Platform.Windows
             IEnumerable<CoreAudioDevice> audioDevices = audioController.GetDevices();
             foreach (CoreAudioDevice device in audioDevices)
             {
-                LoggerHelper.TraceLoop("Audio Device - ID: {}, Real ID: {}, Name: {}", device.Id, device.RealId, device.FullName);
+                LoggerHelper.TraceLoop("Audio Device - ID: {0}, Real ID: {1}, Name: {2}", device.Id, device.RealId, device.FullName);
                 OnDeviceChanged(device, DeviceChangedType.DeviceAdded);
             }
 
@@ -52,15 +49,12 @@ namespace IOTLinkAPI.Platform.Windows
 
         private void OnDeviceChanged(CoreAudioDevice device, DeviceChangedType changedType)
         {
-            LoggerHelper.Trace("Audio Device {} - Change Type: {}", device.Id, changedType);
+            LoggerHelper.Trace("Audio Device {0} - Change Type: {1}", device.Id, changedType);
 
             if (changedType == DeviceChangedType.DeviceRemoved)
             {
                 devices.Remove(device.Id);
-                deviceVolume.Remove(device.Id);
                 devicePeakValue.Remove(device.Id);
-                deviceMuted.Remove(device.Id);
-                deviceState.Remove(device.Id);
             }
             else
             {
@@ -73,9 +67,6 @@ namespace IOTLinkAPI.Platform.Windows
                     device.PeakValueChanged.Subscribe(x => devicePeakValue[device.Id] = x.PeakValue);
 
                 devices[device.Id] = device;
-                deviceMuted[device.Id] = device.IsMuted;
-                deviceState[device.Id] = device.State.ToString();
-                deviceVolume[device.Id] = device.Volume;
             }
         }
 
@@ -85,13 +76,13 @@ namespace IOTLinkAPI.Platform.Windows
             if (device == null)
                 return false;
 
-            return deviceMuted[device.Id];
+            return device.IsMuted;
         }
 
         public bool IsAudioPlaying(Guid guid)
         {
             CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
-            if (device == null)
+            if (device == null || !devicePeakValue.ContainsKey(device.Id))
                 return false;
 
             return devicePeakValue[device.Id] > 0d;
@@ -103,13 +94,13 @@ namespace IOTLinkAPI.Platform.Windows
             if (device == null)
                 return 0d;
 
-            return deviceVolume[device.Id];
+            return device.Volume;
         }
 
         public double GetAudioPeakValue(Guid guid)
         {
             CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
-            if (device == null)
+            if (device == null || !devicePeakValue.ContainsKey(device.Id))
                 return 0d;
 
             return devicePeakValue[device.Id];
@@ -165,8 +156,11 @@ namespace IOTLinkAPI.Platform.Windows
 
         private CoreAudioDevice GetDeviceByGuid(Guid guid, CoreAudioDevice defaultDevice)
         {
-            if (guid == Guid.Empty || !devices.ContainsKey(guid))
+            if (guid == Guid.Empty)
                 return defaultDevice;
+
+            if (!devices.ContainsKey(guid))
+                return null;
 
             return devices[guid];
         }
