@@ -86,7 +86,7 @@
 
             public bool Enabled { get; set; }
 
-            public static new LWTConfig FromConfiguration(Configuration config)
+            public static LWTConfig FromConfiguration(Configuration config)
             {
                 LWTConfig cfg = new LWTConfig();
                 cfg.ConnectMessage = config.GetValue("connectMsg", "ON");
@@ -123,7 +123,7 @@
 
             public bool DomainPrefix { get; set; }
 
-            public static new DiscoveryConfig FromConfiguration(Configuration config)
+            public static DiscoveryConfig FromConfiguration(Configuration config)
             {
                 DiscoveryConfig cfg = new DiscoveryConfig();
                 cfg.TopicPrefix = config.GetValue("topicPrefix", "homeassistant");
