@@ -16,6 +16,7 @@ namespace IOTLinkAPI.Platform
         public bool IsAudioPlaying { get; set; }
         public bool IsDefaultDevice { get; set; }
         public bool IsDefaultCommunicationsDevice { get; set; }
+        public bool IsPlaybackDevice { get; set; }
         public bool IsCaptureDevice { get; set; }
     }
 }

@@ -34,7 +34,9 @@ namespace IOTLinkAPI.Platform.Windows
             IEnumerable<CoreAudioDevice> audioDevices = audioController.GetDevices();
             foreach (CoreAudioDevice device in audioDevices)
             {
-                LoggerHelper.TraceLoop("Audio Device - ID: {0}, Real ID: {1}, Name: {2}", device.Id, device.RealId, device.FullName);
+                LoggerHelper.TraceLoop("Audio Device - ID: {0}, Name: {1}, Volume: {2}, Default: {3}, Default Comm: {4}, Capture Device: {5}, Playback Device: {6}", 
+                    device.Id, device.FullName, device.Volume, device.IsDefaultDevice, device.IsDefaultCommunicationsDevice, device.IsCaptureDevice, device.IsPlaybackDevice);
+
                 OnDeviceChanged(device, DeviceChangedType.DeviceAdded);
             }
 
@@ -58,10 +60,13 @@ namespace IOTLinkAPI.Platform.Windows
             }
             else
             {
-                if (device.IsDefaultCommunicationsDevice)
-                    commsPlayback = device;
-                if (device.IsDefaultDevice)
-                    mediaPlayback = device;
+                if(device.IsPlaybackDevice)
+                {
+                    if (device.IsDefaultCommunicationsDevice)
+                        commsPlayback = device;
+                    if (device.IsDefaultDevice)
+                        mediaPlayback = device;
+                }
 
                 if (changedType == DeviceChangedType.DeviceAdded)
                     device.PeakValueChanged.Subscribe(x => devicePeakValue[device.Id] = x.PeakValue);
@@ -85,6 +90,7 @@ namespace IOTLinkAPI.Platform.Windows
                 IsAudioPlaying = GetAudioPeakValue(device.Id) > 0d,
                 IsDefaultDevice = device.IsDefaultDevice,
                 IsDefaultCommunicationsDevice = device.IsDefaultCommunicationsDevice,
+                IsPlaybackDevice = device.IsPlaybackDevice,
                 IsCaptureDevice = device.IsCaptureDevice
             };
         }

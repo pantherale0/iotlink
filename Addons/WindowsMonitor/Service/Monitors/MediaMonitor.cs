@@ -21,6 +21,8 @@ namespace IOTLinkAddon.Service.Monitors
             List<MonitorItem> result = new List<MonitorItem>();
 
             AudioDeviceInfo audioDeviceInfo = PlatformHelper.GetAudioDeviceInfo(Guid.Empty);
+            if (audioDeviceInfo == null)
+                return result;
 
             result.Add(new MonitorItem
             {

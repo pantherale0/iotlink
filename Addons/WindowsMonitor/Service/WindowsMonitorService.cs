@@ -84,7 +84,7 @@ namespace IOTLinkAddon.Service
 
                     List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
                     if (items == null)
-                        return;
+                        continue;
 
                     foreach (var item in items)
                     {
