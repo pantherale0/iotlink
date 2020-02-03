@@ -19,8 +19,8 @@ namespace IOTLinkService.Service.Engine
     public class ServiceAddonManager : IAddonServiceManager
     {
         private static ServiceAddonManager _instance;
-        private Dictionary<string, AddonInfo> _addons = new Dictionary<string, AddonInfo>();
-        private Dictionary<string, MQTTMessageEventHandler> _topics = new Dictionary<string, MQTTMessageEventHandler>();
+        private SortedDictionary<string, AddonInfo> _addons = new SortedDictionary<string, AddonInfo>();
+        private SortedDictionary<string, TopicSubscriptionInfo> _topics = new SortedDictionary<string, TopicSubscriptionInfo>();
 
         public static ServiceAddonManager GetInstance()
         {
@@ -41,15 +41,22 @@ namespace IOTLinkService.Service.Engine
         /// <param name="sender">Origin <see cref="AddonInfo">Addon</see></param>
         /// <param name="topic">MQTT Topic</param>
         /// <param name="msgHandler"><see cref="MQTTMessageEventHandler">Event Handler</see></param>
-        public void SubscribeTopic(ServiceAddon sender, string topic, MQTTMessageEventHandler msgHandler)
+        /// <param name="acceptGlobals">Indicates if the subscription will handle global messages</param>
+        public void SubscribeTopic(ServiceAddon sender, string topic, MQTTMessageEventHandler msgHandler, bool acceptGlobals = true)
         {
             if (sender == null || string.IsNullOrWhiteSpace(topic) || HasSubscription(sender, topic))
                 return;
 
             string addonTopic = BuildTopicName(sender, topic);
-            _topics.Add(addonTopic, msgHandler);
 
-            LoggerHelper.Info("Addon {0} has subscribed to topic {1}", sender.GetAppInfo().AddonId, addonTopic);
+            _topics.Add(addonTopic, new TopicSubscriptionInfo
+            {
+                Topic = addonTopic,
+                AcceptGlobalMessages = acceptGlobals,
+                OnMessageReceived = msgHandler
+            });
+
+            LoggerHelper.Info("Addon {0} has subscribed to topic {1} (Accepts Global: {2})", sender.GetAppInfo().AddonId, addonTopic, acceptGlobals);
         }
 
         /// <summary>
@@ -249,13 +256,15 @@ namespace IOTLinkService.Service.Engine
             LoggerHelper.Info("Loading {0} internal addons", internalAddons.Length);
             foreach (ServiceAddon addon in internalAddons)
             {
-                AddonInfo addonInfo = new AddonInfo();
-                addonInfo.AddonName = addon.GetType().Name;
-                addonInfo.AddonPath = PathHelper.BaseAppPath();
-                addonInfo.AddonFile = String.Empty;
-                addonInfo.Internal = true;
-                addonInfo.AddonId = addon.GetType().Name;
-                addonInfo.ServiceAddon = addon;
+                AddonInfo addonInfo = new AddonInfo
+                {
+                    AddonName = addon.GetType().Name,
+                    AddonPath = PathHelper.BaseAppPath(),
+                    AddonFile = string.Empty,
+                    Internal = true,
+                    AddonId = addon.GetType().Name,
+                    ServiceAddon = addon
+                };
 
                 if (addonInfo.ServiceAddon != null)
                 {
@@ -486,7 +495,10 @@ namespace IOTLinkService.Service.Engine
         internal void Raise_OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
             if (_topics.ContainsKey(e.Message.Topic))
-                _topics[e.Message.Topic](sender, e);
+            {
+                TopicSubscriptionInfo subscriptionInfo = _topics[e.Message.Topic];
+                subscriptionInfo.OnMessageReceived(sender, e);
+            }
         }
 
         /// <summary>

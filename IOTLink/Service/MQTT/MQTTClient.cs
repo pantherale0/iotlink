@@ -18,6 +18,8 @@ namespace IOTLinkService.Service.Engine.MQTT
 {
     internal class MQTTClient
     {
+        private static readonly string GLOBAL_TOPIC_NAME = "ALL";
+
         private static MQTTClient _instance;
 
         private MqttConfig _config;
@@ -484,6 +486,7 @@ namespace IOTLinkService.Service.Engine.MQTT
 
             // Subscribe to ALL Messages
             SubscribeTopic(GetFullTopicName("#"));
+            SubscribeTopic(GetGlobalTopicName("#"));
         }
 
         /// <summary>
@@ -701,7 +704,10 @@ namespace IOTLinkService.Service.Engine.MQTT
             if (topic == null)
                 return string.Empty;
 
-            return MQTTHelper.SanitizeTopic(topic).Replace(GetFullTopicName(), "");
+            return MQTTHelper
+                .SanitizeTopic(topic)
+                .Replace(GetFullTopicName(), "")
+                .Replace(GetGlobalTopicName(), "");
         }
 
         /// <summary>
@@ -716,6 +722,20 @@ namespace IOTLinkService.Service.Engine.MQTT
 
             string machineName = PlatformHelper.GetFullMachineName().Replace("\\", "/");
             string topic = string.Format("{0}/{1}/{2}", _config.Prefix, machineName, name);
+            return MQTTHelper.SanitizeTopic(topic);
+        }
+
+        /// <summary>
+        /// Return the global topic name
+        /// </summary>
+        /// <param name="name">message topic string</param>
+        /// <returns>String containing the global topic name</returns>
+        private string GetGlobalTopicName(string name = "")
+        {
+            if (name == null)
+                name = string.Empty;
+
+            string topic = string.Format("{0}/{1}/{2}", _config.Prefix, GLOBAL_TOPIC_NAME, name);
             return MQTTHelper.SanitizeTopic(topic);
         }
     }

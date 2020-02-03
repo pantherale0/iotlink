@@ -5,7 +5,7 @@ namespace IOTLinkAPI.Addons
 {
     public interface IAddonServiceManager : IAddonManager
     {
-        void SubscribeTopic(ServiceAddon sender, string topic, MQTTMessageEventHandler msgHandler);
+        void SubscribeTopic(ServiceAddon sender, string topic, MQTTMessageEventHandler msgHandler, bool acceptGlobals = true);
 
         bool HasSubscription(ServiceAddon sender, string topic);
 
