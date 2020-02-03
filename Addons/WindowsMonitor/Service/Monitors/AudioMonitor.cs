@@ -5,6 +5,7 @@ using IOTLinkAPI.Platform.HomeAssistant;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace IOTLinkAddon.Service.Monitors
 {
@@ -41,12 +42,13 @@ namespace IOTLinkAddon.Service.Monitors
                 }
             }
 
+            Dictionary<string, string> deviceNames = devices.ToDictionary(x => x.Guid.ToString(), x => x.Name);
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Audio/Devices",
-                Value = JsonConvert.SerializeObject(devices),
+                Value = JsonConvert.SerializeObject(deviceNames),
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Id = "Audio_Devices",
