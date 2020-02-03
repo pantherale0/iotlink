@@ -21,38 +21,54 @@ namespace IOTLinkAddon.Service.Monitors
             PowerStatus powerStatus = SystemInformation.PowerStatus;
 
             // Power Status
+            bool powerLineStatus = powerStatus.PowerLineStatus == PowerLineStatus.Online;
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Power/Status",
-                Value = powerStatus.PowerLineStatus,
+                Value = powerLineStatus,
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.BinarySensor,
                     Id = "PowerStatus",
                     Name = "Power Status",
-                    PayloadOff = "Offline",
-                    PayloadOn = "Online",
+                    PayloadOff = "False",
+                    PayloadOn = "True",
                     DeviceClass = "plug"
                 }
             });
 
             // Battery Status
+            bool batteryStatus = powerStatus.BatteryChargeStatus != BatteryChargeStatus.NoSystemBattery && powerStatus.BatteryChargeStatus != BatteryChargeStatus.Unknown;
             result.Add(new MonitorItem
             {
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
                 Topic = "Stats/Battery/Status",
-                Value = powerStatus.BatteryChargeStatus,
+                Value = batteryStatus,
                 DiscoveryOptions = new HassDiscoveryOptions()
                 {
                     Component = HomeAssistantComponent.BinarySensor,
                     Id = "BatteryStatus",
                     Name = "Battery Status",
-                    PayloadOff = "Offline",
-                    PayloadOn = "Online",
                     DeviceClass = "plug"
+                }
+            });
+
+            // Battery Level
+            result.Add(new MonitorItem
+            {
+                ConfigKey = CONFIG_KEY,
+                Type = MonitorItemType.TYPE_RAW,
+                Topic = "Stats/Battery/Level",
+                Value = powerStatus.BatteryChargeStatus,
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Component = HomeAssistantComponent.Sensor,
+                    Id = "BatteryLevel",
+                    Name = "Battery Level",
+                    DeviceClass = "battery"
                 }
             });
 

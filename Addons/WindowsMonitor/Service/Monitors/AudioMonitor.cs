@@ -84,7 +84,8 @@ namespace IOTLinkAddon.Service.Monitors
                 {
                     Id = string.Format("{0}_Volume", device.Guid),
                     Name = string.Format("{0} Volume", device.Name),
-                    Component = HomeAssistantComponent.Sensor
+                    Component = HomeAssistantComponent.Sensor,
+                    Icon = "mdi:volume"
                 }
             });
 
@@ -99,6 +100,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Id = string.Format("{0}_Volume_Muted", device.Guid),
                     Name = string.Format("{0} Volume Muted", device.Name),
                     Component = HomeAssistantComponent.BinarySensor,
+                    DeviceClass = "sound",
                     PayloadOff = "False",
                     PayloadOn = "True"
                 }
@@ -115,6 +117,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Id = string.Format("{0}_Media_Playing", device.Guid),
                     Name = string.Format("{0} Media Playing", device.Name),
                     Component = HomeAssistantComponent.BinarySensor,
+                    DeviceClass = "sound",
                     PayloadOff = "False",
                     PayloadOn = "True"
                 }

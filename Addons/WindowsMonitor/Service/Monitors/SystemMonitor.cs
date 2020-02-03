@@ -75,7 +75,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Component = HomeAssistantComponent.Sensor,
                     Id = "IdleTime",
                     Name = "System Idle Time",
-                    Unit = "s",
+                    Unit = config.GetValue("inSeconds", false) ? "s" : null,
                     Icon = "mdi:timer"
                 }
             });

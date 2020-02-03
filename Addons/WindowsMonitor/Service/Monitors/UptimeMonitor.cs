@@ -16,6 +16,7 @@ namespace IOTLinkAddon.Service.Monitors
         public override void Init()
         {
             _uptimePerformanceCounter.NextValue();
+            PlatformHelper.LastBootUpTime();
         }
 
         public override string GetConfigKey()
@@ -26,8 +27,6 @@ namespace IOTLinkAddon.Service.Monitors
         public override List<MonitorItem> GetMonitorItems(Configuration config, int interval)
         {
             List<MonitorItem> result = new List<MonitorItem>();
-
-            DateTimeOffset lastBootUpTime = PlatformHelper.LastBootUpTime();
 
             // Boot Time
             result.Add(new MonitorItem
@@ -41,7 +40,6 @@ namespace IOTLinkAddon.Service.Monitors
                     Component = HomeAssistantComponent.Sensor,
                     Id = "BootTime",
                     Name = "System Boot Time",
-                    Unit = "s",
                     Icon = "mdi:timer"
                 }
             });
@@ -58,7 +56,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Component = HomeAssistantComponent.Sensor,
                     Id = "Uptime",
                     Name = "System Uptime",
-                    Unit = "s",
+                    Unit = config.GetValue("inSeconds", false) ? "s" : null,
                     Icon = "mdi:timer"
                 }
             });
