@@ -18,8 +18,6 @@ namespace IOTLinkService.Service.Engine.MQTT
 {
     internal class MQTTClient
     {
-        private static readonly string GLOBAL_TOPIC_NAME = "ALL";
-
         private static MQTTClient _instance;
 
         private MqttConfig _config;
@@ -735,7 +733,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             if (name == null)
                 name = string.Empty;
 
-            string topic = string.Format("{0}/{1}/{2}", _config.Prefix, GLOBAL_TOPIC_NAME, name);
+            string topic = string.Format("{0}/{1}", _config.GlobalPrefix, name);
             return MQTTHelper.SanitizeTopic(topic);
         }
     }

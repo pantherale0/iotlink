@@ -64,6 +64,20 @@ namespace IOTLinkAddon.Service.Monitors
             {
                 ConfigKey = CONFIG_KEY,
                 Type = MonitorItemType.TYPE_RAW,
+                Topic = topic + "Name",
+                Value = device.Name,
+                DiscoveryOptions = new HassDiscoveryOptions()
+                {
+                    Id = string.Format("{0}_Name", device.Guid),
+                    Name = device.Name,
+                    Component = HomeAssistantComponent.Sensor
+                }
+            });
+
+            result.Add(new MonitorItem
+            {
+                ConfigKey = CONFIG_KEY,
+                Type = MonitorItemType.TYPE_RAW,
                 Topic = topic + "Volume",
                 Value = Math.Round(device.Volume, 0),
                 DiscoveryOptions = new HassDiscoveryOptions()

@@ -19,6 +19,8 @@
 
         public string Prefix { get; set; }
 
+        public string GlobalPrefix { get; set; }
+
         public bool CleanSession { get; set; }
 
         public class CredentialConfig
@@ -140,6 +142,7 @@
             mqtt.ClientId = config.GetValue("clientId", null);
             mqtt.CleanSession = config.GetValue("cleanSession", true);
             mqtt.Prefix = config.GetValue("prefix", "IOTLink");
+            mqtt.GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all");
             mqtt.Credentials = CredentialConfig.FromConfiguration(config.GetValue("credentials"));
             mqtt.TCP = TCPConfig.FromConfiguration(config.GetValue("tcp"));
             mqtt.WebSocket = WebSocketConfig.FromConfiguration(config.GetValue("websocket"));
