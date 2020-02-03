@@ -54,7 +54,7 @@ namespace IOTLinkAPI.Platform.Windows
         {
             LoggerHelper.Trace("Audio Device {0} - Change Type: {1}", device.Id, changedType);
 
-            if (changedType == DeviceChangedType.DeviceRemoved)
+            if (changedType == DeviceChangedType.DeviceRemoved || device.State != DeviceState.Active)
             {
                 devices.Remove(device.Id);
                 devicePeakValue.Remove(device.Id);

@@ -105,38 +105,6 @@ namespace IOTLinkAddon.Service.Monitors
                     PayloadOn = "True"
                 }
             });
-
-            result.Add(new MonitorItem
-            {
-                ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_RAW,
-                Topic = topic + "Default",
-                Value = device.IsDefaultDevice,
-                DiscoveryOptions = new HassDiscoveryOptions()
-                {
-                    Id = string.Format("{0}_Default", device.Guid),
-                    Name = string.Format("{0} Default", device.Name),
-                    Component = HomeAssistantComponent.BinarySensor,
-                    PayloadOff = "False",
-                    PayloadOn = "True"
-                }
-            });
-
-            result.Add(new MonitorItem
-            {
-                ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_RAW,
-                Topic = topic + "DefaultComms",
-                Value = device.IsDefaultCommunicationsDevice,
-                DiscoveryOptions = new HassDiscoveryOptions()
-                {
-                    Id = string.Format("{0}_Default_Comms", device.Guid),
-                    Name = string.Format("{0} Default Comms", device.Name),
-                    Component = HomeAssistantComponent.BinarySensor,
-                    PayloadOff = "False",
-                    PayloadOn = "True"
-                }
-            });
         }
     }
 }
