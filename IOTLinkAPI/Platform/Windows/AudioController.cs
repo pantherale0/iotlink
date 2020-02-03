@@ -4,6 +4,7 @@ using AudioSwitcher.AudioApi.Observables;
 using IOTLinkAPI.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace IOTLinkAPI.Platform.Windows
 {
@@ -16,7 +17,7 @@ namespace IOTLinkAPI.Platform.Windows
         private CoreAudioDevice commsPlayback;
         private CoreAudioDevice mediaPlayback;
 
-        private Dictionary<Guid, CoreAudioDevice> devices = new Dictionary<Guid, CoreAudioDevice>();
+        private SortedDictionary<Guid, CoreAudioDevice> devices = new SortedDictionary<Guid, CoreAudioDevice>();
         private Dictionary<Guid, double> devicePeakValue = new Dictionary<Guid, double>();
 
         public static AudioController GetInstance()
@@ -34,7 +35,7 @@ namespace IOTLinkAPI.Platform.Windows
             IEnumerable<CoreAudioDevice> audioDevices = audioController.GetDevices();
             foreach (CoreAudioDevice device in audioDevices)
             {
-                LoggerHelper.TraceLoop("Audio Device - ID: {0}, Name: {1}, Volume: {2}, Default: {3}, Default Comm: {4}, Capture Device: {5}, Playback Device: {6}", 
+                LoggerHelper.TraceLoop("Audio Device - ID: {0}, Name: {1}, Volume: {2}, Default: {3}, Default Comm: {4}, Capture Device: {5}, Playback Device: {6}",
                     device.Id, device.FullName, device.Volume, device.IsDefaultDevice, device.IsDefaultCommunicationsDevice, device.IsCaptureDevice, device.IsPlaybackDevice);
 
                 OnDeviceChanged(device, DeviceChangedType.DeviceAdded);
@@ -53,14 +54,14 @@ namespace IOTLinkAPI.Platform.Windows
         {
             LoggerHelper.Trace("Audio Device {0} - Change Type: {1}", device.Id, changedType);
 
-            if (changedType == DeviceChangedType.DeviceRemoved)
+            if (changedType == DeviceChangedType.DeviceRemoved || device.State != DeviceState.Active)
             {
                 devices.Remove(device.Id);
                 devicePeakValue.Remove(device.Id);
             }
             else
             {
-                if(device.IsPlaybackDevice)
+                if (device.IsPlaybackDevice)
                 {
                     if (device.IsDefaultCommunicationsDevice)
                         commsPlayback = device;
@@ -73,6 +74,11 @@ namespace IOTLinkAPI.Platform.Windows
 
                 devices[device.Id] = device;
             }
+        }
+
+        public List<AudioDeviceInfo> GetAudioDevices()
+        {
+            return devices.Values.Select(x => GetAudioDeviceInfo(x.Id)).ToList();
         }
 
         public AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
@@ -104,6 +110,24 @@ namespace IOTLinkAPI.Platform.Windows
             return devicePeakValue[device.Id];
         }
 
+        public bool SetAudioDefault(Guid guid)
+        {
+            CoreAudioDevice device = GetDeviceByGuid(guid, null);
+            if (device == null)
+                return false;
+
+            return device.SetAsDefault();
+        }
+
+        public bool SetAudioDefaultComms(Guid guid)
+        {
+            CoreAudioDevice device = GetDeviceByGuid(guid, null);
+            if (device == null)
+                return false;
+
+            return device.SetAsDefaultCommunications();
+        }
+
         public bool SetAudioMute(Guid guid, bool mute)
         {
             CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
@@ -132,24 +156,6 @@ namespace IOTLinkAPI.Platform.Windows
                 return;
 
             device.Volume = volume;
-        }
-
-        public void SetDefaultDevice(Guid guid)
-        {
-            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
-            if (device == null)
-                return;
-
-            device.SetAsDefault();
-        }
-
-        public void SetDefaultCommunicationDevice(Guid guid)
-        {
-            CoreAudioDevice device = GetDeviceByGuid(guid, mediaPlayback);
-            if (device == null)
-                return;
-
-            device.SetAsDefaultCommunications();
         }
 
         private CoreAudioDevice GetDeviceByGuid(Guid guid, CoreAudioDevice defaultDevice)

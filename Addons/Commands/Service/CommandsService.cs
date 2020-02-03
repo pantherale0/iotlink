@@ -22,13 +22,20 @@ namespace IOTLinkAddon.Service
             GetManager().SubscribeTopic(this, "lock", OnLockMessage);
             GetManager().SubscribeTopic(this, "hibernate", OnHibernateMessage);
             GetManager().SubscribeTopic(this, "suspend", OnSuspendMessage);
+
             GetManager().SubscribeTopic(this, "run", OnRunMessage);
+
             GetManager().SubscribeTopic(this, "displays/on", OnDisplayTurnOnMessage);
             GetManager().SubscribeTopic(this, "displays/off", OnDisplayTurnOffMessage);
-            GetManager().SubscribeTopic(this, "volume/set", OnVolumeSetMessage);
-            GetManager().SubscribeTopic(this, "volume/mute", OnVolumeMuteMessage);
+
+            GetManager().SubscribeTopic(this, "audio/volume", OnAudioVolumeSetMessage);
+            GetManager().SubscribeTopic(this, "audio/mute", OnAudioMuteMessage);
+            GetManager().SubscribeTopic(this, "audio/default", OnAudioSetDefaultMessage);
+            GetManager().SubscribeTopic(this, "audio/default-comms", OnAudioSetDefaultCommsMessage);
+
             GetManager().SubscribeTopic(this, "notify", OnNotifyMessage);
             GetManager().SubscribeTopic(this, "sendKeys", OnSendKeysMessage);
+
             GetManager().SubscribeTopic(this, "media/playpause", OnMediaPlayPauseMessage);
             GetManager().SubscribeTopic(this, "media/stop", OnMediaStopMessage);
             GetManager().SubscribeTopic(this, "media/next", OnMediaNextMessage);
@@ -73,7 +80,7 @@ namespace IOTLinkAddon.Service
 
         private void OnRunMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Verbose("OnCommandRun: Message received");
+            LoggerHelper.Verbose("OnRunMessage: Message received");
             string value = e.Message.GetPayload();
             if (value == null)
                 return;
@@ -96,18 +103,18 @@ namespace IOTLinkAddon.Service
             }
             catch (Exception ex)
             {
-                LoggerHelper.Error("OnCommandRun failure: {0}", ex.Message);
+                LoggerHelper.Error("OnRunMessage failure: {0}", ex.Message);
             }
         }
 
-        private void OnVolumeSetMessage(object sender, MQTTMessageEventEventArgs e)
+        private void OnAudioVolumeSetMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Verbose("OnVolumeSet: Message received");
+            LoggerHelper.Verbose("OnAudioVolumeSetMessage: Message received");
             try
             {
                 if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
                 {
-                    LoggerHelper.Warn("OnVolumeSetMessage: Received an empty message payload");
+                    LoggerHelper.Warn("OnAudioVolumeSetMessage: Received an empty message payload");
                     return;
                 }
 
@@ -116,36 +123,80 @@ namespace IOTLinkAddon.Service
                 Guid guid = args.Length >= 2 ? Guid.Parse(args[0]) : Guid.Empty;
 
                 PlatformHelper.SetAudioVolume(guid, volume);
-                LoggerHelper.Debug("OnVolumeSet: Volume set to {0}", volume);
+                LoggerHelper.Debug("OnAudioVolumeSetMessage: Volume set to {0}", volume);
             }
             catch (Exception ex)
             {
-                LoggerHelper.Debug("OnVolumeSet: Wrong Payload: {0}", ex.Message);
+                LoggerHelper.Debug("OnAudioVolumeSetMessage: Wrong Payload: {0}", ex.Message);
             }
         }
 
-        private void OnVolumeMuteMessage(object sender, MQTTMessageEventEventArgs e)
+        private void OnAudioMuteMessage(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Verbose("OnVolumeMute: Message received");
+            LoggerHelper.Verbose("OnAudioMuteMessage: Message received");
             try
             {
                 if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
                 {
                     PlatformHelper.ToggleAudioMute(Guid.Empty);
-                    LoggerHelper.Debug("OnVolumeMute: Toggling current audio mute flag.");
+                    LoggerHelper.Debug("OnAudioMuteMessage: Toggling current audio mute flag.");
                     return;
                 }
 
                 string[] args = e.Message.GetPayload().Split(',');
                 bool mute = Convert.ToBoolean(args[args.Length == 2 ? 1 : 0]);
                 Guid guid = args.Length >= 2 ? Guid.Parse(args[0]) : Guid.Empty;
-                
+
                 PlatformHelper.SetAudioMute(guid, mute);
-                LoggerHelper.Debug("OnVolumeMute: Mute flag set to {0}", mute);
+                LoggerHelper.Debug("OnAudioMuteMessage: Mute flag set to {0}", mute);
             }
             catch (Exception ex)
             {
-                LoggerHelper.Debug("OnVolumeMute: Wrong Payload: {0}", ex.Message);
+                LoggerHelper.Debug("OnAudioMuteMessage: Wrong Payload: {0}", ex.Message);
+            }
+        }
+
+        private void OnAudioSetDefaultMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnAudioSetDefaultMessage: Message received");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
+                {
+                    LoggerHelper.Warn("OnAudioSetDefaultMessage: Received an empty message payload");
+                    return;
+                }
+
+                Guid guid = Guid.Parse(e.Message.GetPayload());
+
+                PlatformHelper.SetAudioDefault(guid);
+                LoggerHelper.Debug("OnAudioVolumeSetMessage: Set Audio Device {0} to Default", guid);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Debug("OnAudioSetDefaultMessage: Wrong Payload: {0}", ex.Message);
+            }
+        }
+
+        private void OnAudioSetDefaultCommsMessage(object sender, MQTTMessageEventEventArgs e)
+        {
+            LoggerHelper.Verbose("OnAudioSetDefaultCommsMessage: Message received");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(e.Message.GetPayload()))
+                {
+                    LoggerHelper.Warn("OnAudioSetDefaultCommsMessage: Received an empty message payload");
+                    return;
+                }
+
+                Guid guid = Guid.Parse(e.Message.GetPayload());
+
+                PlatformHelper.SetAudioDefaultComms(guid);
+                LoggerHelper.Debug("OnAudioSetDefaultCommsMessage: Set Audio Device {0} to Default Comms", guid);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Debug("OnAudioSetDefaultCommsMessage: Wrong Payload: {0}", ex.Message);
             }
         }
 
