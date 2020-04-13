@@ -75,6 +75,11 @@ namespace IOTLinkAPI.Platform.Windows
                 WtsApi32.WTSQuerySessionInformation(server, sessionId, WtsApi32.WtsInfoClass.WTSUserName, out buffer, out uint count);
                 username = Marshal.PtrToStringAnsi(buffer).ToLowerInvariant().Trim();
             }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("WindowsAPI::GetUsername() - Error while trying to get username from sessionId {0}: {1}", sessionId, ex.Message);
+                return "Unknown";
+            }
             finally
             {
                 if (buffer != IntPtr.Zero)
@@ -101,6 +106,11 @@ namespace IOTLinkAPI.Platform.Windows
 
                 return sessionInfo.Username;
             }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("WindowsAPI::GetCurrentUsername() - Error while trying to get username: {0}", ex.Message);
+                return "Unknown";
+            }
             finally
             {
                 if (server != IntPtr.Zero)
@@ -118,6 +128,11 @@ namespace IOTLinkAPI.Platform.Windows
                     return INVALID_SESSION_ID;
 
                 return (uint)sessionInfo.SessionID;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("WindowsAPI::GetCurrentSessionId() - Error while trying to get SessionId: {0}", ex.Message);
+                return INVALID_SESSION_ID;
             }
             finally
             {

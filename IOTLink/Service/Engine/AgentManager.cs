@@ -13,7 +13,7 @@ namespace IOTLinkService.Service.Engine
     public class AgentManager
     {
         private static AgentManager _instance;
-        private bool verifyingAgents = false;
+        private readonly object verifyAgentsLock = new object();
 
         public static AgentManager GetInstance()
         {
@@ -60,26 +60,25 @@ namespace IOTLinkService.Service.Engine
 
         public void StartAgents()
         {
-            if (verifyingAgents)
-                return;
-
-            LoggerHelper.Trace("StartAgents() - Initialized");
-            try
+            lock (verifyAgentsLock)
             {
-                verifyingAgents = true;
-                List<WindowsSessionInfo> winSessions = WindowsAPI.GetWindowsSessions().FindAll(s => s.IsActive);
-                foreach (WindowsSessionInfo sessionInfo in winSessions)
+                LoggerHelper.Trace("StartAgents() - Initialized");
+                try
                 {
-                    LoggerHelper.Trace(
-                        "StartAgents() - Windows Session Found. SessionId: {0} StationName: {1} Username: {2} IsActive: {3}",
-                        sessionInfo.SessionID, sessionInfo.StationName, sessionInfo.Username, sessionInfo.IsActive
-                    );
-                    StartAgent(sessionInfo.SessionID, sessionInfo.Username);
+                    List<WindowsSessionInfo> winSessions = WindowsAPI.GetWindowsSessions().FindAll(s => s.IsActive);
+                    foreach (WindowsSessionInfo sessionInfo in winSessions)
+                    {
+                        LoggerHelper.Trace(
+                            "StartAgents() - Windows Session Found. SessionId: {0} StationName: {1} Username: {2} IsActive: {3}",
+                            sessionInfo.SessionID, sessionInfo.StationName, sessionInfo.Username, sessionInfo.IsActive
+                        );
+                        StartAgent(sessionInfo.SessionID, sessionInfo.Username);
+                    }
                 }
-            }
-            finally
-            {
-                verifyingAgents = false;
+                catch (Exception ex)
+                {
+                    LoggerHelper.Error("StartAgents() - Exception Handled: {0}", ex.Message);
+                }
             }
         }
 

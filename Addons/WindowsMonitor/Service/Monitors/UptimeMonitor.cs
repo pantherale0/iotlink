@@ -11,10 +11,13 @@ namespace IOTLinkAddon.Service.Monitors
     {
         private static readonly string CONFIG_KEY = "Uptime";
 
-        private PerformanceCounter _uptimePerformanceCounter = new PerformanceCounter("System", "System Up Time");
+        private static PerformanceCounter _uptimePerformanceCounter;
 
         public override void Init()
         {
+            if (_uptimePerformanceCounter == null)
+                _uptimePerformanceCounter = new PerformanceCounter("System", "System Up Time");
+
             _uptimePerformanceCounter.NextValue();
             PlatformHelper.LastBootUpTime();
         }
