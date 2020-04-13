@@ -54,7 +54,7 @@ namespace IOTLinkAddon.Service
             base.Init(addonManager);
 
             var cfgManager = ConfigurationManager.GetInstance();
-            _configPath = Path.Combine(this._currentPath, "config.yaml");
+            _configPath = Path.Combine(_currentPath, "config.yaml");
             _config = cfgManager.GetConfiguration(_configPath);
             cfgManager.SetReloadHandler(_configPath, OnConfigReload);
 
@@ -64,8 +64,51 @@ namespace IOTLinkAddon.Service
             OnMQTTConnectedHandler += OnClearEvent;
             OnRefreshRequestedHandler += OnClearEvent;
 
+            InitMonitors();
             SetupTimers();
             SetupDiscovery();
+        }
+
+        private void InitMonitors()
+        {
+            foreach (IMonitor monitor in monitors)
+            {
+                try
+                {
+                    monitor.Init();
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Error("WindowsMonitorService::InitMonitors() - Error while trying to initilize {0}: {1}", monitor.GetConfigKey(), ex.Message);
+                }
+            }
+        }
+
+        private void SetupTimers()
+        {
+            if (_config == null || !_config.GetValue("enabled", false))
+            {
+                LoggerHelper.Info("System monitor is disabled.");
+                if (_monitorTimer != null)
+                {
+                    _monitorTimer.Stop();
+                    _monitorTimer = null;
+                }
+
+                return;
+            }
+
+            if (_monitorTimer == null)
+            {
+                _monitorTimer = new Timer();
+                _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
+            }
+
+            _monitorTimer.Stop();
+            _monitorTimer.Interval = 1000;
+            _monitorTimer.Start();
+
+            LoggerHelper.Info("System monitor is activated.");
         }
 
         private void SetupDiscovery()
@@ -101,33 +144,6 @@ namespace IOTLinkAddon.Service
             _cache.Clear();
             _discoveryItems.Clear();
             SendAllInformation();
-        }
-
-        private void SetupTimers()
-        {
-            if (_config == null || !_config.GetValue("enabled", false))
-            {
-                LoggerHelper.Info("System monitor is disabled.");
-                if (_monitorTimer != null)
-                {
-                    _monitorTimer.Stop();
-                    _monitorTimer = null;
-                }
-
-                return;
-            }
-
-            if (_monitorTimer == null)
-            {
-                _monitorTimer = new Timer();
-                _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
-            }
-
-            _monitorTimer.Stop();
-            _monitorTimer.Interval = 1000;
-            _monitorTimer.Start();
-
-            LoggerHelper.Info("System monitor is activated.");
         }
 
         private void OnConfigReload(object sender, ConfigReloadEventArgs e)
