@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 using IOTLinkAPI.Platform.HomeAssistant;
 using System.Threading;
-using MQTTnet.Client.Publishing;
+using MQTTnet.Extensions.ManagedClient;
 
 namespace IOTLinkService.Service.MQTT
 {
@@ -23,9 +23,10 @@ namespace IOTLinkService.Service.MQTT
         private static MQTTClient _instance;
 
         private MqttConfig _config;
-        private IMqttClient _client;
+
+        private IManagedMqttClient _client;
         private IMqttClientOptions _options;
-        private bool _connecting;
+        private IManagedMqttClientOptions _managedOptions;
 
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
@@ -133,6 +134,10 @@ namespace IOTLinkService.Service.MQTT
 
             // Build all options
             _options = mqttOptionBuilder.Build();
+            _managedOptions = new ManagedMqttClientOptionsBuilder()
+                .WithClientOptions(_options)
+                .WithAutoReconnectDelay(TimeSpan.FromSeconds(10))
+                .Build();
 
             LoggerHelper.Trace("MQTTClient::Init() - MQTT Init finished.");
             return true;
@@ -142,50 +147,17 @@ namespace IOTLinkService.Service.MQTT
         /// Try to connect to the configured broker.
         /// Every attempt a delay of (5 * attemps, max 60) seconds is executed.
         /// </summary>
-        internal async void Connect()
+        internal async Task Connect()
         {
-            if (_connecting)
-            {
-                LoggerHelper.Verbose("MQTTClient::Connect() - MQTT client is already connecting. Skipping");
-                return;
-            }
+            LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0}.", GetBrokerInfo());
+            await Task.Yield();
 
-            int tries = 0;
-            _connecting = true;
+            _client = new MqttFactory().CreateManagedMqttClient();
+            _client.UseConnectedHandler(OnConnectedHandler);
+            _client.UseDisconnectedHandler(OnDisconnectedHandler);
+            _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
 
-            do
-            {
-                try
-                {
-                    LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0} (Try: {1}).", GetBrokerInfo(), (tries + 1));
-
-                    _client = new MqttFactory().CreateMqttClient();
-                    _client.UseConnectedHandler(OnConnectedHandler);
-                    _client.UseDisconnectedHandler(OnDisconnectedHandler);
-                    _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
-
-                    var defaultMaxServicePointIdleTime = System.Net.ServicePointManager.MaxServicePointIdleTime;
-                    await _client.ConnectAsync(_options);
-                    System.Net.ServicePointManager.MaxServicePointIdleTime = defaultMaxServicePointIdleTime;
-
-                    LoggerHelper.Info("MQTTClient::Connect() - Connection established successfully.");
-                }
-                catch (Exception ex)
-                {
-                    if (ex is MqttCommunicationException)
-                        LoggerHelper.Info("MQTTClient::Connect() - Connection to the broker failed.");
-                    else
-                        LoggerHelper.Info("MQTTClient::Connect() - Connection failed: {0}", ex.ToString());
-
-                    tries++;
-
-                    double waitTime = Math.Min(5 * tries, 60);
-
-                    LoggerHelper.Info("MQTTClient::Connect() - Waiting {0} seconds before trying again...", waitTime);
-                    Thread.Sleep((int)waitTime * 1000);
-                }
-            } while (!_client.IsConnected);
-            _connecting = false;
+            await _client.StartAsync(_managedOptions);
         }
 
         internal void CleanEvents()
@@ -229,33 +201,15 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         internal void Disconnect(bool skipLastWill = false)
         {
+            LoggerHelper.Info("MQTTClient::Disconnect() - Trying to disconnect from broker: {0}.", GetBrokerInfo());
             if (_client == null)
                 return;
 
-            if (!_client.IsConnected)
+            if (_client.IsConnected && !skipLastWill)
             {
-                LoggerHelper.Verbose("MQTTClient::Disconnect() - MQTT Client not connected. Skipping.");
-                _client = null;
-                return;
-            }
-
-            int tries = 0;
-
-            LoggerHelper.Verbose("MQTTClient::Disconnect() - Disconnecting from MQTT Broker.");
-            while (_client.IsConnected)
-            {
-                LoggerHelper.Trace("MQTTClient::Disconnect() - Trying to disconnect from the broker (Try: {0}).", tries++);
-
-                // Send LWT Disconnected
-                if (!skipLastWill)
-                {
-                    LoggerHelper.Verbose("MQTTClient::Disconnect() - Sending LWT message before disconnecting.");
-                    SendLWTDisconnect();
-                    Thread.Sleep(1000);
-                }
-
-                _client.DisconnectAsync();
-                Thread.Sleep(5000);
+                LoggerHelper.Verbose("MQTTClient::Disconnect() - Sending LWT message before disconnecting.");
+                SendLWTDisconnect();
+                Thread.Sleep(1000);
             }
 
             try
@@ -315,7 +269,7 @@ namespace IOTLinkService.Service.MQTT
             await _client.PublishAsync(mqttMsg);
         }
 
-        internal async void PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
+        internal async Task PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
         {
             if (!_config.Discovery.Enabled)
             {
@@ -381,7 +335,7 @@ namespace IOTLinkService.Service.MQTT
             var jsonString = JsonConvert.SerializeObject(discoveryJson, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
             var mqttMsg = BuildMQTTMessage(configTopic, Encoding.UTF8.GetBytes(jsonString), msgConfig);
 
-            MqttClientPublishResult result = await _client.PublishAsync(mqttMsg);
+            await _client.PublishAsync(mqttMsg);
         }
 
         /// <summary>
@@ -389,7 +343,7 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         /// <param name="topic">String containg the topic</param>
         /// <param name="message">Message bytes[]</param>
-        internal async void PublishMessage(string topic, byte[] message)
+        internal async Task PublishMessage(string topic, byte[] message)
         {
             if (_client == null || !_client.IsConnected)
             {
@@ -410,7 +364,7 @@ namespace IOTLinkService.Service.MQTT
             LoggerHelper.Trace("MQTTClient::PublishMessage() - Publishing to {0}: ({1} bytes)", topic, message?.Length);
 
             MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
-            MqttClientPublishResult result = await _client.PublishAsync(mqttMsg);
+            await _client.PublishAsync(mqttMsg);
         }
 
         /// <summary>
