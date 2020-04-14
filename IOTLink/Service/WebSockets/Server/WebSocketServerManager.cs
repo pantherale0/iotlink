@@ -2,7 +2,7 @@
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.WebSocket;
 using IOTLinkService.Service.Engine;
-using IOTLinkService.Service.Engine.MQTT;
+using IOTLinkService.Service.MQTT;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -232,7 +232,7 @@ namespace IOTLinkService.Service.WebSockets.Server
             if (string.IsNullOrWhiteSpace(topic) || payload == null || payload.Length == 0)
                 return;
 
-            MQTTClient.GetInstance().PublishMessage(topic, payload);
+            MQTTClientManager.GetInstance().PublishMessage(topic, payload);
         }
 
         internal void ParseClientResponse(string clientId, dynamic content)
