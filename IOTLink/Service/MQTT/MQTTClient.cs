@@ -6,7 +6,6 @@ using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
-using MQTTnet.Exceptions;
 using System;
 using System.Text;
 using System.Threading.Tasks;
@@ -151,6 +150,8 @@ namespace IOTLinkService.Service.MQTT
         {
             LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0}.", GetBrokerInfo());
             await Task.Yield();
+
+            LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", MQTTHelper.GetFullTopicName(_config.Prefix));
 
             _client = new MqttFactory().CreateManagedMqttClient();
             _client.UseConnectedHandler(OnConnectedHandler);
@@ -374,7 +375,7 @@ namespace IOTLinkService.Service.MQTT
         /// <returns></returns>
         private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
-            LoggerHelper.Verbose("MQTTClient::OnConnectedHandler() - MQTT Connected");
+            LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
             while (!_client.IsConnected)
                 Thread.Sleep(1000);
 
@@ -384,9 +385,6 @@ namespace IOTLinkService.Service.MQTT
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
             OnMQTTConnected?.Invoke(this, mqttEvent);
-
-            // System Message
-            LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", MQTTHelper.GetFullTopicName(_config.Prefix));
 
             // Subscribe to ALL Messages
             SubscribeTopic(MQTTHelper.GetFullTopicName(_config.Prefix, "#"));
