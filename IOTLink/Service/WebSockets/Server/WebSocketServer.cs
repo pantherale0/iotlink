@@ -16,6 +16,8 @@ namespace IOTLinkService.Service.WebSockets.Server
         private HttpListener _listener;
         private bool _disconnect;
 
+        private readonly object clientsLock = new object();
+
         public event WebSocketMessageEventHandler OnMessageHandler;
 
         private Dictionary<WebSocket, string> _clients = new Dictionary<WebSocket, string>();
@@ -95,7 +97,12 @@ namespace IOTLinkService.Service.WebSockets.Server
 
         internal async void DisconnectClient(string clientId)
         {
-            var entries = _clients.Where(x => x.Value.CompareTo(clientId) == 0);
+            IEnumerable<KeyValuePair<WebSocket, string>> entries;
+
+            lock (clientsLock)
+            {
+                entries = _clients.Where(x => x.Value.CompareTo(clientId) == 0);
+            }
 
             foreach (var entry in entries)
             {
@@ -112,8 +119,11 @@ namespace IOTLinkService.Service.WebSockets.Server
 
             try
             {
-                var newClients = _clients.Except(entries).ToDictionary(x => x.Key, x => x.Value);
-                _clients = newClients;
+                lock (clientsLock)
+                {
+                    var newClients = _clients.Except(entries).ToDictionary(x => x.Key, x => x.Value);
+                    _clients = newClients;
+                }
             }
             catch (Exception ex)
             {
@@ -123,17 +133,25 @@ namespace IOTLinkService.Service.WebSockets.Server
 
         internal void Broadcast(string payload)
         {
-            foreach (WebSocket client in _clients.Keys)
-                SendMessage(client, payload);
+            lock (clientsLock)
+            {
+                foreach (WebSocket client in _clients.Keys)
+                {
+                    SendMessage(client, payload);
+                }
+            }
         }
 
         internal void SendMessage(string clientId, string payload)
         {
-            var entries = _clients.Where(x => x.Value.CompareTo(clientId) == 0);
-            foreach (var entry in entries)
+            lock (clientsLock)
             {
-                WebSocket client = entry.Key;
-                SendMessage(client, payload);
+                var entries = _clients.Where(x => x.Value.CompareTo(clientId) == 0);
+                foreach (var entry in entries)
+                {
+                    WebSocket client = entry.Key;
+                    SendMessage(client, payload);
+                }
             }
         }
 
@@ -157,7 +175,7 @@ namespace IOTLinkService.Service.WebSockets.Server
         private async void ProcessRequest(HttpListenerContext listenerContext)
         {
 
-            WebSocketContext webSocketContext = null;
+            WebSocketContext webSocketContext;
             try
             {
                 webSocketContext = await listenerContext.AcceptWebSocketAsync(subProtocol: null);
