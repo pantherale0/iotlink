@@ -64,38 +64,10 @@ namespace IOTLinkService.Service.MQTT
 
         internal void CleanEvents()
         {
-            if (OnMQTTConnected != null)
-            {
-                foreach (Delegate del in OnMQTTConnected.GetInvocationList())
-                {
-                    OnMQTTConnected -= (MQTTEventHandler)del;
-                }
-
-            }
-
-            if (OnMQTTDisconnected != null)
-            {
-                foreach (Delegate del in OnMQTTDisconnected.GetInvocationList())
-                {
-                    OnMQTTDisconnected -= (MQTTEventHandler)del;
-                }
-            }
-
-            if (OnMQTTMessageReceived != null)
-            {
-                foreach (Delegate del in OnMQTTMessageReceived.GetInvocationList())
-                {
-                    OnMQTTMessageReceived -= (MQTTMessageEventHandler)del;
-                }
-            }
-
-            if (OnMQTTRefreshMessageReceived != null)
-            {
-                foreach (Delegate del in OnMQTTRefreshMessageReceived.GetInvocationList())
-                {
-                    OnMQTTRefreshMessageReceived -= (MQTTRefreshMessageEventHandler)del;
-                }
-            }
+            OnMQTTConnected = null;
+            OnMQTTDisconnected = null;
+            OnMQTTMessageReceived = null;
+            OnMQTTRefreshMessageReceived = null;
         }
 
         internal void BindEvents()
@@ -103,9 +75,9 @@ namespace IOTLinkService.Service.MQTT
             if (_mqttClient == null)
                 return;
 
-            _mqttClient.OnMQTTConnected += OnMQTTConnectedHandler; ;
-            _mqttClient.OnMQTTDisconnected += OnMQTTDisconnectedHandler; ;
-            _mqttClient.OnMQTTMessageReceived += OnMQTTMessageReceivedHandler; ;
+            _mqttClient.OnMQTTConnected += OnMQTTConnectedHandler;
+            _mqttClient.OnMQTTDisconnected += OnMQTTDisconnectedHandler;
+            _mqttClient.OnMQTTMessageReceived += OnMQTTMessageReceivedHandler;
             _mqttClient.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceivedHandler;
         }
 

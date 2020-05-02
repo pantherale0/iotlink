@@ -23,6 +23,12 @@
 
         public bool CleanSession { get; set; }
 
+        public int KeepAlivePeriod { get; set; }
+
+        public int KeepAliveSendInterval { get; set; }
+
+        public int AutoReconnectDelay { get; set; }
+
         public class CredentialConfig
         {
             public string Username { get; set; }
@@ -139,16 +145,20 @@
         public static MqttConfig FromConfiguration(Configuration config)
         {
             MqttConfig mqtt = new MqttConfig();
-            mqtt.ClientId = config.GetValue("clientId", null);
-            mqtt.CleanSession = config.GetValue("cleanSession", true);
-            mqtt.Prefix = config.GetValue("prefix", "IOTLink");
-            mqtt.GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all");
             mqtt.Credentials = CredentialConfig.FromConfiguration(config.GetValue("credentials"));
             mqtt.TCP = TCPConfig.FromConfiguration(config.GetValue("tcp"));
             mqtt.WebSocket = WebSocketConfig.FromConfiguration(config.GetValue("websocket"));
             mqtt.Messages = MsgConfig.FromConfiguration(config.GetValue("messages"));
             mqtt.LWT = LWTConfig.FromConfiguration(config.GetValue("lwt"));
             mqtt.Discovery = DiscoveryConfig.FromConfiguration(config.GetValue("discovery"));
+
+            mqtt.ClientId = config.GetValue("clientId", null);
+            mqtt.CleanSession = config.GetValue("cleanSession", true);
+            mqtt.Prefix = config.GetValue("prefix", "IOTLink");
+            mqtt.GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all");
+            mqtt.AutoReconnectDelay = config.GetValue("autoReconnectDelay", 10);
+            mqtt.KeepAlivePeriod = config.GetValue("keepAlivePeriod", 10);
+            mqtt.KeepAliveSendInterval = config.GetValue("KeepAliveSendInterval", 10);
 
             return mqtt;
         }
