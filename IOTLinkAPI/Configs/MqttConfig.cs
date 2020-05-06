@@ -157,8 +157,8 @@
             mqtt.Prefix = config.GetValue("prefix", "IOTLink");
             mqtt.GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all");
             mqtt.AutoReconnectDelay = config.GetValue("autoReconnectDelay", 10);
-            mqtt.KeepAlivePeriod = config.GetValue("keepAlivePeriod", 10);
-            mqtt.KeepAliveSendInterval = config.GetValue("KeepAliveSendInterval", 10);
+            mqtt.KeepAlivePeriod = config.GetValue("keepAlivePeriod", 60);
+            mqtt.KeepAliveSendInterval = config.GetValue("KeepAliveSendInterval", 5);
 
             return mqtt;
         }

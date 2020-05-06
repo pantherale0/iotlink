@@ -19,8 +19,9 @@ namespace IOTLinkAPI.Platform.Windows
 
         private readonly object devicesLock = new object();
 
-        private SortedDictionary<Guid, CoreAudioDevice> devices = new SortedDictionary<Guid, CoreAudioDevice>();
+        private SortedDictionary<Guid, AudioDeviceInfo> devices = new SortedDictionary<Guid, AudioDeviceInfo>();
         private Dictionary<Guid, double> devicePeakValue = new Dictionary<Guid, double>();
+        private Dictionary<Guid, IDisposable> devicePeakSubs = new Dictionary<Guid, IDisposable>();
 
         public static AudioController GetInstance()
         {
@@ -59,6 +60,7 @@ namespace IOTLinkAPI.Platform.Windows
             {
                 if (changedType == DeviceChangedType.DeviceRemoved || device.State != DeviceState.Active)
                 {
+                    RemoveSubcriptions(device.Id);
                     devices.Remove(device.Id);
                     devicePeakValue.Remove(device.Id);
                 }
@@ -73,9 +75,12 @@ namespace IOTLinkAPI.Platform.Windows
                     }
 
                     if (changedType == DeviceChangedType.DeviceAdded)
-                        device.PeakValueChanged.Subscribe(x => devicePeakValue[device.Id] = x.PeakValue);
+                    {
+                        RemoveSubcriptions(device.Id);
+                        devicePeakSubs[device.Id] = device.PeakValueChanged.Subscribe(x => devicePeakValue[device.Id] = x.PeakValue);
+                    }
 
-                    devices[device.Id] = device;
+                    devices[device.Id] = GetAudioDeviceInfo(device.Id);
                 }
             }
         }
@@ -84,7 +89,8 @@ namespace IOTLinkAPI.Platform.Windows
         {
             lock (devicesLock)
             {
-                return devices.Values.Select(x => GetAudioDeviceInfo(x.Id)).ToList();
+                IEnumerable<CoreAudioDevice> devices = audioController.GetDevices();
+                return devices.Select(x => GetAudioDeviceInfo(x.Id)).ToList();
             }
         }
 
@@ -165,6 +171,20 @@ namespace IOTLinkAPI.Platform.Windows
             device.Volume = volume;
         }
 
+        private void RemoveSubcriptions(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return;
+
+            if (devicePeakSubs.ContainsKey(guid))
+            {
+                IDisposable devicePeakSub = devicePeakSubs[guid];
+
+                devicePeakSubs.Remove(guid);
+                devicePeakSub.Dispose();
+            }
+        }
+
         private CoreAudioDevice GetDeviceByGuid(Guid guid, CoreAudioDevice defaultDevice)
         {
             if (guid == Guid.Empty)
@@ -173,7 +193,8 @@ namespace IOTLinkAPI.Platform.Windows
             if (!devices.ContainsKey(guid))
                 return null;
 
-            return devices[guid];
+            IEnumerable<CoreAudioDevice> audioDevices = audioController.GetDevices();
+            return audioDevices.FirstOrDefault(x => x.Id.Equals(guid));
         }
     }
 }

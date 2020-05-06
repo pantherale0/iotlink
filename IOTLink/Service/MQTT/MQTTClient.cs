@@ -359,10 +359,10 @@ namespace IOTLinkService.Service.MQTT
         private void OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
             LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
-            while (!_client.IsConnected)
+            if (!_client.IsConnected)
             {
                 LoggerHelper.Warn("MQTTClient::OnConnectedHandler() - MQTT Connected handler received without being connected.");
-                Thread.Sleep(1000);
+                return;
             }
 
             // Send LWT Connected

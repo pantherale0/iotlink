@@ -19,7 +19,6 @@ namespace IOTLinkAgent.Agent.WSClient
         private WebSocket _client;
         private string _webSocketUri;
         private bool _connecting;
-        private bool _preventReconnect;
 
         public static WebSocketClient GetInstance()
         {
@@ -56,7 +55,6 @@ namespace IOTLinkAgent.Agent.WSClient
 
             int tries = 0;
             _connecting = true;
-            _preventReconnect = true;
 
             if (_client != null && _client.IsAlive)
             {
@@ -93,14 +91,11 @@ namespace IOTLinkAgent.Agent.WSClient
             }
 
             _connecting = false;
-            _preventReconnect = false;
             LoggerHelper.Verbose("Connection successful");
         }
 
         internal void Disconnect()
         {
-            _preventReconnect = true;
-
             if (_client != null && _client.IsAlive)
             {
                 LoggerHelper.Verbose("Alive connection found. Closing it");

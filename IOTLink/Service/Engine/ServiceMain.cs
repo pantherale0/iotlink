@@ -81,6 +81,7 @@ namespace IOTLinkService.Service.Engine
             client.OnMQTTDisconnected += OnMQTTDisconnected;
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
             client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
+            client.Disconnect();
             client.Connect();
         }
 

@@ -95,26 +95,32 @@ namespace IOTLinkService.Service.WebSockets.Server
             }
         }
 
-        internal async void DisconnectClient(string clientId)
+        internal void DisconnectClient(string clientId)
         {
             IEnumerable<KeyValuePair<WebSocket, string>> entries;
 
             lock (clientsLock)
             {
                 entries = _clients.Where(x => x.Value.CompareTo(clientId) == 0);
-            }
 
-            foreach (var entry in entries)
-            {
-                try
+                foreach (var entry in entries)
                 {
                     WebSocket client = entry.Key;
-                    await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+
+                    try
+                    {
+                        client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).GetAwaiter().GetResult();
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Error("Error while trying to disconnect client: {0}", ex);
+                    }
+                    finally
+                    {
+                        client.Dispose();
+                    }
                 }
-                catch (Exception ex)
-                {
-                    LoggerHelper.Error("Error while trying to disconnect client: {0}", ex);
-                }
+
             }
 
             try

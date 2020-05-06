@@ -13,6 +13,8 @@ namespace IOTLinkService.Service.MQTT
 
         private MQTTClient _mqttClient;
 
+        private readonly object connectionLock = new object();
+
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
         public event MQTTMessageEventHandler OnMQTTMessageReceived;
@@ -37,29 +39,32 @@ namespace IOTLinkService.Service.MQTT
 
         internal void Connect()
         {
-            LoggerHelper.Verbose("MQTTClientManager::Connect()");
-            if (_mqttClient == null)
+            lock (connectionLock)
             {
-                _mqttClient = MQTTClient.GetInstance();
-                _mqttClient.Init();
+                LoggerHelper.Verbose("MQTTClientManager::Connect()");
+                if (_mqttClient == null)
+                {
+                    _mqttClient = MQTTClient.GetInstance();
+                    _mqttClient.Init();
+                }
+
+                BindEvents();
+                _mqttClient.Connect();
             }
-
-            BindEvents();
-            _mqttClient.Connect();
-
-            while (!_mqttClient.IsConnected())
-                Thread.Sleep(1000);
         }
 
         internal void Disconnect(bool skipLastWill = false)
         {
-            LoggerHelper.Verbose("MQTTClientManager::Disconnect()");
-            if (_mqttClient == null)
-                return;
+            lock (connectionLock)
+            {
+                LoggerHelper.Verbose("MQTTClientManager::Disconnect()");
+                if (_mqttClient == null)
+                    return;
 
-            _mqttClient.CleanEvents();
-            _mqttClient.Disconnect(skipLastWill);
-            _mqttClient = null;
+                _mqttClient.CleanEvents();
+                _mqttClient.Disconnect(skipLastWill);
+                _mqttClient = null;
+            }
         }
 
         internal void CleanEvents()
