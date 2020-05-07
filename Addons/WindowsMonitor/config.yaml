@@ -79,7 +79,7 @@ monitors:
     interval: 10
     cacheable: true
   AudioInfo:
-    enabled: true
+    enabled: false
     interval: 10
     cacheable: true
   SystemInfo:

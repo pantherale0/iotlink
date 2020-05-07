@@ -1,7 +1,7 @@
 ﻿using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
-using IOTLinkService.Service.Engine.MQTT;
+using IOTLinkService.Service.MQTT;
 using IOTLinkService.Service.WebSockets.Server;
 using System;
 using System.ServiceProcess;
@@ -27,7 +27,7 @@ namespace IOTLinkService.Service.Engine
 
         private ServiceMain()
         {
-            LoggerHelper.Trace("ServiceMain instance created.");
+            LoggerHelper.Trace("ServiceMain::ServiceMain() - Instance created.");
             ApplicationConfigHelper.Init();
             ApplicationConfigHelper.SetEngineConfigReloadHandler(OnConfigChanged);
         }
@@ -61,6 +61,7 @@ namespace IOTLinkService.Service.Engine
                 _processMonitorTimer = null;
             }
 
+            MQTTClientManager.GetInstance().Stop();
             AgentManager.GetInstance().StopAgents();
             LoggerHelper.GetInstance().Flush();
         }
@@ -73,22 +74,22 @@ namespace IOTLinkService.Service.Engine
 
         private void SetupMQTTHandlers()
         {
-            MQTTClient client = MQTTClient.GetInstance();
-            if (client.Init())
-            {
-                client.OnMQTTConnected += OnMQTTConnected;
-                client.OnMQTTDisconnected += OnMQTTDisconnected;
-                client.OnMQTTMessageReceived += OnMQTTMessageReceived;
-                client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
-                client.Connect();
-            }
+            MQTTClientManager client = MQTTClientManager.GetInstance();
+
+            client.CleanEvents();
+            client.OnMQTTConnected += OnMQTTConnected;
+            client.OnMQTTDisconnected += OnMQTTDisconnected;
+            client.OnMQTTMessageReceived += OnMQTTMessageReceived;
+            client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
+            client.Stop();
+            client.Start();
         }
 
         private void OnConfigChanged(object sender, ConfigReloadEventArgs e)
         {
             if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
             {
-                LoggerHelper.Info("Changes to configuration.yaml detected. Reloading.");
+                LoggerHelper.Info("ServiceMain::OnConfigChanged() - Changes to configuration.yaml detected. Reloading.");
                 ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
 
                 SetupMQTTHandlers();
@@ -101,7 +102,7 @@ namespace IOTLinkService.Service.Engine
 
         private void OnMQTTConnected(object sender, MQTTEventEventArgs e)
         {
-            LoggerHelper.Verbose("MQTT Connected");
+            LoggerHelper.Verbose("ServiceMain::OnMQTTConnected() - MQTT Connected");
 
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             if (!_addonsLoaded)
@@ -115,28 +116,28 @@ namespace IOTLinkService.Service.Engine
 
         private void OnMQTTDisconnected(object sender, MQTTEventEventArgs e)
         {
-            LoggerHelper.Verbose("MQTT Disconnected");
+            LoggerHelper.Verbose("ServiceMain::OnMQTTDisconnected() - MQTT Disconnected");
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnMQTTDisconnected(sender, e);
         }
 
         private void OnMQTTMessageReceived(object sender, MQTTMessageEventEventArgs e)
         {
-            LoggerHelper.Debug("MQTT Message Received");
+            LoggerHelper.Debug("ServiceMain::OnMQTTMessageReceived() - MQTT Message Received");
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnMQTTMessageReceived(sender, e);
         }
 
         private void OnMQTTRefreshMessageReceived(object sender, EventArgs e)
         {
-            LoggerHelper.Debug("MQTT Refresh Message Received");
+            LoggerHelper.Debug("ServiceMain::OnMQTTRefreshMessageReceived() - MQTT Refresh Message Received");
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
             addonsManager.Raise_OnRefreshRequested(sender, e);
         }
 
         public void OnSessionChange(string username, int sessionId, SessionChangeReason reason)
         {
-            LoggerHelper.Verbose("Session Changed");
+            LoggerHelper.Verbose("ServiceMain::OnSessionChange() - Session Changed");
 
             SessionChangeEventArgs args = new SessionChangeEventArgs
             {

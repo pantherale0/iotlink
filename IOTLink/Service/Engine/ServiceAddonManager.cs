@@ -3,7 +3,6 @@ using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
-using IOTLinkService.Service.Engine.MQTT;
 using IOTLinkService.Service.Loaders;
 using IOTLinkService.Service.WebSockets.Server;
 using System;
@@ -11,8 +10,10 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
-using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 using IOTLinkAPI.Platform.HomeAssistant;
+using IOTLinkService.Service.MQTT;
+
+using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
 namespace IOTLinkService.Service.Engine
 {
@@ -101,7 +102,7 @@ namespace IOTLinkService.Service.Engine
                 return;
 
             string addonTopic = BuildTopicName(sender, topic);
-            MQTTClient.GetInstance().PublishMessage(addonTopic, message);
+            MQTTClientManager.GetInstance().PublishMessage(addonTopic, message);
         }
 
         public void PublishDiscoveryMessage(ServiceAddon sender, string topic, string preffixName, HassDiscoveryOptions discoveryOptions)
@@ -110,7 +111,7 @@ namespace IOTLinkService.Service.Engine
                 return;
 
             string addonTopic = BuildTopicName(sender, topic);
-            MQTTClient.GetInstance().PublishDiscoveryMessage(addonTopic, preffixName, discoveryOptions);
+            MQTTClientManager.GetInstance().PublishDiscoveryMessage(addonTopic, preffixName, discoveryOptions);
         }
 
         /// <summary>
@@ -125,7 +126,7 @@ namespace IOTLinkService.Service.Engine
                 return;
 
             string addonTopic = BuildTopicName(sender, topic);
-            MQTTClient.GetInstance().PublishMessage(addonTopic, message);
+            MQTTClientManager.GetInstance().PublishMessage(addonTopic, message);
         }
 
         /// <summary>

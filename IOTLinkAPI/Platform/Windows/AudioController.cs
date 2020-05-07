@@ -17,8 +17,11 @@ namespace IOTLinkAPI.Platform.Windows
         private CoreAudioDevice commsPlayback;
         private CoreAudioDevice mediaPlayback;
 
-        private SortedDictionary<Guid, CoreAudioDevice> devices = new SortedDictionary<Guid, CoreAudioDevice>();
+        private readonly object devicesLock = new object();
+
+        private SortedDictionary<Guid, AudioDeviceInfo> devices = new SortedDictionary<Guid, AudioDeviceInfo>();
         private Dictionary<Guid, double> devicePeakValue = new Dictionary<Guid, double>();
+        private Dictionary<Guid, IDisposable> devicePeakSubs = new Dictionary<Guid, IDisposable>();
 
         public static AudioController GetInstance()
         {
@@ -53,32 +56,42 @@ namespace IOTLinkAPI.Platform.Windows
         private void OnDeviceChanged(CoreAudioDevice device, DeviceChangedType changedType)
         {
             LoggerHelper.Trace("Audio Device {0} - Change Type: {1}", device.Id, changedType);
-
-            if (changedType == DeviceChangedType.DeviceRemoved || device.State != DeviceState.Active)
+            lock (devicesLock)
             {
-                devices.Remove(device.Id);
-                devicePeakValue.Remove(device.Id);
-            }
-            else
-            {
-                if (device.IsPlaybackDevice)
+                if (changedType == DeviceChangedType.DeviceRemoved || device.State != DeviceState.Active)
                 {
-                    if (device.IsDefaultCommunicationsDevice)
-                        commsPlayback = device;
-                    if (device.IsDefaultDevice)
-                        mediaPlayback = device;
+                    RemoveSubcriptions(device.Id);
+                    devices.Remove(device.Id);
+                    devicePeakValue.Remove(device.Id);
                 }
+                else
+                {
+                    if (device.IsPlaybackDevice)
+                    {
+                        if (device.IsDefaultCommunicationsDevice)
+                            commsPlayback = device;
+                        if (device.IsDefaultDevice)
+                            mediaPlayback = device;
+                    }
 
-                if (changedType == DeviceChangedType.DeviceAdded)
-                    device.PeakValueChanged.Subscribe(x => devicePeakValue[device.Id] = x.PeakValue);
+                    if (changedType == DeviceChangedType.DeviceAdded)
+                    {
+                        RemoveSubcriptions(device.Id);
+                        devicePeakSubs[device.Id] = device.PeakValueChanged.Subscribe(x => devicePeakValue[device.Id] = x.PeakValue);
+                    }
 
-                devices[device.Id] = device;
+                    devices[device.Id] = GetAudioDeviceInfo(device.Id);
+                }
             }
         }
 
         public List<AudioDeviceInfo> GetAudioDevices()
         {
-            return devices.Values.Select(x => GetAudioDeviceInfo(x.Id)).ToList();
+            lock (devicesLock)
+            {
+                IEnumerable<CoreAudioDevice> devices = audioController.GetDevices();
+                return devices.Select(x => GetAudioDeviceInfo(x.Id)).ToList();
+            }
         }
 
         public AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
@@ -158,6 +171,20 @@ namespace IOTLinkAPI.Platform.Windows
             device.Volume = volume;
         }
 
+        private void RemoveSubcriptions(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return;
+
+            if (devicePeakSubs.ContainsKey(guid))
+            {
+                IDisposable devicePeakSub = devicePeakSubs[guid];
+
+                devicePeakSubs.Remove(guid);
+                devicePeakSub.Dispose();
+            }
+        }
+
         private CoreAudioDevice GetDeviceByGuid(Guid guid, CoreAudioDevice defaultDevice)
         {
             if (guid == Guid.Empty)
@@ -166,7 +193,8 @@ namespace IOTLinkAPI.Platform.Windows
             if (!devices.ContainsKey(guid))
                 return null;
 
-            return devices[guid];
+            IEnumerable<CoreAudioDevice> audioDevices = audioController.GetDevices();
+            return audioDevices.FirstOrDefault(x => x.Id.Equals(guid));
         }
     }
 }
