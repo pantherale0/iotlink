@@ -61,7 +61,7 @@ namespace IOTLinkService.Service.Engine
                 _processMonitorTimer = null;
             }
 
-            MQTTClientManager.GetInstance().Disconnect();
+            MQTTClientManager.GetInstance().Stop();
             AgentManager.GetInstance().StopAgents();
             LoggerHelper.GetInstance().Flush();
         }
@@ -81,8 +81,8 @@ namespace IOTLinkService.Service.Engine
             client.OnMQTTDisconnected += OnMQTTDisconnected;
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
             client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
-            client.Disconnect();
-            client.Connect();
+            client.Stop();
+            client.Start();
         }
 
         private void OnConfigChanged(object sender, ConfigReloadEventArgs e)

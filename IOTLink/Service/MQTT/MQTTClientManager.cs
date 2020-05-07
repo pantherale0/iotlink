@@ -3,6 +3,7 @@ using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
 namespace IOTLinkService.Service.MQTT
@@ -28,6 +29,18 @@ namespace IOTLinkService.Service.MQTT
             return _instance;
         }
 
+        public async void Start()
+        {
+            LoggerHelper.Info("MQTTClientManager::Start() - Initilizing MQTT");
+            await Task.Run(() => Connect());
+        }
+
+        public async void Stop()
+        {
+            LoggerHelper.Info("MQTTClientManager::Stop() - Finishing MQTT");
+            await Task.Run(() => Disconnect());
+        }
+
         public void Dispose()
         {
             LoggerHelper.Verbose("MQTTClientManager::Dispose()");
@@ -35,36 +48,6 @@ namespace IOTLinkService.Service.MQTT
                 _mqttClient.Disconnect();
 
             _mqttClient = null;
-        }
-
-        internal void Connect()
-        {
-            lock (connectionLock)
-            {
-                LoggerHelper.Verbose("MQTTClientManager::Connect()");
-                if (_mqttClient == null)
-                {
-                    _mqttClient = MQTTClient.GetInstance();
-                    _mqttClient.Init();
-                }
-
-                BindEvents();
-                _mqttClient.Connect();
-            }
-        }
-
-        internal void Disconnect(bool skipLastWill = false)
-        {
-            lock (connectionLock)
-            {
-                LoggerHelper.Verbose("MQTTClientManager::Disconnect()");
-                if (_mqttClient == null)
-                    return;
-
-                _mqttClient.CleanEvents();
-                _mqttClient.Disconnect(skipLastWill);
-                _mqttClient = null;
-            }
         }
 
         internal void CleanEvents()
@@ -134,6 +117,36 @@ namespace IOTLinkService.Service.MQTT
             {
                 LoggerHelper.Error("MQTTClientManager::PublishDiscoveryMessage('{0}', '{1}', '{2}') -> {3}", addonTopic, preffixName, discoveryOptions, ex.Message);
                 Disconnect(true);
+            }
+        }
+
+        private void Connect()
+        {
+            lock (connectionLock)
+            {
+                LoggerHelper.Verbose("MQTTClientManager::Connect()");
+                if (_mqttClient == null)
+                {
+                    _mqttClient = MQTTClient.GetInstance();
+                    _mqttClient.Init();
+                }
+
+                BindEvents();
+                _mqttClient.Connect();
+            }
+        }
+
+        private void Disconnect(bool skipLastWill = false)
+        {
+            lock (connectionLock)
+            {
+                LoggerHelper.Verbose("MQTTClientManager::Disconnect()");
+                if (_mqttClient == null)
+                    return;
+
+                _mqttClient.CleanEvents();
+                _mqttClient.Disconnect(skipLastWill);
+                _mqttClient = null;
             }
         }
 
