@@ -154,7 +154,7 @@ namespace IOTLinkService.Service.MQTT
         {
             if (_mqttClient == null || !_mqttClient.IsConnected())
             {
-                LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - Reconnecting.");
+                LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - MQTT Connection Broken. Reconnecting.");
 
                 Disconnect(true);
                 Connect();

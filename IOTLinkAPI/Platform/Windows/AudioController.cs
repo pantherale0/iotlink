@@ -90,7 +90,13 @@ namespace IOTLinkAPI.Platform.Windows
             lock (devicesLock)
             {
                 IEnumerable<CoreAudioDevice> devices = audioController.GetDevices();
-                return devices.Select(x => GetAudioDeviceInfo(x.Id)).ToList();
+                if (devices == null)
+                    return new List<AudioDeviceInfo>();
+
+                return devices
+                    .Select(x => GetAudioDeviceInfo(x.Id))
+                    .Where(x => x != null)
+                    .ToList();
             }
         }
 
@@ -194,6 +200,9 @@ namespace IOTLinkAPI.Platform.Windows
                 return null;
 
             IEnumerable<CoreAudioDevice> audioDevices = audioController.GetDevices();
+            if (audioDevices == null)
+                return null;
+
             return audioDevices.FirstOrDefault(x => x.Id.Equals(guid));
         }
     }

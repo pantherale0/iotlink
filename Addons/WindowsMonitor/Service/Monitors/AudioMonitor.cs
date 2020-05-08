@@ -23,39 +23,42 @@ namespace IOTLinkAddon.Service.Monitors
             List<MonitorItem> result = new List<MonitorItem>();
 
             List<AudioDeviceInfo> devices = PlatformHelper.GetAudioDevices();
-            foreach (AudioDeviceInfo device in devices)
+            if (devices != null && devices.Count > 0)
             {
-                string type = device.IsCaptureDevice ? "Input" : "Output";
-                string topic = string.Format("Stats/Audio/Devices/{0}/{1}/", type, device.Guid);
-                CreateAudioMonitorItem(result, device, topic, type);
-
-                if (device.IsDefaultDevice)
+                foreach (AudioDeviceInfo device in devices)
                 {
-                    topic = string.Format("Stats/Audio/Devices/{0}/Default/", type);
-                    CreateAudioMonitorItem(result, device, topic, string.Format("Default {0}", type));
+                    string type = device.IsCaptureDevice ? "Input" : "Output";
+                    string topic = string.Format("Stats/Audio/Devices/{0}/{1}/", type, device.Guid);
+                    CreateAudioMonitorItem(result, device, topic, type);
+
+                    if (device.IsDefaultDevice)
+                    {
+                        topic = string.Format("Stats/Audio/Devices/{0}/Default/", type);
+                        CreateAudioMonitorItem(result, device, topic, string.Format("Default {0}", type));
+                    }
+
+                    if (device.IsDefaultCommunicationsDevice)
+                    {
+                        topic = string.Format("Stats/Audio/Devices/{0}/DefaultComms/", type);
+                        CreateAudioMonitorItem(result, device, topic, string.Format("Default Comms {0}", type));
+                    }
                 }
 
-                if (device.IsDefaultCommunicationsDevice)
+                Dictionary<string, string> deviceNames = devices.ToDictionary(x => x.Guid.ToString(), x => x.Name);
+                result.Add(new MonitorItem
                 {
-                    topic = string.Format("Stats/Audio/Devices/{0}/DefaultComms/", type);
-                    CreateAudioMonitorItem(result, device, topic, string.Format("Default Comms {0}", type));
-                }
+                    ConfigKey = CONFIG_KEY,
+                    Type = MonitorItemType.TYPE_RAW,
+                    Topic = "Stats/Audio/Devices",
+                    Value = JsonConvert.SerializeObject(deviceNames),
+                    DiscoveryOptions = new HassDiscoveryOptions()
+                    {
+                        Id = "Audio_Devices",
+                        Name = "Audio Devices",
+                        Component = HomeAssistantComponent.Sensor
+                    }
+                });
             }
-
-            Dictionary<string, string> deviceNames = devices.ToDictionary(x => x.Guid.ToString(), x => x.Name);
-            result.Add(new MonitorItem
-            {
-                ConfigKey = CONFIG_KEY,
-                Type = MonitorItemType.TYPE_RAW,
-                Topic = "Stats/Audio/Devices",
-                Value = JsonConvert.SerializeObject(deviceNames),
-                DiscoveryOptions = new HassDiscoveryOptions()
-                {
-                    Id = "Audio_Devices",
-                    Name = "Audio Devices",
-                    Component = HomeAssistantComponent.Sensor
-                }
-            });
 
             return result;
         }
