@@ -6,25 +6,26 @@ using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
-using MQTTnet.Exceptions;
 using System;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 using IOTLinkAPI.Platform.HomeAssistant;
+using System.Threading;
+using MQTTnet.Extensions.ManagedClient;
 
-namespace IOTLinkService.Service.Engine.MQTT
+namespace IOTLinkService.Service.MQTT
 {
     internal class MQTTClient
     {
         private static MQTTClient _instance;
 
         private MqttConfig _config;
-        private IMqttClient _client;
+
+        private IManagedMqttClient _client;
         private IMqttClientOptions _options;
-        private bool _connecting;
-        private bool _preventReconnect;
+        private IManagedMqttClientOptions _managedOptions;
 
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
@@ -41,7 +42,7 @@ namespace IOTLinkService.Service.Engine.MQTT
 
         private MQTTClient()
         {
-            LoggerHelper.Trace("MQTTClient instance created.");
+            LoggerHelper.Trace("MQTTClient::MQTTClient() - Instance created.");
         }
 
         /// <summary>
@@ -55,21 +56,21 @@ namespace IOTLinkService.Service.Engine.MQTT
             // Configuration not found
             if (_config == null)
             {
-                LoggerHelper.Warn("MQTT is disabled or not configured yet.");
+                LoggerHelper.Warn("MQTTClient::Init() - MQTT is disabled or not configured yet.");
                 return false;
             }
 
             // No broker information
             if ((_config.TCP == null || !_config.TCP.Enabled) && (_config.WebSocket == null || !_config.WebSocket.Enabled))
             {
-                LoggerHelper.Error("You need to configure TCP or WebSocket connection");
+                LoggerHelper.Error("MQTTClient::Init() - You need to configure TCP or WebSocket connection");
                 return false;
             }
 
             // Ambiguous broker information
             if ((_config.TCP != null && _config.TCP.Enabled) && (_config.WebSocket != null && _config.WebSocket.Enabled))
             {
-                LoggerHelper.Error("You need to disable TCP or WebSocket connection. Cannot use both together.");
+                LoggerHelper.Error("MQTTClient::Init() - You need to disable TCP or WebSocket connection. Cannot use both together.");
                 return false;
             }
 
@@ -84,7 +85,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             {
                 if (string.IsNullOrWhiteSpace(_config.TCP.Hostname))
                 {
-                    LoggerHelper.Warn("MQTT TCP Hostname not configured yet.");
+                    LoggerHelper.Warn("MQTTClient::Init() - MQTT TCP Hostname not configured yet.");
                     return false;
                 }
 
@@ -98,7 +99,7 @@ namespace IOTLinkService.Service.Engine.MQTT
             {
                 if (string.IsNullOrWhiteSpace(_config.WebSocket.URI))
                 {
-                    LoggerHelper.Warn("MQTT WebSocket URI not configured yet.");
+                    LoggerHelper.Warn("MQTTClient::Init() - MQTT WebSocket URI not configured yet.");
                     return false;
                 }
 
@@ -126,14 +127,29 @@ namespace IOTLinkService.Service.Engine.MQTT
                 }
                 else
                 {
-                    LoggerHelper.Warn("LWT Disabled - LWT disconnected message is empty or null. Fix your configuration.yaml");
+                    LoggerHelper.Warn("MQTTClient::Init() - LWT Disabled - LWT disconnected message is empty or null. Fix your configuration.yaml");
                 }
             }
 
+            // Keep-Alive Period
+            if (_config.KeepAlivePeriod > 0)
+                mqttOptionBuilder = mqttOptionBuilder.WithKeepAlivePeriod(TimeSpan.FromSeconds(_config.KeepAlivePeriod));
+
+            // Keep-Alive Send Interval
+            if (_config.KeepAliveSendInterval > 0)
+                mqttOptionBuilder = mqttOptionBuilder.WithKeepAliveSendInterval(TimeSpan.FromSeconds(_config.KeepAliveSendInterval));
+
+
+            var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder();
+
+            if (_config.AutoReconnectDelay > 0)
+                managedMqttClientOptions = managedMqttClientOptions.WithAutoReconnectDelay(TimeSpan.FromSeconds(_config.AutoReconnectDelay));
+
             // Build all options
             _options = mqttOptionBuilder.Build();
+            _managedOptions = managedMqttClientOptions.WithClientOptions(_options).Build();
 
-            LoggerHelper.Trace("MQTT Init finished.");
+            LoggerHelper.Trace("MQTTClient::Init() - MQTT Init finished.");
             return true;
         }
 
@@ -141,68 +157,26 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// Try to connect to the configured broker.
         /// Every attempt a delay of (5 * attemps, max 60) seconds is executed.
         /// </summary>
-        internal async void Connect()
+        internal void Connect()
         {
-            if (_connecting)
-            {
-                LoggerHelper.Verbose("MQTT client is already connecting. Skipping");
-                return;
-            }
+            LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0}.", GetBrokerInfo());
 
-            int tries = 0;
-            _connecting = true;
+            LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", MQTTHelper.GetFullTopicName(_config.Prefix));
 
-            do
-            {
-                // Safely disconnect the existing client if it exists.
-                try
-                {
-                    if (_client != null && _client.IsConnected)
-                    {
-                        LoggerHelper.Verbose("Disconnecting from previous session.");
-                        Disconnect();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LoggerHelper.Error("Error while trying to disconnect an existing MQTT Client: {0}", ex.ToString());
-                }
-                finally
-                {
-                    _client = null;
-                }
+            _client = new MqttFactory().CreateManagedMqttClient();
+            _client.UseConnectedHandler(OnConnectedHandler);
+            _client.UseDisconnectedHandler(OnDisconnectedHandler);
+            _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
 
-                _preventReconnect = false;
-                // Safely again, try to connect with the existing broker information.
-                try
-                {
-                    LoggerHelper.Info("Trying to connect to broker: {0} (Try: {1}).", GetBrokerInfo(), (tries + 1));
+            _client.StartAsync(_managedOptions).GetAwaiter().GetResult();
+        }
 
-                    _client = new MqttFactory().CreateMqttClient();
-                    _client.UseConnectedHandler(OnConnectedHandler);
-                    _client.UseDisconnectedHandler(OnDisconnectedHandler);
-                    _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
-
-                    await _client.ConnectAsync(_options).ConfigureAwait(false);
-
-                    LoggerHelper.Info("Connection established successfully.");
-                }
-                catch (Exception ex)
-                {
-                    if (ex is MqttCommunicationException)
-                        LoggerHelper.Info("Connection to the broker failed.");
-                    else
-                        LoggerHelper.Info("Connection failed: {0}", ex.ToString());
-
-                    tries++;
-
-                    double waitTime = Math.Min(5 * tries, 60);
-
-                    LoggerHelper.Info("Waiting {0} seconds before trying again...", waitTime);
-                    await Task.Delay(TimeSpan.FromSeconds(waitTime));
-                }
-            } while (!_client.IsConnected);
-            _connecting = false;
+        internal void CleanEvents()
+        {
+            OnMQTTConnected = null;
+            OnMQTTDisconnected = null;
+            OnMQTTMessageReceived = null;
+            OnMQTTRefreshMessageReceived = null;
         }
 
         /// <summary>
@@ -210,45 +184,23 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// </summary>
         internal void Disconnect(bool skipLastWill = false)
         {
+            LoggerHelper.Info("MQTTClient::Disconnect() - Trying to disconnect from broker: {0}.", GetBrokerInfo());
+            if (_client == null)
+                return;
+
+            if (_client.IsConnected && !skipLastWill)
+            {
+                LoggerHelper.Verbose("MQTTClient::Disconnect() - Sending LWT message before disconnecting.");
+                SendLWTDisconnect();
+            }
+
             try
             {
-                if (_client == null)
-                    return;
-
-                if (!_client.IsConnected)
-                {
-                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
-                    _client = null;
-                    return;
-                }
-
-                int tries = 0;
-                _preventReconnect = true;
-
-                LoggerHelper.Verbose("Disconnecting from MQTT Broker.");
-                while (_client.IsConnected)
-                {
-                    LoggerHelper.Trace("Trying to disconnect from the broker (Try: {0}).", tries++);
-
-                    // Send LWT Disconnected
-                    if (!skipLastWill)
-                    {
-                        LoggerHelper.Verbose("Sending LWT message before disconnecting.");
-                        SendLWTDisconnect();
-                        Task.Delay(TimeSpan.FromSeconds(1));
-                    }
-
-                    _client.DisconnectAsync().ConfigureAwait(false);
-                    Task.Delay(TimeSpan.FromSeconds(5));
-                }
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to disconnect. {0}", ex.Message);
+                _client.StopAsync().GetAwaiter().GetResult();
+                _client.Dispose();
             }
             finally
             {
-                // Remove client reference.
                 _client = null;
             }
         }
@@ -276,140 +228,102 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// </summary>
         /// <param name="topic">String containg the topic</param>
         /// <param name="message">String containg the message</param>
-        internal async void PublishMessage(string topic, string message)
+        internal void PublishMessage(string topic, string message)
         {
-            try
+            if (_client == null || !_client.IsConnected)
             {
-                if (_client == null || !_client.IsConnected)
-                {
-                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(topic))
-                {
-                    LoggerHelper.Verbose("Empty or invalid topic name. Skipping.");
-                    return;
-                }
-
-                topic = GetFullTopicName(topic);
-                if (message == null)
-                    message = string.Empty;
-
-                LoggerHelper.Trace("Publishing to {0}: {1}", topic, message);
-
-                MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
-                await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
-            }
-            catch (MqttCommunicationTimedOutException)
-            {
-                LoggerHelper.Debug("MQTT connection with the server has been timed out.");
-                if (!_preventReconnect)
-                {
-                    LoggerHelper.Verbose("Reconnecting...");
-                    Connect();
-                }
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
-                if (!_preventReconnect)
-                {
-                    LoggerHelper.Verbose("Reconnecting...");
-                    Connect();
-                }
-            }
-        }
-
-        internal async void PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
-        {
-            if (!_config.Discovery.Enabled)
-            {
-                LoggerHelper.Verbose("MQTT Discovery Disabled");
+                LoggerHelper.Verbose("MQTTClient::PublishMessage() - MQTT Client not connected. Skipping.");
                 return;
             }
 
-            var topic = GetFullTopicName(stateTopic);
-
-            try
+            if (string.IsNullOrWhiteSpace(topic))
             {
-                var machineName = Environment.MachineName;
-                var machineFullName = PlatformHelper.GetFullMachineName().Replace("\\", " ");
-                if (_config.Discovery.DomainPrefix)
-                    machineName = machineFullName;
+                LoggerHelper.Verbose("MQTTClient::PublishMessage() - Empty or invalid topic name. Skipping.");
+                return;
+            }
 
-                var machineId = machineName.Replace(" ", "_");
-                var uniqueId = string.Format("{0}_{1}_{2}", machineFullName, preffixName, discoveryOptions.Id).Replace(" ", "_").ToLower();
-                var discoveryJson = new HassDiscoveryJsonClass()
+            topic = MQTTHelper.GetFullTopicName(_config.Prefix, topic);
+            if (message == null)
+                message = string.Empty;
+
+            LoggerHelper.Trace("MQTTClient::PublishMessage() - Publishing to {0}: {1}", topic, message);
+
+            MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.Messages);
+            _client.PublishAsync(mqttMsg).GetAwaiter().GetResult();
+        }
+
+        internal void PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
+        {
+            if (!_config.Discovery.Enabled)
+            {
+                LoggerHelper.Verbose("MQTTClient::PublishDiscoveryMessage() - MQTT Discovery Disabled");
+                return;
+            }
+
+            var availabilityTopic = MQTTHelper.GetFullTopicName(_config.Prefix, "LWT");
+            var topic = MQTTHelper.GetFullTopicName(_config.Prefix, stateTopic);
+            var machineName = Environment.MachineName;
+            var machineFullName = PlatformHelper.GetFullMachineName().Replace("\\", " ");
+
+            if (!_config.Discovery.DomainPrefix)
+                machineFullName = machineName;
+
+            var machineId = machineName.Replace(" ", "_");
+            var uniqueId = string.Format("{0}_{1}_{2}", machineFullName, preffixName, discoveryOptions.Id).Replace(" ", "_").ToLower();
+            var discoveryJson = new HassDiscoveryJsonClass()
+            {
+                Name = string.Format("{0} {1}", machineName, discoveryOptions.Name),
+                UniqueId = uniqueId,
+                AvailabilityTopic = availabilityTopic,
+                PayloadAvailable = "ON",
+                PayloadNotAvailable = "OFF",
+            };
+
+            if (discoveryOptions.Component == HomeAssistantComponent.Camera)
+                discoveryJson.Topic = topic;
+            else
+                discoveryJson.StateTopic = topic;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.Unit))
+                discoveryJson.UnitOfMeasurement = discoveryOptions.Unit;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.ValueTemplate))
+                discoveryJson.ValueTemplate = discoveryOptions.ValueTemplate;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.Icon))
+                discoveryJson.Icon = discoveryOptions.Icon;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.DeviceClass))
+                discoveryJson.DeviceClass = discoveryOptions.DeviceClass;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.PayloadOff))
+                discoveryJson.PayloadOff = discoveryOptions.PayloadOff;
+
+            if (!string.IsNullOrEmpty(discoveryOptions.PayloadOn))
+                discoveryJson.PayloadOn = discoveryOptions.PayloadOn;
+
+            discoveryJson.Device = new Device()
+            {
+                Identifiers = new string[1]
                 {
-                    Name = string.Format("{0} {1}", machineName, discoveryOptions.Name),
-                    UniqueId = uniqueId
-                };
-
-                if (discoveryOptions.Component == HomeAssistantComponent.Camera)
-                    discoveryJson.Topic = topic;
-                else
-                    discoveryJson.StateTopic = topic;
-
-                if (!string.IsNullOrEmpty(discoveryOptions.Unit))
-                    discoveryJson.UnitOfMeasurement = discoveryOptions.Unit;
-
-                if (!string.IsNullOrEmpty(discoveryOptions.ValueTemplate))
-                    discoveryJson.ValueTemplate = discoveryOptions.ValueTemplate;
-
-                if (!string.IsNullOrEmpty(discoveryOptions.Icon))
-                    discoveryJson.Icon = discoveryOptions.Icon;
-
-                if (!string.IsNullOrEmpty(discoveryOptions.DeviceClass))
-                    discoveryJson.DeviceClass = discoveryOptions.DeviceClass;
-
-                if (!string.IsNullOrEmpty(discoveryOptions.PayloadOff))
-                    discoveryJson.PayloadOff = discoveryOptions.PayloadOff;
-
-                if (!string.IsNullOrEmpty(discoveryOptions.PayloadOn))
-                    discoveryJson.PayloadOn = discoveryOptions.PayloadOn;
-
-                discoveryJson.Device = new Device()
-                {
-                    Identifiers = new string[1]
-                    {
                     string.Format("{0}_{1}", machineId, preffixName)
-                    },
-                    Manufacturer = "IOTLink " + AssemblyHelper.GetCurrentVersion(),
-                    Model = Environment.UserDomainName,
-                    Name = string.Format("{0} {1}", machineName, preffixName),
-                };
+                },
+                Manufacturer = "IOTLink " + AssemblyHelper.GetCurrentVersion(),
+                Model = Environment.UserDomainName,
+                Name = string.Format("{0} {1}", machineName, preffixName),
+            };
 
-                var componentTopic = discoveryOptions.Component.ToString().PascalToSnakeCase();
-                var configTopic = string.Format("{0}/{1}/{2}/{3}/{4}", _config.Discovery.TopicPrefix, componentTopic, "iotlink", uniqueId, "config");
-                var msgConfig = new MqttConfig.MsgConfig()
-                {
-                    Retain = true
-                };
-
-                var jsonString = JsonConvert.SerializeObject(discoveryJson, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-                var mqttMsg = BuildMQTTMessage(configTopic, Encoding.UTF8.GetBytes(jsonString), msgConfig);
-
-                await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
-            }
-            catch (MqttCommunicationException)
+            var componentTopic = discoveryOptions.Component.ToString().PascalToSnakeCase();
+            var configTopic = string.Format("{0}/{1}/{2}/{3}/{4}", _config.Discovery.TopicPrefix, componentTopic, "iotlink", uniqueId, "config");
+            var msgConfig = new MqttConfig.MsgConfig()
             {
-                LoggerHelper.Debug("MQTT connection with the server has been timed out.");
-                if (!_preventReconnect)
-                {
-                    LoggerHelper.Verbose("Reconnecting...");
-                    Connect();
-                }
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
-                if (!_preventReconnect)
-                {
-                    LoggerHelper.Verbose("Reconnecting...");
-                    Connect();
-                }
-            }
+                Retain = true
+            };
+
+            var jsonString = JsonConvert.SerializeObject(discoveryJson, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            var mqttMsg = BuildMQTTMessage(configTopic, Encoding.UTF8.GetBytes(jsonString), msgConfig);
+
+            _client.PublishAsync(mqttMsg).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -417,49 +331,28 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// </summary>
         /// <param name="topic">String containg the topic</param>
         /// <param name="message">Message bytes[]</param>
-        internal async void PublishMessage(string topic, byte[] message)
+        internal void PublishMessage(string topic, byte[] message)
         {
-            try
+            if (_client == null || !_client.IsConnected)
             {
-                if (_client == null || !_client.IsConnected)
-                {
-                    LoggerHelper.Verbose("MQTT Client not connected. Skipping.");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(topic))
-                {
-                    LoggerHelper.Verbose("Empty or invalid topic name. Skipping.");
-                    return;
-                }
-
-                topic = GetFullTopicName(topic);
-                if (message == null)
-                    message = new byte[] { };
-
-                LoggerHelper.Trace("Publishing to {0}: ({1} bytes)", topic, message?.Length);
-
-                MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
-                await _client.PublishAsync(mqttMsg).ConfigureAwait(false);
+                LoggerHelper.Verbose("MQTTClient::PublishMessage() - MQTT Client not connected. Skipping.");
+                return;
             }
-            catch (MqttCommunicationException)
+
+            if (string.IsNullOrWhiteSpace(topic))
             {
-                LoggerHelper.Debug("MQTT connection with the server has been timed out.");
-                if (!_preventReconnect)
-                {
-                    LoggerHelper.Verbose("Reconnecting...");
-                    Connect();
-                }
+                LoggerHelper.Verbose("MQTTClient::PublishMessage() - Empty or invalid topic name. Skipping.");
+                return;
             }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to publish to {0}: {1}", topic, ex.Message);
-                if (!_preventReconnect)
-                {
-                    LoggerHelper.Verbose("Reconnecting...");
-                    Connect();
-                }
-            }
+
+            topic = MQTTHelper.GetFullTopicName(_config.Prefix, topic);
+            if (message == null)
+                message = new byte[] { };
+
+            LoggerHelper.Trace("MQTTClient::PublishMessage() - Publishing to {0}: ({1} bytes)", topic, message?.Length);
+
+            MqttApplicationMessage mqttMsg = BuildMQTTMessage(topic, message, _config.Messages);
+            _client.PublishAsync(mqttMsg).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -467,23 +360,28 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// </summary>
         /// <param name="arg"><see cref="MqttClientConnectedEventArgs"/> event</param>
         /// <returns></returns>
-        private async Task OnConnectedHandler(MqttClientConnectedEventArgs arg)
+        private void OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
-            LoggerHelper.Verbose("MQTT Connected");
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
+            if (!_client.IsConnected)
+            {
+                LoggerHelper.Warn("MQTTClient::OnConnectedHandler() - MQTT Connected handler received without being connected.");
+                return;
+            }
 
             // Send LWT Connected
             SendLWTConnect();
 
-            // Fire event
+            // Fire Connected Event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
             OnMQTTConnected?.Invoke(this, mqttEvent);
 
-            // System Message
-            LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", GetFullTopicName());
+            // Fire Refresh Event
+            OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
 
             // Subscribe to ALL Messages
-            SubscribeTopic(GetFullTopicName("#"));
+            SubscribeTopic(MQTTHelper.GetFullTopicName(_config.Prefix, "#"));
+            SubscribeTopic(MQTTHelper.GetGlobalTopicName(_config.GlobalPrefix, "#"));
         }
 
         /// <summary>
@@ -491,20 +389,13 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// </summary>
         /// <param name="arg"><see cref="MqttClientDisconnectedEventArgs"/> event</param>
         /// <returns></returns>
-        private async Task OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
+        private void OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
-            LoggerHelper.Verbose("MQTT Disconnected");
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            LoggerHelper.Verbose("MQTTClient::OnDisconnectedHandler() - MQTT Disconnected");
 
             // Fire event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
             OnMQTTDisconnected?.Invoke(this, mqttEvent);
-
-            if (!_preventReconnect)
-            {
-                LoggerHelper.Verbose("Reconnecting...");
-                Connect();
-            }
         }
 
         /// <summary>
@@ -512,9 +403,9 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// </summary>
         /// <param name="arg"><see cref="MqttApplicationMessageReceivedEventArgs"/> event</param>
         /// <returns></returns>
-        private async Task OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
+        private void OnApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs arg)
         {
-            LoggerHelper.Trace("MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
+            LoggerHelper.Trace("MQTTClient::OnApplicationMessageReceivedHandler() - MQTT Message Received - Topic: {0}", arg.ApplicationMessage.Topic);
 
             // Fire event
             MQTTMessage message = GetMQTTMessage(arg);
@@ -542,22 +433,10 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// Subscribe to a topic
         /// </summary>
         /// <param name="topic">String containg the topic</param>
-        private async void SubscribeTopic(string topic)
+        private void SubscribeTopic(string topic)
         {
-            LoggerHelper.Trace("Subscribing to {0}", topic);
-            try
-            {
-                await _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build()).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to subscribe to {0}: {1}", topic, ex.ToString());
-                if (!_preventReconnect)
-                {
-                    LoggerHelper.Verbose("Reconnecting...");
-                    Connect();
-                }
-            }
+            LoggerHelper.Trace("MQTTClient::SubscribeTopic() - Subscribing to {0}", topic);
+            _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build()).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -585,31 +464,17 @@ namespace IOTLinkService.Service.Engine.MQTT
 
         private void SendLWTConnect()
         {
-            try
-            {
-                if (IsLastWillEnabled() && _client.IsConnected && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
-                    _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage)).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to publish LWT (Connect): {0}", ex.ToString());
-            }
+            if (IsLastWillEnabled() && _client.IsConnected && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
+                _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage)).GetAwaiter().GetResult();
         }
 
         private void SendLWTDisconnect()
         {
-            try
-            {
-                if (_client == null || !_client.IsConnected)
-                    return;
+            if (_client == null || !_client.IsConnected)
+                return;
 
-                if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
-                    _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("Error while trying to publish LWT (Disconnect): {0}", ex.ToString());
-            }
+            if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+                _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -618,7 +483,7 @@ namespace IOTLinkService.Service.Engine.MQTT
         /// <returns>LWT message</returns>
         private MqttApplicationMessage GetLWTMessage(string message)
         {
-            string topic = GetFullTopicName("LWT");
+            string topic = MQTTHelper.GetFullTopicName(_config.Prefix, "LWT");
             return BuildMQTTMessage(topic, Encoding.UTF8.GetBytes(message), _config.LWT);
         }
 
@@ -657,7 +522,7 @@ namespace IOTLinkService.Service.Engine.MQTT
                         builder = builder.WithExactlyOnceQoS();
                         break;
                     default:
-                        LoggerHelper.Warn("Wrong LWT QoS configuration. Defaulting to 0.");
+                        LoggerHelper.Warn("MQTTClient::BuildMQTTMessage() - Wrong LWT QoS configuration. Defaulting to 0.");
                         builder = builder.WithAtMostOnceQoS();
                         break;
                 }
@@ -701,22 +566,10 @@ namespace IOTLinkService.Service.Engine.MQTT
             if (topic == null)
                 return string.Empty;
 
-            return MQTTHelper.SanitizeTopic(topic).Replace(GetFullTopicName(), "");
-        }
-
-        /// <summary>
-        /// Return the full topic name (including domain/machine)
-        /// </summary>
-        /// <param name="name">message topic string</param>
-        /// <returns>String containing the full topic name</returns>
-        private string GetFullTopicName(string name = "")
-        {
-            if (name == null)
-                name = string.Empty;
-
-            string machineName = PlatformHelper.GetFullMachineName().Replace("\\", "/");
-            string topic = string.Format("{0}/{1}/{2}", _config.Prefix, machineName, name);
-            return MQTTHelper.SanitizeTopic(topic);
+            return MQTTHelper
+                .SanitizeTopic(topic)
+                .Replace(MQTTHelper.GetFullTopicName(_config.Prefix), "")
+                .Replace(MQTTHelper.GetGlobalTopicName(_config.GlobalPrefix), "");
         }
     }
 }

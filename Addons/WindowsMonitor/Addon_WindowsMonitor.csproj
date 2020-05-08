@@ -46,8 +46,8 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="YamlDotNet, Version=6.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\YamlDotNet.6.1.1\lib\net45\YamlDotNet.dll</HintPath>
+    <Reference Include="YamlDotNet, Version=8.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\YamlDotNet.8.1.1\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -64,7 +64,7 @@
     <Compile Include="Service\Monitors\SystemMonitor.cs" />
     <Compile Include="Service\Monitors\UptimeMonitor.cs" />
     <Compile Include="Service\Monitors\NetworkMonitor.cs" />
-    <Compile Include="Service\Monitors\MediaMonitor.cs" />
+    <Compile Include="Service\Monitors\AudioMonitor.cs" />
     <Compile Include="Service\Monitors\StorageMonitor.cs" />
     <Compile Include="Service\Monitors\PowerMonitor.cs" />
     <Compile Include="Service\Monitors\MemoryMonitor.cs" />

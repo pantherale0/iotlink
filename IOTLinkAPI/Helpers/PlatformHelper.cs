@@ -34,10 +34,10 @@ namespace IOTLinkAPI.Helpers
         /// <returns>String</returns>
         public static string GetUsername(int sessionId)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return WindowsAPI.GetUsername(sessionId);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            return WindowsAPI.GetUsername(sessionId);
         }
 
         /// <summary>
@@ -46,10 +46,10 @@ namespace IOTLinkAPI.Helpers
         /// <returns>String</returns>
         public static string GetCurrentUsername()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return WindowsAPI.GetCurrentUser();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            return WindowsAPI.GetCurrentUser();
         }
 
         /// <summary>
@@ -100,10 +100,10 @@ namespace IOTLinkAPI.Helpers
         public static void Hibernate()
         {
             LoggerHelper.Debug("Executing system hibernation.");
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                WindowsAPI.Hibernate();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            WindowsAPI.Hibernate();
         }
 
         /// <summary>
@@ -112,10 +112,10 @@ namespace IOTLinkAPI.Helpers
         public static void Suspend()
         {
             LoggerHelper.Debug("Executing system suspend.");
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                WindowsAPI.Suspend();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            WindowsAPI.Suspend();
         }
 
         /// <summary>
@@ -198,6 +198,19 @@ namespace IOTLinkAPI.Helpers
         /// Return a <see cref="AudioDeviceInfo"/> object with all current device information.
         /// </summary>
         /// <returns><see cref="AudioDeviceInfo"/> object</returns>
+        public static List<AudioDeviceInfo> GetAudioDevices()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.GetAudioDevices();
+        }
+
+        /// <summary>
+        /// Return an <see cref="AudioDeviceInfo"/> object with the device information.
+        /// </summary>
+        /// <param name="guid">Device Unique Identifider</param>
+        /// <returns></returns>
         public static AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -207,8 +220,35 @@ namespace IOTLinkAPI.Helpers
         }
 
         /// <summary>
+        /// Set device as the primary playback audio device
+        /// </summary>
+        /// <param name="guid">Device Unique Identifider</param>
+        /// <returns>Boolean</returns>
+        public static bool SetAudioDefault(Guid guid)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.SetAudioDefault(guid);
+        }
+
+        /// <summary>
+        /// Set device as the primary communication playback audio device
+        /// </summary>
+        /// <param name="guid">Device Unique Identifider</param>
+        /// <returns>Boolean</returns>
+        public static bool SetAudioDefaultComms(Guid guid)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
+
+            return WindowsAPI.SetAudioDefaultComms(guid);
+        }
+
+        /// <summary>
         /// Set primary audio device volume mute flag
         /// </summary>
+        /// <param name="guid">Device Unique Identifider</param>
         /// <param name="mute">Boolean indicating the desired mute flag</param>
         /// <returns>Boolean</returns>
         public static bool SetAudioMute(Guid guid, bool mute)
@@ -222,7 +262,7 @@ namespace IOTLinkAPI.Helpers
         /// <summary>
         /// Toggle primary audio device volume mute flag
         /// </summary>
-        /// <param name="mute">Boolean indicating the desired mute flag</param>
+        /// <param name="guid">Device Unique Identifider</param>
         /// <returns>Boolean</returns>
         public static bool ToggleAudioMute(Guid guid)
         {
@@ -235,6 +275,7 @@ namespace IOTLinkAPI.Helpers
         /// <summary>
         /// Set the primary audio device volume level
         /// </summary>
+        /// <param name="guid">Device Unique Identifider</param>
         /// <param name="volume">Desired volume level (0-100)</param>
         public static void SetAudioVolume(Guid guid, double volume)
         {

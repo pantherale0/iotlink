@@ -5,6 +5,37 @@ namespace IOTLinkAPI.Helpers
     public static class MQTTHelper
     {
         /// <summary>
+        /// Return the full topic name (including domain/machine)
+        /// </summary>
+        /// <param name="prefix">prefix string</param>
+        /// <param name="name">message topic string</param>
+        /// <returns>String containing the full topic name</returns>
+        public static string GetFullTopicName(string prefix, string name = "")
+        {
+            if (name == null)
+                name = string.Empty;
+
+            string machineName = PlatformHelper.GetFullMachineName().Replace("\\", "/");
+            string topic = string.Format("{0}/{1}/{2}", prefix, machineName, name);
+            return MQTTHelper.SanitizeTopic(topic);
+        }
+
+        /// <summary>
+        /// Return the global topic name
+        /// </summary>
+        /// <param name="prefix">prefix string</param>
+        /// <param name="name">message topic string</param>
+        /// <returns>String containing the global topic name</returns>
+        public static string GetGlobalTopicName(string prefix, string name = "")
+        {
+            if (name == null)
+                name = string.Empty;
+
+            string topic = string.Format("{0}/{1}", prefix, name);
+            return MQTTHelper.SanitizeTopic(topic);
+        }
+
+        /// <summary>
         /// Remove non-wanted characters from the node name
         /// </summary>
         /// <param name="name">String containing the source name</param>

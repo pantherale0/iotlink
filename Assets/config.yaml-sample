@@ -52,7 +52,11 @@ mqtt:
   ########################################################################
   clientId: 
   prefix: IOTLink
+  globalPrefix: IOTLink/all
   cleanSession: true
+  autoReconnectDelay: 10
+  keepAlivePeriod: 60
+  KeepAliveSendInterval: 5
 
 ########################################################################
 # Logging Configuration

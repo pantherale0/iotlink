@@ -18,6 +18,9 @@ namespace IOTLinkAPI.Platform.HomeAssistant
         [JsonProperty("icon")]
         public string Icon { get; set; }
 
+        [JsonProperty("availability_topic")]
+        public string AvailabilityTopic { get; set; }
+
         [JsonProperty("state_topic")]
         public string StateTopic { get; set; }
 
@@ -33,11 +36,17 @@ namespace IOTLinkAPI.Platform.HomeAssistant
         [JsonProperty("device_class")]
         public string DeviceClass { get; set; }
 
+        [JsonProperty("payload_on")]
+        public string PayloadOn { get; set; }
+
         [JsonProperty("payload_off")]
         public string PayloadOff { get; set; }
 
-        [JsonProperty("payload_on")]
-        public string PayloadOn { get; set; }
+        [JsonProperty("payload_available")]
+        public string PayloadAvailable { get; set; }
+
+        [JsonProperty("payload_not_available")]
+        public string PayloadNotAvailable { get; set; }
 
         [JsonProperty("device")]
         public Device Device { get; set; }

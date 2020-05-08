@@ -66,7 +66,8 @@ namespace IOTLinkAddon.Service.Monitors
                     {
                         Id = $"Screen_{i}_Width",
                         Name = $"Screen #{i} - Width",
-                        Component = HomeAssistantComponent.Sensor
+                        Component = HomeAssistantComponent.Sensor,
+                        Icon = "mdi:monitor"
                     }
                 });
 
@@ -80,7 +81,8 @@ namespace IOTLinkAddon.Service.Monitors
                     {
                         Id = $"Screen_{i}_Height",
                         Name = $"Screen #{i} - Height",
-                        Component = HomeAssistantComponent.Sensor
+                        Component = HomeAssistantComponent.Sensor,
+                        Icon = "mdi:monitor"
                     }
                 });
             }

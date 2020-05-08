@@ -10,10 +10,13 @@ namespace IOTLinkAddon.Service.Monitors
     {
         private static readonly string CONFIG_KEY = "CPU";
 
-        private PerformanceCounter _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+        private static PerformanceCounter _cpuPerformanceCounter;
 
         public override void Init()
         {
+            if (_cpuPerformanceCounter == null)
+                _cpuPerformanceCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+
             _cpuPerformanceCounter.NextValue();
         }
 
