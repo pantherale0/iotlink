@@ -34,10 +34,10 @@ namespace IOTLinkAPI.Helpers
         /// <returns>String</returns>
         public static string GetUsername(int sessionId)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return WindowsAPI.GetUsername(sessionId);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            return WindowsAPI.GetUsername(sessionId);
         }
 
         /// <summary>
@@ -46,10 +46,10 @@ namespace IOTLinkAPI.Helpers
         /// <returns>String</returns>
         public static string GetCurrentUsername()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return WindowsAPI.GetCurrentUser();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            return WindowsAPI.GetCurrentUser();
         }
 
         /// <summary>
@@ -100,10 +100,10 @@ namespace IOTLinkAPI.Helpers
         public static void Hibernate()
         {
             LoggerHelper.Debug("Executing system hibernation.");
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                WindowsAPI.Hibernate();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            WindowsAPI.Hibernate();
         }
 
         /// <summary>
@@ -112,10 +112,10 @@ namespace IOTLinkAPI.Helpers
         public static void Suspend()
         {
             LoggerHelper.Debug("Executing system suspend.");
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                WindowsAPI.Suspend();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
 
-            throw new PlatformNotSupportedException();
+            WindowsAPI.Suspend();
         }
 
         /// <summary>

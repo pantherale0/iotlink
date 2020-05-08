@@ -260,6 +260,7 @@ namespace IOTLinkService.Service.MQTT
                 return;
             }
 
+            var availabilityTopic = MQTTHelper.GetFullTopicName(_config.Prefix, "LWT");
             var topic = MQTTHelper.GetFullTopicName(_config.Prefix, stateTopic);
             var machineName = Environment.MachineName;
             var machineFullName = PlatformHelper.GetFullMachineName().Replace("\\", " ");
@@ -272,7 +273,10 @@ namespace IOTLinkService.Service.MQTT
             var discoveryJson = new HassDiscoveryJsonClass()
             {
                 Name = string.Format("{0} {1}", machineName, discoveryOptions.Name),
-                UniqueId = uniqueId
+                UniqueId = uniqueId,
+                AvailabilityTopic = availabilityTopic,
+                PayloadAvailable = "ON",
+                PayloadNotAvailable = "OFF",
             };
 
             if (discoveryOptions.Component == HomeAssistantComponent.Camera)
@@ -368,9 +372,12 @@ namespace IOTLinkService.Service.MQTT
             // Send LWT Connected
             SendLWTConnect();
 
-            // Fire event
+            // Fire Connected Event
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
             OnMQTTConnected?.Invoke(this, mqttEvent);
+
+            // Fire Refresh Event
+            OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
 
             // Subscribe to ALL Messages
             SubscribeTopic(MQTTHelper.GetFullTopicName(_config.Prefix, "#"));
