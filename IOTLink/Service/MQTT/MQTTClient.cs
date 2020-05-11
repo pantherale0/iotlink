@@ -376,12 +376,11 @@ namespace IOTLinkService.Service.MQTT
             MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
             OnMQTTConnected?.Invoke(this, mqttEvent);
 
-            // Fire Refresh Event
-            OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
-
             // Subscribe to ALL Messages
             SubscribeTopic(MQTTHelper.GetFullTopicName(_config.Prefix, "#"));
-            SubscribeTopic(MQTTHelper.GetGlobalTopicName(_config.GlobalPrefix, "#"));
+
+            if (!string.IsNullOrWhiteSpace(_config.GlobalPrefix))
+                SubscribeTopic(MQTTHelper.GetGlobalTopicName(_config.GlobalPrefix, "#"));
         }
 
         /// <summary>

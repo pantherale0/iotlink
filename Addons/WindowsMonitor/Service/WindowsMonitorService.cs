@@ -88,7 +88,7 @@ namespace IOTLinkAddon.Service
         {
             if (_config == null || !_config.GetValue("enabled", false))
             {
-                LoggerHelper.Info("System monitor is disabled.");
+                LoggerHelper.Info("WindowsMonitorService::SetupTimers() - System monitor is disabled.");
                 if (_monitorTimer != null)
                 {
                     _monitorTimer.Stop();
@@ -108,22 +108,23 @@ namespace IOTLinkAddon.Service
             _monitorTimer.Interval = 1000;
             _monitorTimer.Start();
 
-            LoggerHelper.Info("System monitor is activated.");
+            LoggerHelper.Info("WindowsMonitorService::SetupTimers() - System monitor is activated.");
         }
 
         private void SetupDiscovery()
         {
             if (_config == null)
             {
-                LoggerHelper.Info("MQTT discovery is disabled.");
+                LoggerHelper.Info("WindowsMonitorService::SetupDiscovery() - MQTT discovery is disabled.");
                 return;
             }
+
             foreach (var monitor in monitors)
             {
                 string configKey = monitor.GetConfigKey();
                 if (CheckMonitorEnabled(configKey))
                 {
-                    LoggerHelper.Debug("{0} Monitor - Sending config", configKey);
+                    LoggerHelper.Debug("WindowsMonitorService::SetupDiscovery() - {0} Monitor - Sending configuration", configKey);
 
                     List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
                     if (items == null)
@@ -139,7 +140,7 @@ namespace IOTLinkAddon.Service
 
         private void OnClearEvent(object sender, EventArgs e)
         {
-            LoggerHelper.Verbose("Event {0} Received. Clearing cache and resending information.", e.GetType().ToString());
+            LoggerHelper.Verbose("WindowsMonitorService::OnClearEvent() - Event {0} Received. Clearing cache and resending information.", e.GetType().ToString());
 
             _cache.Clear();
             _discoveryItems.Clear();
@@ -151,7 +152,7 @@ namespace IOTLinkAddon.Service
             if (e.ConfigType != ConfigType.CONFIGURATION_ADDON)
                 return;
 
-            LoggerHelper.Verbose("Reloading configuration");
+            LoggerHelper.Verbose("WindowsMonitorService::OnConfigReload() - Reloading configuration");
 
             _config = ConfigurationManager.GetInstance().GetConfiguration(_configPath);
             SetupTimers();
@@ -160,78 +161,84 @@ namespace IOTLinkAddon.Service
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
         {
-            LoggerHelper.Verbose("OnSessionChange - {0}: {1}", e.Reason.ToString(), e.Username);
+            LoggerHelper.Verbose("WindowsMonitorService::OnSessionChange() - {0}: {1}", e.Reason.ToString(), e.Username);
 
             GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
         {
-            LoggerHelper.Debug("OnMonitorTimerElapsed: Started");
+            LoggerHelper.Debug("WindowsMonitorService::OnMonitorTimerElapsed() - Started");
 
             SendAllInformation();
 
             if (_monitorCounter++ == uint.MaxValue)
                 _monitorCounter = 0;
 
-            LoggerHelper.Debug("OnMonitorTimerElapsed: Completed");
+            LoggerHelper.Debug("WindowsMonitorService::OnMonitorTimerElapsed() - Completed");
         }
 
         private void SendAllInformation()
         {
-            try
-            {
-                _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
+            _monitorTimer.Stop(); // Stop the timer in order to prevent overlapping
 
-                // Execute Monitors
-                foreach (IMonitor monitor in monitors)
-                    ExecuteMonitor(monitor);
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("SendAllInformation - Error: {0}", ex.ToString());
-            }
-            finally
-            {
-                _monitorTimer.Start(); // After everything, start the timer again.
-            }
+            // Execute Monitors
+            foreach (IMonitor monitor in monitors)
+                ExecuteMonitor(monitor);
+
+            _monitorTimer.Start(); // After everything, start the timer again.
         }
 
         private void ExecuteMonitor(IMonitor monitor)
         {
-            // Execute agent requests first
-            Dictionary<string, AddonRequestType> agentRequests = monitor.GetAgentRequests();
-            if (agentRequests != null)
+            try
             {
-                foreach (KeyValuePair<string, AddonRequestType> entry in agentRequests)
+                // Execute agent requests first
+                Dictionary<string, AddonRequestType> agentRequests = monitor.GetAgentRequests();
+                if (agentRequests != null)
                 {
-                    if (!CheckMonitorEnabled(entry.Key) || !CheckMonitorInterval(entry.Key))
-                        continue;
+                    foreach (KeyValuePair<string, AddonRequestType> entry in agentRequests)
+                    {
+                        if (!CheckMonitorEnabled(entry.Key) || !CheckMonitorInterval(entry.Key))
+                            continue;
 
-                    LoggerHelper.Debug("{0} Monitor - Requesting Agent information ({1})", entry.Key, entry.Value.ToString());
+                        LoggerHelper.Debug("WindowsMonitorService::ExecuteMonitor({0}) - Agent {1} - Request information ({2})", monitor.GetConfigKey(), entry.Key, entry.Value.ToString());
 
-                    dynamic addonData = new ExpandoObject();
-                    addonData.requestType = entry.Value;
+                        dynamic addonData = new ExpandoObject();
+                        addonData.requestType = entry.Value;
 
-                    GetManager().SendAgentRequest(this, addonData);
+                        GetManager().SendAgentRequest(this, addonData);
+                    }
                 }
             }
-
-            // Get monitor sensors
-            string configKey = monitor.GetConfigKey();
-            if (CheckMonitorEnabled(configKey) && CheckMonitorInterval(configKey))
+            catch (Exception ex)
             {
-                LoggerHelper.Debug("{0} Monitor - Sending information", configKey);
+                LoggerHelper.Error("WindowsMonitorService::ExecuteMonitor({0}) - Agent Request Error: {1}", monitor.GetConfigKey(), ex.ToString());
+            }
 
-                List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
-                if (items == null)
-                    return;
 
-                foreach (MonitorItem item in items)
+            try
+            {
+                // Get monitor sensors
+                string configKey = monitor.GetConfigKey();
+                if (CheckMonitorEnabled(configKey) && CheckMonitorInterval(configKey))
                 {
-                    PublishDiscoveryItem(item);
-                    PublishItem(item);
+                    LoggerHelper.Debug("WindowsMonitorService::ExecuteMonitor({0}) - Sending information", configKey);
+
+                    List<MonitorItem> items = monitor.GetMonitorItems(GetMonitorConfiguration(configKey), GetMonitorInterval(configKey));
+                    if (items == null)
+                        return;
+
+                    foreach (MonitorItem item in items)
+                    {
+                        PublishDiscoveryItem(item);
+                        PublishItem(item);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("WindowsMonitorService::ExecuteMonitor({0}) - Error: {1}", monitor.GetConfigKey(), ex.ToString());
             }
         }
 

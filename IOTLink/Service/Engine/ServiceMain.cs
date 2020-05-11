@@ -11,7 +11,7 @@ namespace IOTLinkService.Service.Engine
     public class ServiceMain
     {
         private static ServiceMain _instance;
-        private bool _addonsLoaded;
+        private static bool _addonsLoaded;
 
         private DateTime _lastConfigChange;
 
@@ -49,6 +49,7 @@ namespace IOTLinkService.Service.Engine
                 _processMonitorTimer.Start();
             }
 
+            SetupAddons();
             SetupMQTTHandlers();
             SetupWebSocket();
         }
@@ -64,6 +65,16 @@ namespace IOTLinkService.Service.Engine
             MQTTClientManager.GetInstance().Stop();
             AgentManager.GetInstance().StopAgents();
             LoggerHelper.GetInstance().Flush();
+        }
+
+        private void SetupAddons()
+        {
+            ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
+            if (!_addonsLoaded)
+            {
+                addonsManager.LoadAddons();
+                _addonsLoaded = true;
+            }
         }
 
         private void SetupWebSocket()
@@ -105,12 +116,6 @@ namespace IOTLinkService.Service.Engine
             LoggerHelper.Verbose("ServiceMain::OnMQTTConnected() - MQTT Connected");
 
             ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
-            if (!_addonsLoaded)
-            {
-                addonsManager.LoadAddons();
-                _addonsLoaded = true;
-            }
-
             addonsManager.Raise_OnMQTTConnected(sender, e);
         }
 

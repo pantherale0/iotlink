@@ -54,9 +54,7 @@
     <Compile Include="Common\AddonRequestType.cs" />
     <Compile Include="Service\CommandsService.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include=".vs\Addon_Commands\v15\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\..\IOTLinkAPI\IOTLinkAPI.csproj">
       <Project>{ccb5ff85-b16d-4a6a-aa53-993f6b86fea1}</Project>
