@@ -72,9 +72,7 @@
     <Compile Include="Service\Monitors\IMonitor.cs" />
     <Compile Include="Service\WindowsMonitorService.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include=".vs\Addon_WindowsMonitor\v15\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\..\IOTLinkAPI\IOTLinkAPI.csproj">
       <Project>{ccb5ff85-b16d-4a6a-aa53-993f6b86fea1}</Project>
