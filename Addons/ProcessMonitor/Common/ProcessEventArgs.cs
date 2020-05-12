@@ -4,12 +4,13 @@ namespace IOTLinkAddon.Common
 {
     public class ProcessEventArgs : EventArgs
     {
-        public long ProcessID { get; set; }
+        public string ProcessName { get; set; }
+        public int ProcessID { get; set; }
+        public int ParentProcessID { get; set; }
 
-        public long ParentProcessID { get; set; }
-
-        public ProcessEventArgs(long processId, long parentProcessId) : base()
+        public ProcessEventArgs(string processName, int processId, int parentProcessId) : base()
         {
+            ProcessName = processName;
             ProcessID = processId;
             ParentProcessID = parentProcessId;
         }

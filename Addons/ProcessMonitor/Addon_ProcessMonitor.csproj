@@ -61,7 +61,7 @@
     <Compile Include="Common\ProcessInformation.cs" />
     <Compile Include="Common\ProcessHelper.cs" />
     <Compile Include="Common\ProcessState.cs" />
-    <Compile Include="Service\Monitors\ProcessMonitor.cs" />
+    <Compile Include="Service\Monitors\ProcessEventMonitor.cs" />
     <Compile Include="Service\ProcessMonitorService.cs" />
   </ItemGroup>
   <ItemGroup />

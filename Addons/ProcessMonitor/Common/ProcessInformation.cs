@@ -4,7 +4,7 @@ namespace IOTLinkAddon.Service.Platform
 {
     public class ProcessInformation
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
         public int SessionId { get; set; }
         public string ProcessName { get; set; }
         public DateTime StartDateTime { get; set; }
@@ -13,5 +13,6 @@ namespace IOTLinkAddon.Service.Platform
         public string MainWindowTitle { get; set; }
         public bool FullScreen { get; set; }
         public ProcessState Status { get; set; }
+        public ProcessInformation Parent { get; set; }
     }
 }

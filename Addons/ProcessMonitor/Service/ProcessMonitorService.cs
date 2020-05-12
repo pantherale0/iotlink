@@ -1,4 +1,6 @@
-﻿using IOTLinkAddon.Service.Platform;
+﻿using IOTLinkAddon.Common;
+using IOTLinkAddon.Service.Monitors;
+using IOTLinkAddon.Service.Platform;
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
@@ -7,8 +9,8 @@ using IOTLinkAPI.Platform.Events;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Timers;
 
 namespace IOTLinkAddon.Service
@@ -23,6 +25,8 @@ namespace IOTLinkAddon.Service
         private string _configPath;
         private Configuration _config;
 
+        private ProcessEventMonitor eventMonitor = new ProcessEventMonitor();
+
         private Dictionary<string, string> _cache = new Dictionary<string, string>();
 
         public override void Init(IAddonManager addonManager)
@@ -33,6 +37,10 @@ namespace IOTLinkAddon.Service
             _configPath = Path.Combine(_currentPath, "config.yaml");
             _config = cfgManager.GetConfiguration(_configPath);
             cfgManager.SetReloadHandler(_configPath, OnConfigReload);
+
+            eventMonitor.Init();
+            eventMonitor.OnProcessStarted += OnProcessStarted;
+            eventMonitor.OnProcessStopped += OnProcessStopped;
 
             OnConfigReloadHandler += OnConfigReload;
             OnMQTTConnectedHandler += OnClearEvent;
@@ -120,37 +128,116 @@ namespace IOTLinkAddon.Service
             _monitorTimer.Start(); // After everything, start the timer again.
         }
 
+        private void OnProcessStarted(object sender, ProcessEventArgs e)
+        {
+            string processName = ProcessHelper.CleanProcessName(e.ProcessName);
+            int processId = e.ProcessID;
+            int parentProcessId = e.ParentProcessID;
+
+            Configuration monitor = _config.GetValue("monitors:" + processName);
+            if (monitor == null)
+            {
+                LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+                return;
+            }
+
+            LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - Monitoring FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+            ProcessInformation pi = ProcessHelper.GetProcessInformation(processId);
+            if (pi == null)
+                return;
+
+            if (pi.Parent != null && string.Compare(pi.ProcessName, pi.Parent.ProcessName) == 0)
+                return; // Children processes should not trigger notifications
+
+            LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - FOUND Main Process (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+        }
+
+        private void OnProcessStopped(object sender, ProcessEventArgs e)
+        {
+            string processName = ProcessHelper.CleanProcessName(e.ProcessName);
+            int processId = e.ProcessID;
+            int parentProcessId = e.ParentProcessID;
+
+            Configuration monitor = _config.GetValue("monitors:" + processName);
+            if (monitor == null)
+            {
+                LoggerHelper.Info("ProcessMonitorService::OnProcessStopped({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+                return;
+            }
+
+            LoggerHelper.Info("ProcessMonitorService::OnProcessStopped({0}) - Monitoring FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+            ProcessInformation pi = ProcessHelper.GetProcessInformation(processId);
+            if (pi == null)
+                return;
+
+            if (pi.Parent != null && string.Compare(pi.ProcessName, pi.Parent.ProcessName) == 0)
+                return; // Children processes should not trigger notifications
+
+            LoggerHelper.Info("ProcessMonitorService::OnProcessStopped({0}) - FOUND Main Process (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+        }
+
         private void ProcessMonitor(Configuration monitor)
         {
+            int interval = monitor.GetValue("interval", DEFAULT_INTERVAL);
+            if ((_monitorCounter % interval) != 0)
+                return;
+
             string processName = monitor.GetValue("name", string.Empty);
             bool enabled = monitor.GetValue("enabled", false);
             bool cacheable = monitor.GetValue("cacheable", false);
             bool grouped = monitor.GetValue("grouped", false);
 
-            LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Enabled: {1} - Cacheable: {2} - Grouped: {3}", processName, enabled, cacheable, grouped);
+            LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Enabled: {1} - Cacheable: {2} - Grouped: {3}", processName, enabled, cacheable, grouped);
             if (!enabled)
             {
-                LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Monitoring is disabled. Skipping.", processName);
+                LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Monitoring is disabled. Skipping.", processName);
                 return;
             }
 
             List<ProcessInformation> processes = ProcessHelper.GetProcessesByName(processName);
             if (processes.Count == 0)
             {
-                LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Not Running", processName);
+                LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Not Running", processName);
                 return;
             }
 
-            LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - {1} Processes Found", processName, processes.Count);
-            foreach (ProcessInformation pi in processes)
+            LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - {1} Processes Found", processName, processes.Count);
+
+            if (grouped)
+                ProcessGroup(monitor, processes);
+            else
+                ProcessSingleProcess(monitor, processes[0]);
+        }
+
+        private void ProcessGroup(Configuration monitor, List<ProcessInformation> processes)
+        {
+            string processName = monitor.GetValue("name", string.Empty);
+
+            List<ProcessInformation> mainProcesses = new List<ProcessInformation>();
+            foreach (ProcessInformation item in processes)
             {
-                LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - {1}", processName, JsonConvert.SerializeObject(pi));
-                if (grouped)
+                ProcessInformation pi = item;
+                while (pi.Parent != null && string.Compare(pi.ProcessName, pi.Parent.ProcessName) == 0)
                 {
-                    LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Monitoring is grouped. Skipping other processes with same name.", processName);
-                    break;
+                    LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Iterating over child process to find parent: {1}", processName, JsonConvert.SerializeObject(pi));
+                    pi = pi.Parent;
                 }
+
+                if (!mainProcesses.Any(x => x.Id == pi.Id))
+                    mainProcesses.Add(pi);
             }
+
+            // Main Processes Only
+            foreach (ProcessInformation item in mainProcesses)
+            {
+                LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Main Process {1}", processName, JsonConvert.SerializeObject(item));
+            }
+        }
+
+        private void ProcessSingleProcess(Configuration monitor, ProcessInformation process)
+        {
+            string processName = monitor.GetValue("name", string.Empty);
+            LoggerHelper.Info("ProcessMonitorService::ProcessSingleProcess({0}) - {1}", processName, JsonConvert.SerializeObject(process));
         }
     }
 }
