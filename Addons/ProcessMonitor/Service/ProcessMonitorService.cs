@@ -4,6 +4,7 @@ using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -105,13 +106,14 @@ namespace IOTLinkAddon.Service
             List<Configuration> monitors = _config.GetConfigurationList("monitors");
             foreach (var monitor in monitors)
             {
+                string processName = monitor.GetValue("name", string.Empty);
                 try
                 {
                     ProcessMonitor(monitor);
                 }
                 catch (Exception ex)
                 {
-                    LoggerHelper.Error("ProcessMonitorService::SendAllInformation() - Error while executing {0}: {1}", monitor, ex);
+                    LoggerHelper.Error("ProcessMonitorService::SendAllInformation() - {0} Monitor - Error: {1}", processName, ex);
                 }
             }
 
@@ -139,9 +141,10 @@ namespace IOTLinkAddon.Service
                 return;
             }
 
+            LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - {1} Processes Found", processName, processes.Count);
             foreach (ProcessInformation pi in processes)
             {
-                LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - {1} ", processName, pi);
+                LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - {1}", processName, JsonConvert.SerializeObject(pi));
                 if (grouped)
                 {
                     LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Monitoring is grouped. Skipping other processes with same name.", processName);
