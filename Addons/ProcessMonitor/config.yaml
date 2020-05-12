@@ -1,0 +1,127 @@
+############################################################################
+# Enabled
+############################################################################
+# This flag indicates whether the module is enabled or disabled.
+############################################################################
+# Type: Boolean
+# Default: false
+############################################################################
+enabled: true
+
+############################################################################
+# Default Formats
+############################################################################
+# Define which formatting will be used by default in all monitors
+############################################################################
+# Sizes: B (Bytes), KB (Kilobytes), GB (Gigabytes), TB (Terabytes)
+#  - You can define rounding with "XX:Y" where Y is the number of decimals.
+#  - Example: "GB:2" will display 2 decimal places
+#
+# Time/Date:
+# - See this link:
+# - https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings
+#
+# Important:
+# - You can override default format for each monitor by placing formats
+# - under their configuration. Example:
+#   Memory:
+#    enabled: true
+#    interval: 10
+#    cacheable: true
+#    formats:
+#      memoryFormat: GB:2
+############################################################################
+formats:
+  diskFormat: GB
+  memoryFormat: MB
+  dateFormat: yyyy-MM-dd
+  timeFormat: HH:mm:ss
+  dateTimeFormat: yyyy-MM-dd HH:mm:ss
+
+############################################################################
+# Monitors
+############################################################################
+# Configure which monitors are enabled and which interval they should
+# be pooled from the system. I don't recommend less than 5 seconds.
+# Cacheable monitors don't send the value repeatedly unless it changes.
+############################################################################
+monitors:
+  - name: AnyDesk
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: chrome
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: Discord
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: obs64
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: Origin
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: Rambox
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: SkypeApp
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: steam
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: TeamViewer
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
+
+  - name: vlc
+    enabled: true
+    cacheable: true
+    grouped: true
+    events:
+      onStart: true
+      onStop: true
