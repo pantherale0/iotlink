@@ -114,7 +114,7 @@ namespace IOTLinkAddon.Service
             List<Configuration> monitors = _config.GetConfigurationList("monitors");
             foreach (var monitor in monitors)
             {
-                string processName = monitor.GetValue("name", string.Empty);
+                string processName = GetMonitorName(monitor);
                 try
                 {
                     ProcessMonitor(monitor);
@@ -134,22 +134,28 @@ namespace IOTLinkAddon.Service
             int processId = e.ProcessID;
             int parentProcessId = e.ParentProcessID;
 
-            Configuration monitor = _config.GetValue("monitors:" + processName);
+            Configuration monitor = _config.GetConfigurationList("monitors").First(x => string.Compare(processName, GetMonitorName(x)) == 0);
             if (monitor == null)
             {
-                LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+                LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
                 return;
             }
 
-            LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - Monitoring FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
             ProcessInformation pi = ProcessHelper.GetProcessInformation(processId);
             if (pi == null)
+            {
+                LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Unable to get information from PID {1}", processName, processId);
                 return;
+            }
 
             if (pi.Parent != null && string.Compare(pi.ProcessName, pi.Parent.ProcessName) == 0)
-                return; // Children processes should not trigger notifications
+            {
+                LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Spawning child {1} from {0}", processName, pi.Id, pi.Parent.Id);
+                return;
+            }
 
             LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - FOUND Main Process (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+            //TODO: Send MQTT
         }
 
         private void OnProcessStopped(object sender, ProcessEventArgs e)
@@ -158,22 +164,15 @@ namespace IOTLinkAddon.Service
             int processId = e.ProcessID;
             int parentProcessId = e.ParentProcessID;
 
-            Configuration monitor = _config.GetValue("monitors:" + processName);
+            Configuration monitor = _config.GetConfigurationList("monitors").First(x => string.Compare(processName, GetMonitorName(x)) == 0);
             if (monitor == null)
             {
                 LoggerHelper.Info("ProcessMonitorService::OnProcessStopped({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
                 return;
             }
 
-            LoggerHelper.Info("ProcessMonitorService::OnProcessStopped({0}) - Monitoring FOUND (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
             ProcessInformation pi = ProcessHelper.GetProcessInformation(processId);
-            if (pi == null)
-                return;
-
-            if (pi.Parent != null && string.Compare(pi.ProcessName, pi.Parent.ProcessName) == 0)
-                return; // Children processes should not trigger notifications
-
-            LoggerHelper.Info("ProcessMonitorService::OnProcessStopped({0}) - FOUND Main Process (PID: {1} - Parent: {2})", processName, processId, parentProcessId);
+            //TODO: Finish Stop event
         }
 
         private void ProcessMonitor(Configuration monitor)
@@ -182,15 +181,15 @@ namespace IOTLinkAddon.Service
             if ((_monitorCounter % interval) != 0)
                 return;
 
-            string processName = monitor.GetValue("name", string.Empty);
+            string processName = GetMonitorName(monitor);
             bool enabled = monitor.GetValue("enabled", false);
             bool cacheable = monitor.GetValue("cacheable", false);
             bool grouped = monitor.GetValue("grouped", false);
 
-            LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Enabled: {1} - Cacheable: {2} - Grouped: {3}", processName, enabled, cacheable, grouped);
+            LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Enabled: {1} - Cacheable: {2} - Grouped: {3}", processName, enabled, cacheable, grouped);
             if (!enabled)
             {
-                LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Monitoring is disabled. Skipping.", processName);
+                LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Monitoring is disabled. Skipping.", processName);
                 return;
             }
 
@@ -201,7 +200,7 @@ namespace IOTLinkAddon.Service
                 return;
             }
 
-            LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - {1} Processes Found", processName, processes.Count);
+            LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - {1} Processes Found", processName, processes.Count);
 
             if (grouped)
                 ProcessGroup(monitor, processes);
@@ -211,7 +210,7 @@ namespace IOTLinkAddon.Service
 
         private void ProcessGroup(Configuration monitor, List<ProcessInformation> processes)
         {
-            string processName = monitor.GetValue("name", string.Empty);
+            string processName = GetMonitorName(monitor);
 
             List<ProcessInformation> mainProcesses = new List<ProcessInformation>();
             foreach (ProcessInformation item in processes)
@@ -219,7 +218,7 @@ namespace IOTLinkAddon.Service
                 ProcessInformation pi = item;
                 while (pi.Parent != null && string.Compare(pi.ProcessName, pi.Parent.ProcessName) == 0)
                 {
-                    LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Iterating over child process to find parent: {1}", processName, JsonConvert.SerializeObject(pi));
+                    LoggerHelper.Debug("ProcessMonitorService::ProcessMonitor({0}) - Iterating over child process to find parent: {1}", processName, JsonConvert.SerializeObject(pi));
                     pi = pi.Parent;
                 }
 
@@ -232,6 +231,14 @@ namespace IOTLinkAddon.Service
             {
                 LoggerHelper.Info("ProcessMonitorService::ProcessMonitor({0}) - Main Process {1}", processName, JsonConvert.SerializeObject(item));
             }
+        }
+
+        private string GetMonitorName(Configuration monitor)
+        {
+            if (monitor == null)
+                return null;
+
+            return monitor.GetValue("name", string.Empty);
         }
 
         private void ProcessSingleProcess(Configuration monitor, ProcessInformation process)

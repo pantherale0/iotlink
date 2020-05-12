@@ -1,6 +1,7 @@
 ﻿using IOTLinkAddon.Common;
 using IOTLinkAddon.Service.Platform;
 using IOTLinkAPI.Helpers;
+using System;
 using System.Management;
 using static IOTLinkAddon.Common.ProcessHandlers;
 
@@ -39,10 +40,10 @@ namespace IOTLinkAddon.Service.Monitors
 
         private void CreateProcessStartEvent(ManagementBaseObject baseObject)
         {
-            int processId = (int)baseObject.Properties["ProcessId"].Value;
-            int parentProcessId = (int)baseObject.Properties["ParentProcessId"].Value;
+            int processId = Convert.ToInt32(baseObject.Properties["ProcessId"].Value);
+            int parentProcessId = Convert.ToInt32(baseObject.Properties["ParentProcessId"].Value);
             string processName = (string)baseObject.Properties["Name"].Value;
-            LoggerHelper.Info("ProcessEventMonitor::CreateProcessStartEvent({0}) - ProcessID: {1} ParentProcessID: {2}", processName, processId, parentProcessId);
+            LoggerHelper.Debug("ProcessEventMonitor::CreateProcessStartEvent({0}) - ProcessID: {1} ParentProcessID: {2}", processName, processId, parentProcessId);
 
             ProcessEventArgs eventArgs = new ProcessEventArgs(processName, processId, parentProcessId);
             OnProcessStarted?.Invoke(this, eventArgs);
@@ -50,8 +51,8 @@ namespace IOTLinkAddon.Service.Monitors
 
         private void CreateProcessStopEvent(ManagementBaseObject baseObject)
         {
-            int processId = (int)baseObject.Properties["ProcessId"].Value;
-            int parentProcessId = (int)baseObject.Properties["ParentProcessId"].Value;
+            int processId = Convert.ToInt32(baseObject.Properties["ProcessId"].Value);
+            int parentProcessId = Convert.ToInt32(baseObject.Properties["ParentProcessId"].Value);
             string processName = (string)baseObject.Properties["Name"].Value;
             LoggerHelper.Info("ProcessEventMonitor::CreateProcessStopEvent({0}) - ProcessID: {1} ParentProcessID: {2}", processName, processId, parentProcessId);
 
