@@ -38,15 +38,19 @@ namespace IOTLinkAddon.Service
             _config = cfgManager.GetConfiguration(_configPath);
             cfgManager.SetReloadHandler(_configPath, OnConfigReload);
 
-            eventMonitor.Init();
-            eventMonitor.OnProcessStarted += OnProcessStarted;
-            eventMonitor.OnProcessStopped += OnProcessStopped;
-
             OnConfigReloadHandler += OnConfigReload;
             OnMQTTConnectedHandler += OnClearEvent;
             OnRefreshRequestedHandler += OnClearEvent;
 
+            SetupEventMonitor();
             SetupTimers();
+        }
+
+        private void SetupEventMonitor()
+        {
+            eventMonitor.Init();
+            eventMonitor.OnProcessStarted += OnProcessStarted;
+            eventMonitor.OnProcessStopped += OnProcessStopped;
         }
 
         private void SetupTimers()
@@ -54,14 +58,25 @@ namespace IOTLinkAddon.Service
             if (_config == null || !_config.GetValue("enabled", false))
             {
                 LoggerHelper.Info("ProcessMonitorService::SetupTimers() - Process monitor is disabled.");
-                if (_monitorTimer != null)
-                {
-                    _monitorTimer.Stop();
-                    _monitorTimer = null;
-                }
-
+                CleanTimers();
                 return;
             }
+
+            StartTimers();
+        }
+
+        private void CleanTimers()
+        {
+            if (_monitorTimer != null)
+            {
+                _monitorTimer.Stop();
+                _monitorTimer = null;
+            }
+        }
+
+        private void StartTimers()
+        {
+            CleanTimers();
 
             if (_monitorTimer == null)
             {
@@ -69,7 +84,6 @@ namespace IOTLinkAddon.Service
                 _monitorTimer.Elapsed += new ElapsedEventHandler(OnMonitorTimerElapsed);
             }
 
-            _monitorTimer.Stop();
             _monitorTimer.Interval = 1000;
             _monitorTimer.Start();
 
