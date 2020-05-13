@@ -3,7 +3,6 @@
     public enum ProcessState
     {
         Running,
-        Suspended,
-        Exited
+        NotRunning
     }
 }

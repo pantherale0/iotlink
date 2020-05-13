@@ -108,10 +108,7 @@ namespace IOTLinkAddon.Service.Platform
 
         private static ProcessState ParseState(Process process)
         {
-            if (process.HasExited)
-                return ProcessState.Exited;
-
-            return (process.Responding ? ProcessState.Running : ProcessState.Suspended);
+            return process.HasExited ? ProcessState.NotRunning : ProcessState.Running;
         }
     }
 }

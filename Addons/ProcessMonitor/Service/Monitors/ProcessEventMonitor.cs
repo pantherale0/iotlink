@@ -42,10 +42,11 @@ namespace IOTLinkAddon.Service.Monitors
         {
             int processId = Convert.ToInt32(baseObject.Properties["ProcessId"].Value);
             int parentProcessId = Convert.ToInt32(baseObject.Properties["ParentProcessId"].Value);
+            int sessionId = Convert.ToInt32(baseObject.Properties["SessionId"].Value);
             string processName = (string)baseObject.Properties["Name"].Value;
             LoggerHelper.Debug("ProcessEventMonitor::CreateProcessStartEvent({0}) - ProcessID: {1} ParentProcessID: {2}", processName, processId, parentProcessId);
 
-            ProcessEventArgs eventArgs = new ProcessEventArgs(processName, processId, parentProcessId);
+            ProcessEventArgs eventArgs = new ProcessEventArgs(sessionId, processName, processId, parentProcessId);
             OnProcessStarted?.Invoke(this, eventArgs);
         }
 
@@ -53,10 +54,11 @@ namespace IOTLinkAddon.Service.Monitors
         {
             int processId = Convert.ToInt32(baseObject.Properties["ProcessId"].Value);
             int parentProcessId = Convert.ToInt32(baseObject.Properties["ParentProcessId"].Value);
+            int sessionId = Convert.ToInt32(baseObject.Properties["SessionId"].Value);
             string processName = (string)baseObject.Properties["Name"].Value;
             LoggerHelper.Info("ProcessEventMonitor::CreateProcessStopEvent({0}) - ProcessID: {1} ParentProcessID: {2}", processName, processId, parentProcessId);
 
-            ProcessEventArgs eventArgs = new ProcessEventArgs(processName, processId, parentProcessId);
+            ProcessEventArgs eventArgs = new ProcessEventArgs(sessionId, processName, processId, parentProcessId);
             OnProcessStopped?.Invoke(this, eventArgs);
         }
     }
