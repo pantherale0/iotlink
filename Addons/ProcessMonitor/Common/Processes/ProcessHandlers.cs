@@ -1,4 +1,4 @@
-﻿namespace IOTLinkAddon.Common
+﻿namespace IOTLinkAddon.Common.Processes
 {
     public abstract class ProcessHandlers
     {

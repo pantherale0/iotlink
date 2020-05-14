@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IOTLinkAddon.Common
+namespace IOTLinkAddon.Common.Processes
 {
     public class ProcessEventArgs : EventArgs
     {

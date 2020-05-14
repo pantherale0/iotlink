@@ -46,92 +46,135 @@ formats:
 # Cacheable monitors don't send the value repeatedly unless it changes.
 ############################################################################
 monitors:
-  - name: AnyDesk
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # Google Chrome
+  chrome:
+    processes:
+      - chrome
+      - chrome64
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: chrome
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # AnyDesk
+  AnyDesk:
+    processes:
+      - AnyDesk
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: Discord
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # Discord
+  Discord:
+    processes:
+      - Discord
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: obs64
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # OBS Studio
+  OBS-Studio:
+    processes:
+      - obs
+      - obs64
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: Origin
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # Origin
+  Origin:
+    processes:
+      - Origin
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: Rambox
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # Steam
+  Steam:
+    processes:
+      - steam
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: SkypeApp
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # Rambox
+  Rambox:
+    processes:
+      - Rambox
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: steam
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # Skype
+  Skype:
+    processes:
+      - Skype
+      - SkypeApp
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: TeamViewer
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # TeamViewer
+  TeamViewer:
+    processes:
+      - TeamViewer
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
 
-  - name: vlc
-    enabled: true
-    cacheable: true
-    grouped: true
-    interval: 60
-    events:
-      onStart: true
-      onStop: true
+  # VLC Media Player
+  VLC:
+    processes:
+      - vlc
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60

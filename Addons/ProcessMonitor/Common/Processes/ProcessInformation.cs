@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IOTLinkAddon.Service.Platform
+namespace IOTLinkAddon.Common.Processes
 {
     public class ProcessInformation
     {

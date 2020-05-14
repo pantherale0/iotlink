@@ -1,9 +1,9 @@
-﻿using IOTLinkAddon.Common;
-using IOTLinkAddon.Service.Platform;
+﻿using IOTLinkAddon.Common.Helpers;
+using IOTLinkAddon.Common.Processes;
 using IOTLinkAPI.Helpers;
 using System;
 using System.Management;
-using static IOTLinkAddon.Common.ProcessHandlers;
+using static IOTLinkAddon.Common.Processes.ProcessHandlers;
 
 namespace IOTLinkAddon.Service.Monitors
 {
@@ -56,7 +56,7 @@ namespace IOTLinkAddon.Service.Monitors
             int parentProcessId = Convert.ToInt32(baseObject.Properties["ParentProcessId"].Value);
             int sessionId = Convert.ToInt32(baseObject.Properties["SessionId"].Value);
             string processName = (string)baseObject.Properties["Name"].Value;
-            LoggerHelper.Info("ProcessEventMonitor::CreateProcessStopEvent({0}) - ProcessID: {1} ParentProcessID: {2}", processName, processId, parentProcessId);
+            LoggerHelper.Debug("ProcessEventMonitor::CreateProcessStopEvent({0}) - ProcessID: {1} ParentProcessID: {2}", processName, processId, parentProcessId);
 
             ProcessEventArgs eventArgs = new ProcessEventArgs(sessionId, processName, processId, parentProcessId);
             OnProcessStopped?.Invoke(this, eventArgs);

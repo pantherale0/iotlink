@@ -1,4 +1,5 @@
-﻿using IOTLinkAPI.Helpers;
+﻿using IOTLinkAddon.Common.Processes;
+using IOTLinkAPI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Management;
 using static System.Management.ManagementObjectCollection;
 
-namespace IOTLinkAddon.Service.Platform
+namespace IOTLinkAddon.Common.Helpers
 {
     public static class ProcessHelper
     {
