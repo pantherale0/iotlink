@@ -55,6 +55,9 @@ namespace IOTLinkAddon.Agent
                 if (!string.IsNullOrWhiteSpace(process.MainWindowTitle))
                     process.MainWindowTitle = process.MainWindowTitle.Trim(new char[] { '\r', '\n', '\t' }).Trim();
 
+                process.Windows = handles.Select(h => WindowsAPI.GetWindowTitle(h)).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                process.ClassNames = handles.Select(h => WindowsAPI.GetWindowClassName(h)).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+
                 dynamic addonData = new ExpandoObject();
                 addonData.requestType = AddonRequestType.REQUEST_PROCESS_INFORMATION;
                 addonData.requestData = process;

@@ -59,6 +59,7 @@
     <Compile Include="Agent\ProcessMonitorAgent.cs" />
     <Compile Include="Common\AddonRequestType.cs" />
     <Compile Include="Common\Configs\MonitoringConfig.cs" />
+    <Compile Include="Common\Helpers\MonitorHelper.cs" />
     <Compile Include="Common\Processes\ProcessEventArgs.cs" />
     <Compile Include="Common\Processes\ProcessHandlers.cs" />
     <Compile Include="Common\Processes\ProcessInformation.cs" />

@@ -52,12 +52,13 @@ monitors:
       - chrome
       - chrome64
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # AnyDesk
@@ -65,12 +66,13 @@ monitors:
     processes:
       - AnyDesk
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Discord
@@ -78,12 +80,13 @@ monitors:
     processes:
       - Discord
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # OBS Studio
@@ -92,12 +95,13 @@ monitors:
       - obs
       - obs64
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Origin
@@ -105,12 +109,13 @@ monitors:
     processes:
       - Origin
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Steam
@@ -118,12 +123,13 @@ monitors:
     processes:
       - steam
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Rambox
@@ -131,12 +137,13 @@ monitors:
     processes:
       - Rambox
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Skype
@@ -145,12 +152,13 @@ monitors:
       - Skype
       - SkypeApp
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # TeamViewer
@@ -158,12 +166,13 @@ monitors:
     processes:
       - TeamViewer
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # VLC Media Player
@@ -171,12 +180,13 @@ monitors:
     processes:
       - vlc
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Plex
@@ -184,12 +194,13 @@ monitors:
     processes:
       - Plex
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Plex Media Server
@@ -197,12 +208,13 @@ monitors:
     processes:
       - Plex Media Server
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Zoom
@@ -210,12 +222,13 @@ monitors:
     processes:
       - Zoom
     windows:
-    handles:
+    classnames:
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60
 
   # Zoom
@@ -223,11 +236,12 @@ monitors:
     processes:
       - Zoom
     windows:
-    handles:
+    classnames:
       - ZPContentViewWndClass
     configs:
       enabled: true
       discoverable: true
       cacheable: true
       grouped: true
+      compareType: 0
       interval: 60

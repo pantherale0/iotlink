@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace IOTLinkAddon.Common.Processes
 {
@@ -15,5 +16,7 @@ namespace IOTLinkAddon.Common.Processes
         public bool FullScreen { get; set; }
         public ProcessState Status { get; set; }
         public ProcessInformation Parent { get; set; }
+        public List<string> Windows { get; set; }
+        public List<string> ClassNames { get; set; }
     }
 }

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 
 namespace IOTLinkAPI.Platform.Windows
@@ -606,6 +607,32 @@ namespace IOTLinkAPI.Platform.Windows
 
             bool result = (windowHeight == monitorHeight) && (windowWidth == monitorWidth);
             return result;
+        }
+
+        public static string GetWindowTitle(IntPtr hWnd)
+        {
+            int size = User32.GetWindowTextLength(hWnd);
+            if (size > 0)
+            {
+                size++;
+                var stringBuilder = new StringBuilder(size);
+                User32.GetWindowText(hWnd, stringBuilder, size);
+
+                if (stringBuilder.Length > 0)
+                    return stringBuilder.ToString();
+            }
+
+            return null;
+        }
+
+        public static string GetWindowClassName(IntPtr hWnd)
+        {
+            var stringBuilder = new StringBuilder(512);
+            User32.GetClassName(hWnd, stringBuilder, stringBuilder.Capacity);
+            if (stringBuilder.Length > 0)
+                return stringBuilder.ToString();
+
+            return null;
         }
 
         private static bool EnumWindow(IntPtr handle, IntPtr pointer)
