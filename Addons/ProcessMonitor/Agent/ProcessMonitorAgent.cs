@@ -40,7 +40,7 @@ namespace IOTLinkAddon.Agent
             try
             {
                 int processId = (int)data;
-                ProcessInformation process = ProcessHelper.GetProcessInformation(processId);
+                ProcessInformation process = ProcessHelper.GetProcessInformation(processId, false);
                 if (process == null)
                     return;
 

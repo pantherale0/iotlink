@@ -32,7 +32,7 @@ namespace IOTLinkAddon.Common.Helpers
             return processes.Select(x => ParseProcess(x)).ToList();
         }
 
-        public static ProcessInformation GetProcessInformation(int processId)
+        public static ProcessInformation GetProcessInformation(int processId, bool fetchParent = true)
         {
             try
             {
@@ -43,7 +43,7 @@ namespace IOTLinkAddon.Common.Helpers
                 if (process == null || process.Id == 0)
                     return null;
 
-                return ParseProcess(process);
+                return ParseProcess(process, fetchParent);
             }
             catch (Exception)
             {
@@ -84,7 +84,7 @@ namespace IOTLinkAddon.Common.Helpers
             return processName.ToLowerInvariant().Replace(".exe", "").Trim();
         }
 
-        private static ProcessInformation ParseProcess(Process process)
+        private static ProcessInformation ParseProcess(Process process, bool fetchParent = true)
         {
             ProcessInformation result = new ProcessInformation
             {
@@ -92,7 +92,7 @@ namespace IOTLinkAddon.Common.Helpers
                 SessionId = process.SessionId,
                 ProcessName = process.ProcessName,
                 Status = ParseState(process),
-                Parent = GetProcessParent(process.Id)
+                Parent = fetchParent ? GetProcessParent(process.Id) : null
             };
 
             if (!process.HasExited)

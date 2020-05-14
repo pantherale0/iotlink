@@ -178,3 +178,56 @@ monitors:
       cacheable: true
       grouped: true
       interval: 60
+
+  # Plex
+  Plex:
+    processes:
+      - Plex
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
+
+  # Plex Media Server
+  Plex-Server:
+    processes:
+      - Plex Media Server
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
+
+  # Zoom
+  Zoom:
+    processes:
+      - Zoom
+    windows:
+    handles:
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
+
+  # Zoom
+  Zoom-InMeeting:
+    processes:
+      - Zoom
+    windows:
+    handles:
+      - ZPContentViewWndClass
+    configs:
+      enabled: true
+      discoverable: true
+      cacheable: true
+      grouped: true
+      interval: 60
