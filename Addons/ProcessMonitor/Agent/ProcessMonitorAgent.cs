@@ -40,27 +40,15 @@ namespace IOTLinkAddon.Agent
             try
             {
                 int processId = (int)data;
-                ProcessInformation process = ProcessHelper.GetProcessInformation(processId, false);
-                if (process == null)
+                ProcessInformation processInfo = ProcessHelper.GetProcessInformation(processId, false);
+                if (processInfo == null)
                     return;
 
-                LoggerHelper.Debug("ProcessMonitorAgent::ExecuteProcessInformation({0}) - Handle: {1} | Title: {2}", processId, process.MainWindowHandle, process.MainWindowTitle);
-
-                IntPtr mainHwnd = new IntPtr(process.MainWindowHandle);
-                List<IntPtr> handles = new List<IntPtr>();
-                handles.Add(mainHwnd);
-                handles.AddRange(WindowsAPI.GetChildWindows(mainHwnd));
-
-                process.FullScreen = handles.Any(x => WindowsAPI.IsFullScreen(x));
-                if (!string.IsNullOrWhiteSpace(process.MainWindowTitle))
-                    process.MainWindowTitle = process.MainWindowTitle.Trim(new char[] { '\r', '\n', '\t' }).Trim();
-
-                process.Windows = handles.Select(h => WindowsAPI.GetWindowTitle(h)).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-                process.ClassNames = handles.Select(h => WindowsAPI.GetWindowClassName(h)).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                LoggerHelper.Debug("ProcessMonitorAgent::ExecuteProcessInformation({0}) - Handle: {1} | Title: {2}", processId, processInfo.MainWindowHandle, processInfo.MainWindowTitle);
 
                 dynamic addonData = new ExpandoObject();
                 addonData.requestType = AddonRequestType.REQUEST_PROCESS_INFORMATION;
-                addonData.requestData = process;
+                addonData.requestData = FillProcessInformation(processInfo);
 
                 GetManager().SendAgentResponse(this, addonData);
             }
@@ -68,6 +56,67 @@ namespace IOTLinkAddon.Agent
             {
                 LoggerHelper.Error("ProcessMonitorAgent::ExecuteProcessInformation() - Error: {0}", ex);
             }
+        }
+
+        private ProcessInformation FillProcessInformation(ProcessInformation processInfo)
+        {
+            if (processInfo == null)
+                return null;
+
+            List<ProcessInformation> childrenProcessInfos = ProcessHelper.GetProcessChildren(processInfo.Id);
+            List<IntPtr> handles = GetProcessHandles(processInfo);
+
+            foreach (ProcessInformation cpi in childrenProcessInfos)
+            {
+                var childrenHandles = GetProcessHandles(cpi);
+                handles.AddRange(childrenHandles);
+            }
+
+            processInfo.MainWindowTitle = GetProcessTitle(processInfo);
+            processInfo.FullScreen = IsFullScreen(handles);
+            processInfo.Windows = GetProcessWindows(handles);
+            processInfo.ClassNames = GetProcessClassNames(handles);
+
+            return processInfo;
+        }
+
+        private List<IntPtr> GetProcessHandles(ProcessInformation process)
+        {
+            if (process == null)
+                return new List<IntPtr>();
+
+            var mainHwnd = new IntPtr(process.MainWindowHandle);
+            var handles = new List<IntPtr>();
+            handles.Add(mainHwnd);
+            handles.AddRange(WindowsAPI.GetChildWindows(mainHwnd));
+
+            return handles;
+        }
+
+        private string GetProcessTitle(ProcessInformation process)
+        {
+            if (process == null)
+                return null;
+
+            if (!string.IsNullOrWhiteSpace(process.MainWindowTitle))
+                return process.MainWindowTitle.Trim(new char[] { '\r', '\n', '\t' }).Trim();
+
+            return null;
+        }
+
+        private bool IsFullScreen(List<IntPtr> handles)
+        {
+            return handles.Any(x => WindowsAPI.IsFullScreen(x));
+        }
+
+        private List<string> GetProcessWindows(List<IntPtr> handles)
+        {
+            return handles.Select(h => WindowsAPI.GetWindowTitle(h)).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        }
+
+        private List<string> GetProcessClassNames(List<IntPtr> handles)
+        {
+            return handles.Select(h => WindowsAPI.GetWindowClassName(h)).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         }
     }
 }

@@ -26,6 +26,15 @@ namespace IOTLinkAddon.Common.Helpers
             return monitors.FirstOrDefault(x => string.Compare(x.Name, name, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
+        public static List<ProcessMonitor> GetProcessMonitorsByProcessName(List<ProcessMonitor> monitors, string processName)
+        {
+            if (string.IsNullOrWhiteSpace(processName))
+                return null;
+
+            processName = ProcessHelper.CleanProcessName(processName);
+            return monitors.Where(x => x.Config.ProcessNames.Contains(processName, StringComparer.OrdinalIgnoreCase)).ToList();
+        }
+
         public static ProcessMonitor GetProcessMonitorByProcessName(List<ProcessMonitor> monitors, string processName)
         {
             if (string.IsNullOrWhiteSpace(processName))
@@ -40,49 +49,57 @@ namespace IOTLinkAddon.Common.Helpers
             return monitors.FirstOrDefault(x => x.Process?.Id == processId);
         }
 
-        public static ProcessMonitor GetProcessMonitorByProcessInfo(List<ProcessMonitor> monitors, ProcessInformation processInfo)
+        public static List<ProcessMonitor> GetProcessMonitorsByProcessInfo(List<ProcessMonitor> monitors, ProcessInformation processInfo)
         {
             if (processInfo == null)
-                return null;
+                return new List<ProcessMonitor>();
 
-            List<ProcessMonitor> processMonitors = GetProcessMonitorsByName(monitors, processInfo.ProcessName);
-            foreach (ProcessMonitor monitor in processMonitors)
-            {
-                if (CheckMonitorFilters(monitor, processInfo))
-                    return monitor;
-            }
+            List<ProcessMonitor> processMonitors = GetProcessMonitorsByProcessName(monitors, processInfo.ProcessName);
+            return processMonitors.Where(pm => CheckMonitorFilters(pm, processInfo)).ToList();
+        }
 
-            return null;
+        public static bool HasConditions(ProcessMonitor monitor)
+        {
+            return (monitor.Config.ProcessWindows.Count != 0 || monitor.Config.ProcessClassNames.Count != 0);
         }
 
         public static bool CheckMonitorFilters(ProcessMonitor monitor, ProcessInformation processInfo)
         {
+            if (processInfo == null)
+                return false;
+
             MonitorConfig config = monitor.Config;
             if (!config.ProcessNames.Contains(processInfo.ProcessName, StringComparer.OrdinalIgnoreCase))
                 return false;
 
-            var processWindows = config.ProcessWindows;
-            var processClasses = config.ProcessClassNames;
-            if (processWindows.Count == 0 && processClasses.Count == 0)
+            if (!HasConditions(monitor))
                 return true;
 
-            var compareType = config.Monitoring.CompareType;
+            var processWindows = config.ProcessWindows;
+            var processClasses = config.ProcessClassNames;
 
+            var compareType = config.Monitoring.CompareType;
             var windowMatches = 0;
             var classMatches = 0;
 
-            foreach (string windowName in processWindows)
+            if (processInfo.Windows != null)
             {
-                bool hasFound = processInfo.Windows.Any(w => Regex.IsMatch(w, windowName));
-                if (hasFound)
-                    windowMatches++;
+                foreach (string windowName in processWindows)
+                {
+                    bool hasFound = processInfo.Windows.Any(w => Regex.IsMatch(w, windowName));
+                    if (hasFound)
+                        windowMatches++;
+                }
             }
 
-            foreach (string className in processClasses)
+            if (processInfo.ClassNames != null)
             {
-                bool hasFound = processInfo.ClassNames.Any(w => Regex.IsMatch(w, className));
-                if (hasFound)
-                    classMatches++;
+                foreach (string className in processClasses)
+                {
+                    bool hasFound = processInfo.ClassNames.Any(w => Regex.IsMatch(w, className));
+                    if (hasFound)
+                        classMatches++;
+                }
             }
 
             switch (compareType)

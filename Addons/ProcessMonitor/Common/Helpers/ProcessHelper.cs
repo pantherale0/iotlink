@@ -76,6 +76,38 @@ namespace IOTLinkAddon.Common.Helpers
             }
         }
 
+        public static List<ProcessInformation> GetProcessChildren(int processId)
+        {
+            try
+            {
+                var query = string.Format("SELECT ProcessId FROM Win32_Process WHERE ParentProcessId = {0}", processId);
+                ManagementObjectSearcher search = new ManagementObjectSearcher(DEFAULT_SCOPE, query);
+                ManagementObjectCollection resultCollection = search.Get();
+
+                if (resultCollection.Count == 0)
+                    return new List<ProcessInformation>();
+
+                ManagementObjectEnumerator mgtResults = resultCollection.GetEnumerator();
+
+                List<ProcessInformation> results = new List<ProcessInformation>();
+                while (mgtResults.MoveNext())
+                {
+                    var pid = Convert.ToInt32((uint)mgtResults.Current["ProcessId"]);
+                    var child = GetProcessInformation(pid, false);
+
+                    if (child != null)
+                        results.Add(child);
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ProcessHelper::GetProcessParent({0}) - Error: {1}", processId, ex);
+                return null;
+            }
+        }
+
         public static string CleanProcessName(string processName)
         {
             if (string.IsNullOrWhiteSpace(processName))

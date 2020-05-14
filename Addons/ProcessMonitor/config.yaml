@@ -59,7 +59,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # AnyDesk
   AnyDesk:
@@ -73,7 +73,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Discord
   Discord:
@@ -87,7 +87,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # OBS Studio
   OBS-Studio:
@@ -102,7 +102,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Origin
   Origin:
@@ -116,7 +116,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Steam
   Steam:
@@ -130,7 +130,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Rambox
   Rambox:
@@ -144,7 +144,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Skype
   Skype:
@@ -159,7 +159,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # TeamViewer
   TeamViewer:
@@ -173,7 +173,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # VLC Media Player
   VLC:
@@ -187,7 +187,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Plex
   Plex:
@@ -201,7 +201,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Plex Media Server
   Plex-Server:
@@ -215,7 +215,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Zoom
   Zoom:
@@ -229,7 +229,7 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10
 
   # Zoom
   Zoom-InMeeting:
@@ -244,4 +244,4 @@ monitors:
       cacheable: true
       grouped: true
       compareType: 0
-      interval: 60
+      interval: 10

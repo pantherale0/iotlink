@@ -581,7 +581,8 @@ namespace IOTLinkAPI.Platform.Windows
                 if (listHandle.IsAllocated)
                     listHandle.Free();
             }
-            return result;
+
+            return result.Where(r => User32.IsWindowVisible(r)).ToList();
         }
 
         public static bool IsFullScreen(IntPtr hWnd)
@@ -612,7 +613,7 @@ namespace IOTLinkAPI.Platform.Windows
         public static string GetWindowTitle(IntPtr hWnd)
         {
             int size = User32.GetWindowTextLength(hWnd);
-            if (size > 0)
+            if (size > 0 && User32.IsWindowVisible(hWnd))
             {
                 size++;
                 var stringBuilder = new StringBuilder(size);
@@ -627,6 +628,9 @@ namespace IOTLinkAPI.Platform.Windows
 
         public static string GetWindowClassName(IntPtr hWnd)
         {
+            if (!User32.IsWindowVisible(hWnd))
+                return null;
+
             var stringBuilder = new StringBuilder(512);
             User32.GetClassName(hWnd, stringBuilder, stringBuilder.Capacity);
             if (stringBuilder.Length > 0)
