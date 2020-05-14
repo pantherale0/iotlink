@@ -589,11 +589,10 @@ namespace IOTLinkAPI.Platform.Windows
             mi.Size = MonitorInfoEx.SizeOf;
 
             IntPtr hMonitor = User32.MonitorFromWindow(hWnd, 1);
-            if (User32.GetMonitorInfoEx(hMonitor, ref mi))
+            if (!User32.GetMonitorInfoEx(hMonitor, ref mi))
                 return false;
 
-            Rect appBounds;
-            if (!User32.GetWindowRect(hWnd, out appBounds))
+            if (!User32.GetWindowRect(hWnd, out Rect appBounds))
                 return false;
 
             if (!User32.IsWindowVisible(hWnd))
