@@ -100,8 +100,8 @@ namespace IOTLinkAddon.Common.Helpers
                 result.StartDateTime = process.StartTime;
                 result.MemoryUsed = process.WorkingSet64;
                 result.ProcessorUsage = process.TotalProcessorTime;
+                result.MainWindowHandle = process.MainWindowHandle.ToInt32();
                 result.MainWindowTitle = process.MainWindowTitle;
-                result.FullScreen = false; //TODO: Implement fullscreen detection
             }
 
             return result;

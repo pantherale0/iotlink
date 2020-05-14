@@ -566,6 +566,59 @@ namespace IOTLinkAPI.Platform.Windows
             return mousePoint;
         }
 
+        public static List<IntPtr> GetChildWindows(IntPtr parent)
+        {
+            List<IntPtr> result = new List<IntPtr>();
+            GCHandle listHandle = GCHandle.Alloc(result);
+            try
+            {
+                User32.EnumWindowsProc childProc = new User32.EnumWindowsProc(EnumWindow);
+                User32.EnumChildWindows(parent, childProc, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                if (listHandle.IsAllocated)
+                    listHandle.Free();
+            }
+            return result;
+        }
+
+        public static bool IsFullScreen(IntPtr hWnd)
+        {
+            MonitorInfoEx mi = new MonitorInfoEx();
+            mi.Size = MonitorInfoEx.SizeOf;
+
+            IntPtr hMonitor = User32.MonitorFromWindow(hWnd, 1);
+            if (User32.GetMonitorInfoEx(hMonitor, ref mi))
+                return false;
+
+            Rect appBounds;
+            if (!User32.GetWindowRect(hWnd, out appBounds))
+                return false;
+
+            if (!User32.IsWindowVisible(hWnd))
+                return false;
+
+            int windowHeight = appBounds.Right - appBounds.Left;
+            int windowWidth = appBounds.Bottom - appBounds.Top;
+
+            int monitorHeight = mi.Monitor.Right - mi.Monitor.Left;
+            int monitorWidth = mi.Monitor.Bottom - mi.Monitor.Top;
+
+            bool result = (windowHeight == monitorHeight) && (windowWidth == monitorWidth);
+            return result;
+        }
+
+        private static bool EnumWindow(IntPtr handle, IntPtr pointer)
+        {
+            GCHandle gch = GCHandle.FromIntPtr(pointer);
+            if (!(gch.Target is List<IntPtr> list))
+                throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
+
+            list.Add(handle);
+            return true;
+        }
+
         private static bool GetSessionUserToken(IntPtr server, WindowsSessionInfo sessionInfo, ref IntPtr phUserToken)
         {
             var hImpersonationToken = IntPtr.Zero;
