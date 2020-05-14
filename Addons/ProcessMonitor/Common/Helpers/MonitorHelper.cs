@@ -1,6 +1,7 @@
 ﻿using IOTLinkAddon.Common.Configs;
 using IOTLinkAddon.Common.Processes;
 using IOTLinkAddon.Service;
+using IOTLinkAPI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,18 +45,12 @@ namespace IOTLinkAddon.Common.Helpers
             return monitors.FirstOrDefault(x => x.Config.ProcessNames.Contains(processName, StringComparer.OrdinalIgnoreCase));
         }
 
-        public static ProcessMonitor GetProcessMonitorByProcessId(List<ProcessMonitor> monitors, int processId)
-        {
-            return monitors.FirstOrDefault(x => x.Process?.Id == processId);
-        }
-
         public static List<ProcessMonitor> GetProcessMonitorsByProcessInfo(List<ProcessMonitor> monitors, ProcessInformation processInfo)
         {
             if (processInfo == null)
                 return new List<ProcessMonitor>();
 
-            List<ProcessMonitor> processMonitors = GetProcessMonitorsByProcessName(monitors, processInfo.ProcessName);
-            return processMonitors.Where(pm => CheckMonitorFilters(pm, processInfo)).ToList();
+            return GetProcessMonitorsByProcessName(monitors, processInfo.ProcessName);
         }
 
         public static bool HasConditions(ProcessMonitor monitor)
@@ -66,18 +61,26 @@ namespace IOTLinkAddon.Common.Helpers
         public static bool CheckMonitorFilters(ProcessMonitor monitor, ProcessInformation processInfo)
         {
             if (processInfo == null)
+            {
+                LoggerHelper.Debug("MonitorHelper::CheckMonitorFilters({0}) - Process Information NULL", monitor.Name);
                 return false;
+            }
 
             MonitorConfig config = monitor.Config;
             if (!config.ProcessNames.Contains(processInfo.ProcessName, StringComparer.OrdinalIgnoreCase))
+            {
+                LoggerHelper.Debug("MonitorHelper::CheckMonitorFilters({0}, {1}) - Process Name not found", monitor.Name, processInfo.ProcessName);
                 return false;
+            }
 
             if (!HasConditions(monitor))
+            {
+                LoggerHelper.Debug("MonitorHelper::CheckMonitorFilters({0}, {1}) - NO additional rules", monitor.Name, processInfo.ProcessName);
                 return true;
+            }
 
             var processWindows = config.ProcessWindows;
             var processClasses = config.ProcessClassNames;
-
             var compareType = config.Monitoring.CompareType;
             var windowMatches = 0;
             var classMatches = 0;
@@ -102,23 +105,32 @@ namespace IOTLinkAddon.Common.Helpers
                 }
             }
 
+            var result = false;
             switch (compareType)
             {
                 default:
-                    return (processWindows.Count == windowMatches) && (processClasses.Count == classMatches);
+                    result = (processWindows.Count == windowMatches) && (processClasses.Count == classMatches);
+                    break;
 
                 case 1:
-                    return (processWindows.Count == windowMatches) || (processClasses.Count == classMatches);
+                    result = (processWindows.Count == windowMatches) || (processClasses.Count == classMatches);
+                    break;
 
                 case 2:
-                    return (processWindows.Count == windowMatches) && (classMatches > 0);
+                    result = (processWindows.Count == windowMatches) && (classMatches > 0);
+                    break;
 
                 case 3:
-                    return (processClasses.Count == classMatches) && (windowMatches > 0);
+                    result = (processClasses.Count == classMatches) && (windowMatches > 0);
+                    break;
 
                 case 4:
-                    return (windowMatches > 0) || (classMatches > 0);
+                    result = (windowMatches > 0) || (classMatches > 0);
+                    break;
             }
+
+            LoggerHelper.Debug("MonitorHelper::CheckMonitorFilters({0}, {1}) - Compare Type: {2} - Result: {3}", monitor.Name, processInfo.ProcessName, compareType, result);
+            return result;
         }
     }
 }
