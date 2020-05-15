@@ -131,7 +131,7 @@ namespace IOTLinkAddon.Common.Helpers
             {
                 result.StartDateTime = process.StartTime;
                 result.MemoryUsed = process.WorkingSet64;
-                result.ProcessorUsage = process.TotalProcessorTime;
+                result.ProcessorUsageTime = process.TotalProcessorTime.TotalMilliseconds;
                 result.MainWindowHandle = process.MainWindowHandle.ToInt32();
                 result.MainWindowTitle = process.MainWindowTitle;
             }

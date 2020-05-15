@@ -81,7 +81,7 @@ namespace IOTLinkAddon.Common.Helpers
 
             var processWindows = config.ProcessWindows;
             var processClasses = config.ProcessClassNames;
-            var compareType = config.Monitoring.CompareType;
+            var compareType = config.General.CompareType;
             var windowMatches = 0;
             var classMatches = 0;
 

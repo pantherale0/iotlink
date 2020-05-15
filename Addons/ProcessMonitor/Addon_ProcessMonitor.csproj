@@ -58,16 +58,16 @@
   <ItemGroup>
     <Compile Include="Agent\ProcessMonitorAgent.cs" />
     <Compile Include="Common\AddonRequestType.cs" />
-    <Compile Include="Common\Configs\MonitoringConfig.cs" />
+    <Compile Include="Common\Configs\GeneralConfig.cs" />
     <Compile Include="Common\Helpers\MonitorHelper.cs" />
     <Compile Include="Common\Processes\ProcessEventArgs.cs" />
     <Compile Include="Common\Processes\ProcessHandlers.cs" />
     <Compile Include="Common\Processes\ProcessInformation.cs" />
     <Compile Include="Common\Helpers\ProcessHelper.cs" />
     <Compile Include="Common\Processes\ProcessState.cs" />
-    <Compile Include="Service\list.cs" />
     <Compile Include="Common\Configs\MonitorConfig.cs" />
     <Compile Include="Service\Monitors\ProcessEventMonitor.cs" />
+    <Compile Include="Common\ProcessInfoMQTT.cs" />
     <Compile Include="Service\ProcessMonitor.cs" />
     <Compile Include="Service\ProcessMonitorService.cs" />
   </ItemGroup>

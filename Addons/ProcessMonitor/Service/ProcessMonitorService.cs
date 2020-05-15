@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Timers;
@@ -116,7 +117,7 @@ namespace IOTLinkAddon.Service
         private void SetupMonitor(Configuration monitorConfiguration)
         {
             MonitorConfig config = MonitorConfig.FromConfiguration(monitorConfiguration);
-            if (!config.Monitoring.Enabled)
+            if (!config.General.Enabled)
             {
                 LoggerHelper.Debug("ProcessMonitorService::SetupMonitor({0}) - Monitoring is disabled.", monitorConfiguration.Key);
                 return;
@@ -212,7 +213,7 @@ namespace IOTLinkAddon.Service
             {
                 try
                 {
-                    var interval = monitor.Config.Monitoring.Interval;
+                    var interval = monitor.Config.General.Interval;
                     if ((_monitorCounter % interval) != 0)
                         continue;
 
@@ -233,9 +234,7 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("ProcessMonitorService::ExecuteMonitor({0}) - Started", monitor.Name);
 
             var config = monitor.Config;
-            var grouped = config.Monitoring.Grouped;
-
-            List<ProcessInformation> processes = new List<ProcessInformation>();
+            var processes = new List<ProcessInformation>();
             foreach (string processName in config.ProcessNames)
             {
                 processes.AddRange(ProcessHelper.GetProcessesByName(processName));
@@ -249,7 +248,7 @@ namespace IOTLinkAddon.Service
                 return;
             }
 
-            if (grouped)
+            if (processes.Count > 0)
                 ProcessGroup(monitor, processes);
             else
                 ProcessSingleProcess(monitor, processes[0]);
@@ -357,16 +356,23 @@ namespace IOTLinkAddon.Service
 
             var topic = $"Processes/{monitor.Name}";
             var filter = MonitorHelper.CheckMonitorFilters(monitor, processInfo);
-            var value = processInfo.Status == ProcessState.Running ? JsonConvert.SerializeObject(processInfo) : "{}";
-            var state = processInfo.Status == ProcessState.Running ? "ON" : "OFF";
+            var value = "{}";
+            var state = "OFF";
 
             if (processInfo.Status != ProcessState.Running || !filter)
             {
                 LoggerHelper.Debug("ProcessMonitorService::ProcessSingleProcess({0}) - Setting empty process", monitor.Name);
 
-                SendMonitorValue(monitor, $"{topic}/State", "OFF");
-                SendMonitorValue(monitor, $"{topic}/Sensor", "{}");
+                SendMonitorValue(monitor, $"{topic}/State", state);
+                SendMonitorValue(monitor, $"{topic}/Sensor", value);
                 return;
+            }
+
+            if (processInfo.Status == ProcessState.Running)
+            {
+                var mqttObject = CreateProcessInfoMQTT(monitor, processInfo);
+                value = JsonConvert.SerializeObject(mqttObject);
+                state = "ON";
             }
 
             SendMonitorValue(monitor, $"{topic}/State", state);
@@ -421,12 +427,79 @@ namespace IOTLinkAddon.Service
             return (processInfo.Parent != null) && (string.Compare(processInfo.ProcessName, processInfo.Parent.ProcessName, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
+        private ProcessInfoMQTT CreateProcessInfoMQTT(ProcessMonitor monitor, ProcessInformation processInfo)
+        {
+            if (processInfo == null)
+                return null;
+
+            var uptime = (int)(DateTime.Now - processInfo.StartDateTime).TotalSeconds;
+
+            ProcessInfoMQTT pi = new ProcessInfoMQTT
+            {
+                Id = processInfo.Id.ToString(),
+                SessionId = processInfo.SessionId.ToString(),
+                ProcessName = processInfo.ProcessName,
+                MainWindowTitle = processInfo.MainWindowTitle,
+                FullScreen = processInfo.FullScreen.ToString(),
+                Windows = processInfo.Windows,
+                ClassNames = processInfo.ClassNames,
+                MemoryUsed = FormatSizeObject(processInfo.MemoryUsed)
+            };
+
+            if (monitor.LastUpdated != null && monitor.LastProcessorUsageTime > 0d)
+            {
+                var timeInterval = (DateTime.Now - processInfo.StartDateTime).TotalMilliseconds;
+                var cpuUsage = MathHelper.ToInteger(Math.Round((monitor.LastProcessorUsageTime - processInfo.ProcessorUsageTime) / timeInterval), 0);
+                pi.ProcessorUsage = cpuUsage.ToString();
+            }
+
+            monitor.LastProcessorUsageTime = processInfo.ProcessorUsageTime;
+            monitor.LastUpdated = DateTime.Now;
+
+            pi.Status = processInfo.Status.ToString();
+            pi.StartDateTime = FormatDateObject(processInfo.StartDateTime);
+            pi.Uptime = FormatUptime(uptime);
+
+            return pi;
+        }
+
+        private string FormatSizeObject(object value)
+        {
+            long sizeInBytes = MathHelper.ToLong(value, 0L);
+            string formatStr = _config.GetValue("formats:memoryFormat", "MB");
+
+            string format = formatStr.Contains(":") ? formatStr.Split(':')[0] : formatStr;
+            int roundDigits = formatStr.Contains(":") ? MathHelper.ToInteger(formatStr.Split(':')[1]) : 0;
+
+            double size = UnitsHelper.ConvertSize(sizeInBytes, format);
+            return Math.Round(size, roundDigits).ToString(CultureInfo.InvariantCulture);
+        }
+
+        private string FormatDateObject(object value)
+        {
+            var format = _config.GetValue("formats:dateTimeFormat", "yyyy-MM-dd HH:mm:ss");
+            if (value is DateTime)
+                return ((DateTime)value).ToString(format, CultureInfo.InvariantCulture);
+
+            return value.ToString();
+        }
+
+        private string FormatUptime(int value)
+        {
+            var inSeconds = _config.GetValue("formats:uptimeInSeconds", false);
+            if (inSeconds)
+                return value.ToString();
+
+            TimeSpan uptime = TimeSpan.FromSeconds(MathHelper.ToDouble(value));
+            return uptime.ToString(@"dd\:hh\:mm\:ss", CultureInfo.InvariantCulture);
+        }
+
         private void SendMonitorValue(ProcessMonitor monitor, string topic, string value)
         {
             if (string.IsNullOrWhiteSpace(topic))
                 return;
 
-            if (monitor.Config.Monitoring.Cacheable)
+            if (monitor.Config.General.Cacheable)
             {
                 if (_cache.ContainsKey(topic) && _cache[topic].CompareTo(value) == 0)
                     return;

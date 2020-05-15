@@ -10,7 +10,7 @@ namespace IOTLinkAddon.Common.Processes
         public string ProcessName { get; set; }
         public DateTime StartDateTime { get; set; }
         public long MemoryUsed { get; set; }
-        public TimeSpan ProcessorUsage { get; set; }
+        public double ProcessorUsageTime { get; set; }
         public int MainWindowHandle { get; set; }
         public string MainWindowTitle { get; set; }
         public bool FullScreen { get; set; }

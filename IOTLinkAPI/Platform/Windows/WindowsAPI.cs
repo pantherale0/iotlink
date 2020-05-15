@@ -567,7 +567,7 @@ namespace IOTLinkAPI.Platform.Windows
             return mousePoint;
         }
 
-        public static List<IntPtr> GetChildWindows(IntPtr parent)
+        public static List<IntPtr> GetChildWindows(IntPtr parent, int processId)
         {
             List<IntPtr> result = new List<IntPtr>();
             GCHandle listHandle = GCHandle.Alloc(result);
@@ -582,7 +582,14 @@ namespace IOTLinkAPI.Platform.Windows
                     listHandle.Free();
             }
 
-            return result.Where(r => User32.IsWindowVisible(r)).ToList();
+            return result.Where(hWnd =>
+            {
+                User32.GetWindowThreadProcessId(hWnd, out int hWndProcessId);
+                if (hWndProcessId != processId)
+                    return false;
+
+                return User32.IsWindowVisible(hWnd);
+            }).ToList();
         }
 
         public static bool IsFullScreen(IntPtr hWnd)

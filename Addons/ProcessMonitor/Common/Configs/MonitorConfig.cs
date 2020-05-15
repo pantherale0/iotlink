@@ -11,7 +11,7 @@ namespace IOTLinkAddon.Common.Configs
         public List<string> ProcessNames { get; set; }
         public List<string> ProcessWindows { get; set; }
         public List<string> ProcessClassNames { get; set; }
-        public MonitoringConfig Monitoring { get; set; }
+        public GeneralConfig General { get; set; }
 
         public static MonitorConfig FromConfiguration(Configuration configuration)
         {
@@ -21,7 +21,7 @@ namespace IOTLinkAddon.Common.Configs
                 ProcessNames = configuration.GetList<string>("processes").Select(x => ProcessHelper.CleanProcessName(x)).ToList(),
                 ProcessWindows = configuration.GetList<string>("windows"),
                 ProcessClassNames = configuration.GetList<string>("classnames"),
-                Monitoring = MonitoringConfig.FromConfiguration(configuration.GetValue("configs"))
+                General = GeneralConfig.FromConfiguration(configuration.GetValue("configs"))
             };
         }
     }

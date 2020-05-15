@@ -85,26 +85,26 @@ namespace IOTLinkAddon.Agent
             return processInfo;
         }
 
-        private List<IntPtr> GetProcessHandles(ProcessInformation process)
+        private List<IntPtr> GetProcessHandles(ProcessInformation processInfo)
         {
-            if (process == null)
+            if (processInfo == null)
                 return new List<IntPtr>();
 
-            var mainHwnd = new IntPtr(process.MainWindowHandle);
+            var mainHwnd = new IntPtr(processInfo.MainWindowHandle);
             var handles = new List<IntPtr>();
             handles.Add(mainHwnd);
-            handles.AddRange(WindowsAPI.GetChildWindows(mainHwnd));
+            handles.AddRange(WindowsAPI.GetChildWindows(mainHwnd, processInfo.Id));
 
             return handles;
         }
 
-        private string GetProcessTitle(ProcessInformation process)
+        private string GetProcessTitle(ProcessInformation processInfo)
         {
-            if (process == null)
+            if (processInfo == null)
                 return null;
 
-            if (!string.IsNullOrWhiteSpace(process.MainWindowTitle))
-                return process.MainWindowTitle.Trim(new char[] { '\r', '\n', '\t' }).Trim();
+            if (!string.IsNullOrWhiteSpace(processInfo.MainWindowTitle))
+                return processInfo.MainWindowTitle.Trim(new char[] { '\r', '\n', '\t' }).Trim();
 
             return null;
         }
