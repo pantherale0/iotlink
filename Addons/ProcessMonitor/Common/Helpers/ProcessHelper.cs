@@ -1,5 +1,7 @@
 ﻿using IOTLinkAddon.Common.Processes;
 using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Platform;
+using IOTLinkAPI.Platform.Windows;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +20,7 @@ namespace IOTLinkAddon.Common.Helpers
         {
             Process[] processes = Process.GetProcesses();
 
-            return processes.Select(x => ParseProcess(x)).ToList();
+            return processes.Select(x => ParseProcess(x)).Where(x => x != null).ToList();
         }
 
         public static List<ProcessInformation> GetProcessesByName(string processName)
@@ -29,7 +31,17 @@ namespace IOTLinkAddon.Common.Helpers
             processName = CleanProcessName(processName);
             Process[] processes = Process.GetProcessesByName(processName);
 
-            return processes.Select(x => ParseProcess(x)).ToList();
+            return processes.Select(x => ParseProcess(x)).Where(x => x != null).ToList();
+        }
+
+        public static List<int> GetProcessesIdsByName(string processName)
+        {
+            if (string.IsNullOrWhiteSpace(processName))
+                return new List<int>();
+
+            processName = CleanProcessName(processName);
+            Process[] processes = Process.GetProcessesByName(processName);
+            return processes.Select(x => x.Id).ToList();
         }
 
         public static ProcessInformation GetProcessInformation(int processId, bool fetchParent = true)
@@ -96,7 +108,10 @@ namespace IOTLinkAddon.Common.Helpers
                     var child = GetProcessInformation(pid, false);
 
                     if (child != null)
+                    {
                         results.Add(child);
+                        results.AddRange(GetProcessChildren(child.Id));
+                    }
                 }
 
                 return results;
@@ -118,20 +133,27 @@ namespace IOTLinkAddon.Common.Helpers
 
         private static ProcessInformation ParseProcess(Process process, bool fetchParent = true)
         {
+            ProcessInfo processInfo = ProcessEventManager.GetInstance().GetProcessInfo(process.Id);
+            if (processInfo == null)
+            {
+                LoggerHelper.Error("ProcessHelper::ParseProcess({0}, {1}) - Not found", process.Id, fetchParent);
+                return null;
+            }
+
             ProcessInformation result = new ProcessInformation
             {
-                Id = process.Id,
-                SessionId = process.SessionId,
-                ProcessName = process.ProcessName,
+                Id = processInfo.Id,
+                SessionId = processInfo.SessionId,
+                ProcessName = processInfo.ProcessName,
+                StartDateTime = processInfo.StartDateTime,
+                MemoryUsed = processInfo.MemoryUsed,
+                ProcessorUsage = processInfo.ProcessorUsage,
                 Status = ParseState(process),
                 Parent = fetchParent ? GetProcessParent(process.Id) : null
             };
 
             if (!process.HasExited)
             {
-                result.StartDateTime = process.StartTime;
-                result.MemoryUsed = process.WorkingSet64;
-                result.ProcessorUsageTime = process.TotalProcessorTime.TotalMilliseconds;
                 result.MainWindowHandle = process.MainWindowHandle.ToInt32();
                 result.MainWindowTitle = process.MainWindowTitle;
             }

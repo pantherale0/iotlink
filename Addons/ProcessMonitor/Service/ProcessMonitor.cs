@@ -7,7 +7,5 @@ namespace IOTLinkAddon.Service
     {
         public string Name { get; set; }
         public MonitorConfig Config { get; set; }
-        public DateTime LastUpdated { get; set; }
-        public double LastProcessorUsageTime { get; set; }
     }
 }

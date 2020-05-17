@@ -2,12 +2,13 @@
 using IOTLinkAddon.Common.Configs;
 using IOTLinkAddon.Common.Helpers;
 using IOTLinkAddon.Common.Processes;
-using IOTLinkAddon.Service.Monitors;
 using IOTLinkAPI.Addons;
 using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
+using IOTLinkAPI.Platform.Events.Process;
+using IOTLinkAPI.Platform.Windows;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,6 @@ namespace IOTLinkAddon.Service
         private Configuration _config;
 
         private List<ProcessMonitor> _monitors = new List<ProcessMonitor>();
-        private ProcessEventMonitor _eventMonitor;
 
         private Timer _monitorTimer;
         private uint _monitorCounter = 0;
@@ -81,13 +81,10 @@ namespace IOTLinkAddon.Service
 
         private void SetupEventMonitor()
         {
-            if (_eventMonitor != null)
-                _eventMonitor = null;
+            var eventMonitor = ProcessEventManager.GetInstance();
 
-            _eventMonitor = new ProcessEventMonitor();
-            _eventMonitor.Init();
-            _eventMonitor.OnProcessStarted += OnProcessStarted;
-            _eventMonitor.OnProcessStopped += OnProcessStopped;
+            eventMonitor.OnProcessStarted += OnProcessStarted;
+            eventMonitor.OnProcessStopped += OnProcessStopped;
         }
 
         private void SetupMonitors()
@@ -381,21 +378,21 @@ namespace IOTLinkAddon.Service
 
         private void OnProcessStarted(object sender, ProcessEventArgs e)
         {
-            string processName = ProcessHelper.CleanProcessName(e.ProcessName);
+            string processName = ProcessHelper.CleanProcessName(e.ProcessInfo.ProcessName);
 
             List<ProcessMonitor> monitors = MonitorHelper.GetProcessMonitorsByProcessName(_monitors, processName);
 
             LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - {1} Monitors found.", processName, monitors.Count);
             if (monitors.Count == 0)
             {
-                LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, e.ProcessId, e.ParentProcessId);
+                LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, e.ProcessInfo.Id, e.ProcessInfo.ParentId);
                 return;
             }
 
-            ProcessInformation pi = ProcessHelper.GetProcessInformation(e.ProcessId);
+            ProcessInformation pi = ProcessHelper.GetProcessInformation(e.ProcessInfo.Id);
             if (pi == null)
             {
-                LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Unable to get information from PID {1}", processName, e.ProcessId);
+                LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Unable to get information from PID {1}", processName, e.ProcessInfo.Id);
                 return;
             }
 
@@ -405,7 +402,7 @@ namespace IOTLinkAddon.Service
                 return;
             }
 
-            LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Process Detected (PID: {1} - Parent: {2})", processName, e.ProcessId, e.ParentProcessId);
+            LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Process Detected (PID: {1} - Parent: {2})", processName, e.ProcessInfo.Id, e.ProcessInfo.ParentId);
 
             foreach (ProcessMonitor monitor in monitors)
                 ProcessSingleProcess(monitor, pi);
@@ -413,7 +410,7 @@ namespace IOTLinkAddon.Service
 
         private void OnProcessStopped(object sender, ProcessEventArgs e)
         {
-            string processName = ProcessHelper.CleanProcessName(e.ProcessName);
+            string processName = ProcessHelper.CleanProcessName(e.ProcessInfo.ProcessName);
 
             List<ProcessMonitor> monitors = MonitorHelper.GetProcessMonitorsByProcessName(_monitors, processName);
 
@@ -443,18 +440,9 @@ namespace IOTLinkAddon.Service
                 FullScreen = processInfo.FullScreen.ToString(),
                 Windows = processInfo.Windows,
                 ClassNames = processInfo.ClassNames,
-                MemoryUsed = FormatSizeObject(processInfo.MemoryUsed)
+                ProcessorUsage = processInfo.ProcessorUsage.ToString(),
+                MemoryUsed = FormatSizeObject(processInfo.MemoryUsed),
             };
-
-            if (monitor.LastUpdated != null && monitor.LastProcessorUsageTime > 0d)
-            {
-                var timeInterval = (DateTime.Now - processInfo.StartDateTime).TotalMilliseconds;
-                var cpuUsage = MathHelper.ToInteger(Math.Round((monitor.LastProcessorUsageTime - processInfo.ProcessorUsageTime) / timeInterval), 0);
-                pi.ProcessorUsage = cpuUsage.ToString();
-            }
-
-            monitor.LastProcessorUsageTime = processInfo.ProcessorUsageTime;
-            monitor.LastUpdated = DateTime.Now;
 
             pi.Status = processInfo.Status.ToString();
             pi.StartDateTime = FormatDateObject(processInfo.StartDateTime);

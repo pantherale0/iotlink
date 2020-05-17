@@ -75,6 +75,9 @@ namespace IOTLinkAddon.Agent
             {
                 var childrenHandles = GetProcessHandles(cpi);
                 handles.AddRange(childrenHandles);
+
+                processInfo.MemoryUsed += cpi.MemoryUsed;
+                processInfo.ProcessorUsage += cpi.ProcessorUsage;
             }
 
             processInfo.MainWindowTitle = GetProcessTitle(processInfo);

@@ -1,16 +1,10 @@
-﻿using System;
+﻿using IOTLinkAPI.Platform;
 using System.Collections.Generic;
 
 namespace IOTLinkAddon.Common.Processes
 {
-    public class ProcessInformation
+    public class ProcessInformation : ProcessInfo
     {
-        public int Id { get; set; }
-        public int SessionId { get; set; }
-        public string ProcessName { get; set; }
-        public DateTime StartDateTime { get; set; }
-        public long MemoryUsed { get; set; }
-        public double ProcessorUsageTime { get; set; }
         public int MainWindowHandle { get; set; }
         public string MainWindowTitle { get; set; }
         public bool FullScreen { get; set; }
