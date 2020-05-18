@@ -22,6 +22,9 @@ namespace IOTLinkAddon.Service
 {
     public class ProcessMonitorService : ServiceAddon
     {
+        private static readonly string PAYLOAD_ON = "ON";
+        private static readonly string PAYLOAD_OFF = "OFF";
+
         private string _configPath;
         private Configuration _config;
 
@@ -103,6 +106,7 @@ namespace IOTLinkAddon.Service
                 try
                 {
                     SetupMonitor(monitorConfiguration);
+                    SetupDiscovery(monitorConfiguration.Key);
                 }
                 catch (Exception ex)
                 {
@@ -129,6 +133,23 @@ namespace IOTLinkAddon.Service
             }
 
             _monitors.Add(monitor);
+        }
+
+        private void SetupDiscovery(string monitorName)
+        {
+            ProcessMonitor monitor = MonitorHelper.GetProcessMonitorByName(_monitors, monitorName);
+
+            if (monitor == null || !monitor.Config.General.Enabled)
+            {
+                LoggerHelper.Debug("ProcessMonitorService::SetupMonitor({0}) - Monitoring is disabled.", monitorName);
+                return;
+            }
+
+            if (!monitor.Config.General.Discoverable)
+            {
+                LoggerHelper.Debug("ProcessMonitorService::SetupDiscovery({0}) - Discovery is disabled.", monitorName);
+                return;
+            }
         }
 
         private void CleanTimers()
@@ -289,28 +310,31 @@ namespace IOTLinkAddon.Service
                 processInfo = new ProcessInformation { ProcessName = monitor.Name, Status = ProcessState.NotRunning };
             }
 
-            var topic = $"Processes/{monitor.Name}";
             if (processInfo.Status == ProcessState.NotRunning)
             {
                 LoggerHelper.Debug("ProcessMonitorService::ProcessSingleProcess({0}) - Process not running.", monitor.Name);
-                SendMonitorValue(monitor, $"{topic}/State", "OFF");
-                SendMonitorValue(monitor, $"{topic}/Sensor", "{}");
+                SendMonitorValue(monitor, GetStateTopic(monitor), PAYLOAD_OFF);
+                SendMonitorValue(monitor, GetSensorTopic(monitor), PAYLOAD_ON);
                 return;
             }
 
             if (processInfo.Status == ProcessState.Running && !MonitorHelper.HasConditions(monitor))
             {
                 LoggerHelper.Debug("ProcessMonitorService::ProcessSingleProcess({0}) - Process Running - Monitor without rules.", monitor.Name);
-                SendMonitorValue(monitor, $"{topic}/State", "ON");
+                SendMonitorValue(monitor, GetStateTopic(monitor), PAYLOAD_ON);
             }
 
+            RequestAgentData(processInfo.Id);
+            LoggerHelper.Verbose("ProcessMonitorService::ProcessSingleProcess({0}) - Completed", monitor.Name);
+        }
+
+        private void RequestAgentData(int processId)
+        {
             dynamic addonData = new ExpandoObject();
             addonData.requestType = AddonRequestType.REQUEST_PROCESS_INFORMATION;
-            addonData.processId = processInfo.Id;
+            addonData.processId = processId;
 
             GetManager().SendAgentRequest(this, addonData);
-
-            LoggerHelper.Verbose("ProcessMonitorService::ProcessSingleProcess({0}) - Completed", monitor.Name);
         }
 
         private void OnAgentResponse(object sender, AgentAddonResponseEventArgs e)
@@ -330,16 +354,16 @@ namespace IOTLinkAddon.Service
 
             List<ProcessMonitor> monitors = MonitorHelper.GetProcessMonitorsByProcessInfo(_monitors, processInfo);
 
-            LoggerHelper.Info("ProcessMonitorService::OnProcessInformationReceived({0}) - {1} Monitors found.", processInfo.Id, monitors.Count);
+            LoggerHelper.Debug("ProcessMonitorService::OnProcessInformationReceived({0}) - {1} Monitors found.", processInfo.Id, monitors.Count);
             if (monitors.Count == 0)
             {
-                LoggerHelper.Info("ProcessMonitorService::OnProcessInformationReceived({0}) - Monitoring not found", processInfo.Id);
+                LoggerHelper.Debug("ProcessMonitorService::OnProcessInformationReceived({0}) - Monitoring not found", processInfo.Id);
                 return;
             }
 
             foreach (ProcessMonitor monitor in monitors)
             {
-                LoggerHelper.Info("ProcessMonitorService::OnProcessInformationReceived({0}) - Monitor: {1}", processInfo.Id, monitor.Name);
+                LoggerHelper.Debug("ProcessMonitorService::OnProcessInformationReceived({0}) - Monitor: {1}", processInfo.Id, monitor.Name);
                 SendProcessInformation(monitor, processInfo);
             }
         }
@@ -351,29 +375,18 @@ namespace IOTLinkAddon.Service
 
             LoggerHelper.Info("ProcessMonitorService::SendProcessInformation({0}) - {1}", monitor.Name, JsonConvert.SerializeObject(processInfo));
 
-            var topic = $"Processes/{monitor.Name}";
-            var filter = MonitorHelper.CheckMonitorFilters(monitor, processInfo);
-            var value = "{}";
-            var state = "OFF";
+            ProcessInfoMQTT mqttObject = null;
+            var state = PAYLOAD_OFF;
 
-            if (processInfo.Status != ProcessState.Running || !filter)
+            if (processInfo.Status == ProcessState.Running && MonitorHelper.CheckMonitorFilters(monitor, processInfo))
             {
-                LoggerHelper.Debug("ProcessMonitorService::ProcessSingleProcess({0}) - Setting empty process", monitor.Name);
-
-                SendMonitorValue(monitor, $"{topic}/State", state);
-                SendMonitorValue(monitor, $"{topic}/Sensor", value);
-                return;
+                mqttObject = CreateProcessInfoMQTT(monitor, processInfo);
+                state = PAYLOAD_ON;
             }
 
-            if (processInfo.Status == ProcessState.Running)
-            {
-                var mqttObject = CreateProcessInfoMQTT(monitor, processInfo);
-                value = JsonConvert.SerializeObject(mqttObject);
-                state = "ON";
-            }
-
-            SendMonitorValue(monitor, $"{topic}/State", state);
-            SendMonitorValue(monitor, $"{topic}/Sensor", value);
+            var json = JsonConvert.SerializeObject(mqttObject, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            SendMonitorValue(monitor, GetStateTopic(monitor), state);
+            SendMonitorValue(monitor, GetSensorTopic(monitor), json);
         }
 
         private void OnProcessStarted(object sender, ProcessEventArgs e)
@@ -480,6 +493,16 @@ namespace IOTLinkAddon.Service
 
             TimeSpan uptime = TimeSpan.FromSeconds(MathHelper.ToDouble(value));
             return uptime.ToString(@"dd\:hh\:mm\:ss", CultureInfo.InvariantCulture);
+        }
+
+        private string GetStateTopic(ProcessMonitor monitor)
+        {
+            return $"Processes/{monitor.Name}/State";
+        }
+
+        private string GetSensorTopic(ProcessMonitor monitor)
+        {
+            return $"Processes/{monitor.Name}/Sensor";
         }
 
         private void SendMonitorValue(ProcessMonitor monitor, string topic, string value)
