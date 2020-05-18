@@ -8,6 +8,7 @@ using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.Process;
+using IOTLinkAPI.Platform.HomeAssistant;
 using IOTLinkAPI.Platform.Windows;
 using Newtonsoft.Json;
 using System;
@@ -141,7 +142,7 @@ namespace IOTLinkAddon.Service
 
             if (monitor == null || !monitor.Config.General.Enabled)
             {
-                LoggerHelper.Debug("ProcessMonitorService::SetupMonitor({0}) - Monitoring is disabled.", monitorName);
+                LoggerHelper.Debug("ProcessMonitorService::SetupMonitor({0}) - Monitoring not found or disabled.", monitorName);
                 return;
             }
 
@@ -150,6 +151,116 @@ namespace IOTLinkAddon.Service
                 LoggerHelper.Debug("ProcessMonitorService::SetupDiscovery({0}) - Discovery is disabled.", monitorName);
                 return;
             }
+
+            SetupProcessDiscoveryState(monitor);
+            SetupProcessDiscoveryMemory(monitor);
+            SetupProcessDiscoveryProcessor(monitor);
+            SetupProcessDiscoveryUptime(monitor);
+            SetupProcessDiscoveryFullscreen(monitor);
+        }
+
+        private void SetupProcessDiscoveryState(ProcessMonitor monitor)
+        {
+            if (monitor == null)
+                return;
+
+            var id = string.Format("{0}_{1}", monitor.Name, "State");
+            var name = string.Format("{0} {1}", monitor.Name, "State");
+
+            HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
+            {
+                Id = id,
+                Name = name,
+                DeviceClass = "moving",
+                Component = HomeAssistantComponent.BinarySensor
+            };
+
+            GetManager().PublishDiscoveryMessage(this, GetStateTopic(monitor), "Processes", discoveryOptions);
+        }
+
+        private void SetupProcessDiscoveryMemory(ProcessMonitor monitor)
+        {
+            if (monitor == null)
+                return;
+
+            var id = string.Format("{0}_{1}", monitor.Name, "MemoryUsed");
+            var name = string.Format("{0} {1}", monitor.Name, "Memory Used");
+
+            HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
+            {
+                Id = id,
+                Name = name,
+                Icon = "mdi:memory",
+                Unit = "MB",
+                ValueTemplate = "{{ value_json.MemoryUsed }}",
+                Component = HomeAssistantComponent.Sensor
+            };
+
+            GetManager().PublishDiscoveryMessage(this, GetSensorTopic(monitor), "Processes", discoveryOptions);
+        }
+
+        private void SetupProcessDiscoveryProcessor(ProcessMonitor monitor)
+        {
+            if (monitor == null)
+                return;
+
+            var id = string.Format("{0}_{1}", monitor.Name, "ProcessorUsage");
+            var name = string.Format("{0} {1}", monitor.Name, "Processor Usage");
+
+            HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
+            {
+                Id = id,
+                Name = name,
+                Icon = "mdi:gauge",
+                Unit = "%",
+                ValueTemplate = "{{ value_json.ProcessorUsage }}",
+                Component = HomeAssistantComponent.Sensor
+            };
+
+            GetManager().PublishDiscoveryMessage(this, GetSensorTopic(monitor), "Processes", discoveryOptions);
+        }
+
+        private void SetupProcessDiscoveryUptime(ProcessMonitor monitor)
+        {
+            if (monitor == null)
+                return;
+
+            var id = string.Format("{0}_{1}", monitor.Name, "Uptime");
+            var name = string.Format("{0} {1}", monitor.Name, "Uptime");
+            var inSeconds = _config.GetValue("formats:uptimeInSeconds", false);
+
+            HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
+            {
+                Id = id,
+                Name = name,
+                Icon = "mdi:timer",
+                ValueTemplate = "{{ value_json.Uptime }}",
+                Unit = inSeconds ? "s" : "",
+                Component = HomeAssistantComponent.Sensor
+            };
+
+            GetManager().PublishDiscoveryMessage(this, GetSensorTopic(monitor), "Processes", discoveryOptions);
+        }
+
+        private void SetupProcessDiscoveryFullscreen(ProcessMonitor monitor)
+        {
+            if (monitor == null)
+                return;
+
+            var id = string.Format("{0}_{1}", monitor.Name, "FullScreen");
+            var name = string.Format("{0} {1}", monitor.Name, "FullScreen");
+
+            HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
+            {
+                Id = id,
+                Name = name,
+                ValueTemplate = "{{ value_json.FullScreen }}",
+                PayloadOn = "True",
+                PayloadOff = "False",
+                Component = HomeAssistantComponent.BinarySensor
+            };
+
+            GetManager().PublishDiscoveryMessage(this, GetSensorTopic(monitor), "Processes", discoveryOptions);
         }
 
         private void CleanTimers()
@@ -261,7 +372,7 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("ProcessMonitorService::ExecuteMonitor({0}) - {1} Processes Found", monitor.Name, processes.Count);
             if (processes.Count == 0)
             {
-                LoggerHelper.Info("ProcessMonitorService::ExecuteMonitor({0}) - Not Running", monitor.Name);
+                LoggerHelper.Debug("ProcessMonitorService::ExecuteMonitor({0}) - Not Running", monitor.Name);
                 ProcessSingleProcess(monitor);
                 return;
             }
@@ -373,7 +484,7 @@ namespace IOTLinkAddon.Service
             if (processInfo == null)
                 return;
 
-            LoggerHelper.Info("ProcessMonitorService::SendProcessInformation({0}) - {1}", monitor.Name, JsonConvert.SerializeObject(processInfo));
+            LoggerHelper.Debug("ProcessMonitorService::SendProcessInformation({0}) - {1}", monitor.Name, JsonConvert.SerializeObject(processInfo));
 
             ProcessInfoMQTT mqttObject = null;
             var state = PAYLOAD_OFF;
@@ -427,7 +538,7 @@ namespace IOTLinkAddon.Service
 
             List<ProcessMonitor> monitors = MonitorHelper.GetProcessMonitorsByProcessName(_monitors, processName);
 
-            LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - {1} Monitors found.", processName, monitors.Count);
+            LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - {1} Monitors found.", processName, monitors.Count);
             foreach (ProcessMonitor monitor in monitors)
                 ExecuteMonitor(monitor);
         }

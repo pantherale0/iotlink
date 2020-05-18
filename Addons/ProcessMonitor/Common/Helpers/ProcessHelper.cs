@@ -135,10 +135,7 @@ namespace IOTLinkAddon.Common.Helpers
         {
             ProcessInfo processInfo = ProcessEventManager.GetInstance().GetProcessInfo(process.Id);
             if (processInfo == null)
-            {
-                LoggerHelper.Error("ProcessHelper::ParseProcess({0}, {1}) - Not found", process.Id, fetchParent);
                 return null;
-            }
 
             ProcessInformation result = new ProcessInformation
             {
