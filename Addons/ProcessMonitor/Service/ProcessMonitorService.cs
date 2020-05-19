@@ -48,7 +48,8 @@ namespace IOTLinkAddon.Service
             cfgManager.SetReloadHandler(_configPath, OnConfigReload);
 
             OnConfigReloadHandler += OnConfigReload;
-            OnMQTTConnectedHandler += OnClearEvent;
+            OnMQTTConnectedHandler += OnMQTTConnected;
+            OnMQTTDisconnectedHandler += OnMQTTDisconnected;
             OnRefreshRequestedHandler += OnClearEvent;
             OnAgentResponseHandler += OnAgentResponse;
 
@@ -164,8 +165,8 @@ namespace IOTLinkAddon.Service
             if (monitor == null)
                 return;
 
-            var id = string.Format("{0}_{1}", monitor.Name, "State");
-            var name = string.Format("{0} {1}", monitor.Name, "State");
+            var id = monitor.Name;
+            var name = monitor.Config.General.DisplayName;
 
             HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
             {
@@ -184,7 +185,7 @@ namespace IOTLinkAddon.Service
                 return;
 
             var id = string.Format("{0}_{1}", monitor.Name, "MemoryUsed");
-            var name = string.Format("{0} {1}", monitor.Name, "Memory Used");
+            var name = string.Format("{0} {1}", monitor.Config.General.DisplayName, "Memory Used");
 
             HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
             {
@@ -205,7 +206,7 @@ namespace IOTLinkAddon.Service
                 return;
 
             var id = string.Format("{0}_{1}", monitor.Name, "ProcessorUsage");
-            var name = string.Format("{0} {1}", monitor.Name, "Processor Usage");
+            var name = string.Format("{0} {1}", monitor.Config.General.DisplayName, "Processor Usage");
 
             HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
             {
@@ -226,7 +227,7 @@ namespace IOTLinkAddon.Service
                 return;
 
             var id = string.Format("{0}_{1}", monitor.Name, "Uptime");
-            var name = string.Format("{0} {1}", monitor.Name, "Uptime");
+            var name = string.Format("{0} {1}", monitor.Config.General.DisplayName, "Uptime");
             var inSeconds = _config.GetValue("formats:uptimeInSeconds", false);
 
             HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
@@ -248,7 +249,7 @@ namespace IOTLinkAddon.Service
                 return;
 
             var id = string.Format("{0}_{1}", monitor.Name, "FullScreen");
-            var name = string.Format("{0} {1}", monitor.Name, "FullScreen");
+            var name = string.Format("{0} {1}", monitor.Config.General.DisplayName, "FullScreen");
 
             HassDiscoveryOptions discoveryOptions = new HassDiscoveryOptions
             {
@@ -300,6 +301,17 @@ namespace IOTLinkAddon.Service
                 return;
 
             _monitorTimer.Stop();
+        }
+
+        private void OnMQTTConnected(object sender, EventArgs e)
+        {
+            RestartTimers();
+            OnClearEvent(this, e);
+        }
+
+        private void OnMQTTDisconnected(object sender, EventArgs e)
+        {
+            StopTimers();
         }
 
         private void OnClearEvent(object sender, EventArgs e)

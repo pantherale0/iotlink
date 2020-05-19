@@ -2,7 +2,6 @@
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
@@ -15,6 +14,7 @@ namespace IOTLinkService.Service.MQTT
         private MQTTClient _mqttClient;
 
         private readonly object connectionLock = new object();
+        private readonly object verifyLock = new object();
 
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
@@ -152,12 +152,15 @@ namespace IOTLinkService.Service.MQTT
 
         private void VerifyConnection()
         {
-            if (_mqttClient == null || !_mqttClient.IsConnected())
+            lock (verifyLock)
             {
-                LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - MQTT Connection Broken. Reconnecting.");
+                if (_mqttClient == null || !_mqttClient.IsConnected())
+                {
+                    LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - MQTT Connection Broken. Reconnecting.");
 
-                Disconnect(true);
-                Connect();
+                    Disconnect(true);
+                    Connect();
+                }
             }
         }
 

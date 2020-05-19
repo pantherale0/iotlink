@@ -61,7 +61,8 @@ namespace IOTLinkAddon.Service
             OnSessionChangeHandler += OnSessionChange;
             OnConfigReloadHandler += OnConfigReload;
             OnAgentResponseHandler += OnAgentResponse;
-            OnMQTTConnectedHandler += OnClearEvent;
+            OnMQTTConnectedHandler += OnMQTTConnected;
+            OnMQTTDisconnectedHandler += OnMQTTDisconnected;
             OnRefreshRequestedHandler += OnClearEvent;
 
             InitMonitors();
@@ -136,6 +137,17 @@ namespace IOTLinkAddon.Service
                     }
                 }
             }
+        }
+
+        private void OnMQTTConnected(object sender, EventArgs e)
+        {
+            SetupTimers();
+            OnClearEvent(this, e);
+        }
+
+        private void OnMQTTDisconnected(object sender, EventArgs e)
+        {
+            _monitorTimer.Stop();
         }
 
         private void OnClearEvent(object sender, EventArgs e)
