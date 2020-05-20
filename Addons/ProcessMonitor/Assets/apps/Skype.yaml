@@ -1,0 +1,14 @@
+# Skype
+processes:
+  - Skype
+  - SkypeApp
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Skype
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

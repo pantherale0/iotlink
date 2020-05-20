@@ -1,0 +1,13 @@
+# Origin
+processes:
+  - Origin
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Origin
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

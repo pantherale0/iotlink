@@ -114,6 +114,9 @@
     <Compile Include="Addons\ServiceAddon.cs" />
     <Compile Include="Addons\IAddonManager.cs" />
     <Compile Include="Common\CacheContainer.cs" />
+    <Compile Include="Common\Yaml\IncludeRef.cs" />
+    <Compile Include="Common\Yaml\YamlIncludeNodeDeserializer.cs" />
+    <Compile Include="Common\Yaml\YamlIncludeNodeDeserializerOptions.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Configs\Configuration.cs" />

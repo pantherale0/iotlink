@@ -1,0 +1,12 @@
+processes:
+  - Zoom
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Zoom
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

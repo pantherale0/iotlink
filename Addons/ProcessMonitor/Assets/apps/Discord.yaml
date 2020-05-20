@@ -1,0 +1,13 @@
+# Discord
+processes:
+  - Discord
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Discord
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

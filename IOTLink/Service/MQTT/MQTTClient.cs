@@ -1,19 +1,17 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events.MQTT;
+using IOTLinkAPI.Platform.HomeAssistant;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Extensions.ManagedClient;
+using Newtonsoft.Json;
 using System;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
-using IOTLinkAPI.Platform.HomeAssistant;
-using System.Threading;
-using MQTTnet.Extensions.ManagedClient;
 
 namespace IOTLinkService.Service.MQTT
 {

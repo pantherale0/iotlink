@@ -1,0 +1,14 @@
+# Zoom InMeeting
+processes:
+  - Zoom
+windows:
+classnames:
+  - ZPContentViewWndClass
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Zoom - In Meeting
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

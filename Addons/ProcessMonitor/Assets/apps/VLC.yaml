@@ -1,0 +1,13 @@
+# VLC Media Player
+processes:
+  - vlc
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: VLC Media Player
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

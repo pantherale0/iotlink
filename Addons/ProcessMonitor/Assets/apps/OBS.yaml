@@ -1,0 +1,14 @@
+# OBS Studio
+processes:
+  - obs
+  - obs64
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: OBS Studio
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

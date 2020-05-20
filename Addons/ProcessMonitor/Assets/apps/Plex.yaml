@@ -1,0 +1,13 @@
+# Plex
+processes:
+  - Plex
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Plex
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

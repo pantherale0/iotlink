@@ -518,7 +518,7 @@ namespace IOTLinkAddon.Service
 
             List<ProcessMonitor> monitors = MonitorHelper.GetProcessMonitorsByProcessName(_monitors, processName);
 
-            LoggerHelper.Info("ProcessMonitorService::OnProcessStarted({0}) - {1} Monitors found.", processName, monitors.Count);
+            LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - {1} Monitors found.", processName, monitors.Count);
             if (monitors.Count == 0)
             {
                 LoggerHelper.Debug("ProcessMonitorService::OnProcessStarted({0}) - Monitoring NOT FOUND (PID: {1} - Parent: {2})", processName, e.ProcessInfo.Id, e.ProcessInfo.ParentId);

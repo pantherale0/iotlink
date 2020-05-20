@@ -1,0 +1,13 @@
+# Plex Media Server
+processes:
+  - Plex Media Server
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Plex Server
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

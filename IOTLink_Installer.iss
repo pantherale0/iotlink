@@ -59,17 +59,23 @@ Source: "Assets\images\icons\uninstall_service.ico";                           D
 ; Service Start/Stop
 Source: "Assets\images\icons\start_service.ico";                               DestDir: "{app}\Icons"; Flags: ignoreversion
 Source: "Assets\images\icons\stop_service.ico";                                DestDir: "{app}\Icons"; Flags: ignoreversion
+
 ; Addon - Commands
 Source: "Addons\Commands\addon.yaml";                                          DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
 Source: "Addons\Commands\bin\Release\Commands.dll";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
+Source: "Addons\Commands\Assets\*";                                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion recursesubdirs;   Permissions: everyone-full;  Tasks: Addons\Commands
+
 ; Addon - Windows Monitor
 Source: "Addons\WindowsMonitor\addon.yaml";                                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
 Source: "Addons\WindowsMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: confirmoverwrite;               Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
 Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll";                DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\Assets\*";                                      DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion recursesubdirs;   Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+
 ; Addon - Process Monitor
 Source: "Addons\ProcessMonitor\addon.yaml";                                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
 Source: "Addons\ProcessMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: confirmoverwrite;               Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
 Source: "Addons\ProcessMonitor\bin\Release\ProcessMonitor.dll";                DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
+Source: "Addons\ProcessMonitor\Assets\*";                                      DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: ignoreversion recursesubdirs;   Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
 
 [Icons]
 ; Service Install/Uninstall

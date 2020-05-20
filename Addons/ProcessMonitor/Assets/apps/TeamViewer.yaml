@@ -1,0 +1,13 @@
+# TeamViewer
+processes:
+  - TeamViewer
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: TeamViewer
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

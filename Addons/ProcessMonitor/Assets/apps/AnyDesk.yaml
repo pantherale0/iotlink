@@ -1,0 +1,13 @@
+# AnyDesk
+processes:
+  - AnyDesk
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: AnyDesk
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

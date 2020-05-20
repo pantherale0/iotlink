@@ -1,0 +1,13 @@
+# Steam
+processes:
+  - steam
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Steam
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10

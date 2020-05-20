@@ -1,0 +1,13 @@
+# Rambox
+processes:
+  - Rambox
+windows:
+classnames:
+configs:
+  enabled: true
+  discoverable: true
+  displayName: Rambox
+  cacheable: true
+  grouped: true
+  compareType: 0
+  interval: 10
