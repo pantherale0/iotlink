@@ -584,6 +584,9 @@ namespace IOTLinkAPI.Platform.Windows
 
             return result.Where(hWnd =>
             {
+                if (hWnd == IntPtr.Zero)
+                    return false;
+
                 User32.GetWindowThreadProcessId(hWnd, out int hWndProcessId);
                 if (hWndProcessId != processId)
                     return false;

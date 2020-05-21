@@ -29,22 +29,23 @@ formats:
 ############################################################################
 # Monitors
 ############################################################################
-# Configure which monitors are enabled and which interval they should
-# be pooled from the system. I don't recommend less than 5 seconds.
-# Cacheable monitors don't send the value repeatedly unless it changes.
+# Configure which processes should be monitored.
+# For minizing file size, each monitor is split in a different file and
+# included here. Uncomment for use, and check file for details.
 ############################################################################
 monitors:
-  AnyDesk: !include apps/AnyDesk.yaml
-  Chrome: !include apps/Chrome.yaml
-  Discord: !include apps/Discord.yaml
-  OBS: !include apps/OBS.yaml
-  Origin: !include apps/Origin.yaml
-  Plex: !include apps/Plex.yaml
-  Plex: !include apps/Plex-Server.yaml
-  Rambox: !include apps/Rambox.yaml
-  Skype: !include apps/Skype.yaml
-  Steam: !include apps/Steam.yaml
-  TeamViewer: !include apps/TeamViewer.yaml
-  VLC: !include apps/VLC.yaml
-  Zoom: !include apps/Zoom.yaml
-  Zoom-InMeeting: !include apps/Zoom-InMeeting.yaml
+  #AnyDesk: !include apps/AnyDesk.yaml
+  #Chrome: !include apps/Chrome.yaml
+  #Discord: !include apps/Discord.yaml
+  #Firefox: !include apps/Firefox.yaml
+  #OBS: !include apps/OBS.yaml
+  #Origin: !include apps/Origin.yaml
+  #Plex: !include apps/Plex.yaml
+  #Plex: !include apps/Plex-Server.yaml
+  #Rambox: !include apps/Rambox.yaml
+  #Skype: !include apps/Skype.yaml
+  #Steam: !include apps/Steam.yaml
+  #TeamViewer: !include apps/TeamViewer.yaml
+  #VLC: !include apps/VLC.yaml
+  #Zoom: !include apps/Zoom.yaml
+  #Zoom-InMeeting: !include apps/Zoom-InMeeting.yaml

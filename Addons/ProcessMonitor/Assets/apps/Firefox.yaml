@@ -23,15 +23,15 @@
 #     4:       Should MATCH AT LEAST ONE window OR AT LEAST ONE classnames
 ############################################################################
 
-# Rambox
+# Mozilla Firefox
 processes:
-  - Rambox
+  - firefox
 windows:
 classnames:
 configs:
   enabled: true
   discoverable: true
-  displayName: Rambox
+  displayName: Mozilla Firefox
   cacheable: true
   grouped: true
   compareType: 0

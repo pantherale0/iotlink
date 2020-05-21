@@ -40,7 +40,7 @@ namespace IOTLinkAddon.Agent
             try
             {
                 int processId = (int)data;
-                LoggerHelper.Debug("ProcessMonitorAgent::ExecuteProcessInformation({0}) - Started", processId);
+                LoggerHelper.Verbose("ProcessMonitorAgent::ExecuteProcessInformation({0}) - Started", processId);
 
                 ProcessInformation processInfo = ProcessHelper.GetProcessInformation(processId, false);
                 if (processInfo == null)
@@ -66,7 +66,7 @@ namespace IOTLinkAddon.Agent
             if (processInfo == null)
                 return null;
 
-            LoggerHelper.Verbose("ProcessMonitorAgent::FillProcessInformation() - Started");
+            LoggerHelper.Debug("ProcessMonitorAgent::FillProcessInformation({0}) - Started", processInfo.Id);
 
             List<ProcessInformation> childrenProcessInfos = ProcessHelper.GetProcessChildren(processInfo.Id);
             List<IntPtr> handles = GetProcessHandles(processInfo);
@@ -90,7 +90,7 @@ namespace IOTLinkAddon.Agent
 
         private List<IntPtr> GetProcessHandles(ProcessInformation processInfo)
         {
-            if (processInfo == null)
+            if (processInfo == null || processInfo.MainWindowHandle == 0)
                 return new List<IntPtr>();
 
             var mainHwnd = new IntPtr(processInfo.MainWindowHandle);
