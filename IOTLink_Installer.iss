@@ -7,7 +7,9 @@
 #define APP_VERSION      "2.2.0"
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
-#define APP_AUTHOR_URL  "https://alexslx.com"
+#define APP_AUTHOR_URL  "https://www.alexandreleites.com.br"
+
+#include "donate.iss"
 
 [Setup]
 ; Basic Information
