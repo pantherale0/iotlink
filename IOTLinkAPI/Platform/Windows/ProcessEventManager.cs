@@ -11,8 +11,12 @@ namespace IOTLinkAPI.Platform.Windows
     public class ProcessEventManager
     {
         private static readonly string WMI_SCOPE = "root\\CIMV2";
-        private static readonly string WMI_QUERY_PROCESS_PERF = "SELECT * FROM __InstanceModificationEvent WITHIN 1 WHERE TargetInstance Isa 'Win32_PerfFormattedData_PerfProc_Process' AND PreviousInstance.PercentProcessorTime != TargetInstance.PercentProcessorTime";
-        private static readonly string WMI_QUERY_PROCESS_STATE = "SELECT * FROM __InstanceOperationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process'";
+
+        private static readonly int WMI_INTERVAL_PROCESS_PERF = 60;
+        private static readonly string WMI_QUERY_PROCESS_PERF = "SELECT * FROM __InstanceModificationEvent WITHIN {0} WHERE TargetInstance Isa 'Win32_PerfFormattedData_PerfProc_Process' AND PreviousInstance.PercentProcessorTime != TargetInstance.PercentProcessorTime";
+
+        private static readonly int WMI_INTERVAL_PROCESS_STATE = 1;
+        private static readonly string WMI_QUERY_PROCESS_STATE = "SELECT * FROM __InstanceOperationEvent WITHIN {0} WHERE TargetInstance ISA 'Win32_Process'";
 
         private static ProcessEventManager _instance;
 
@@ -51,13 +55,13 @@ namespace IOTLinkAPI.Platform.Windows
         {
             if (_processPerformanceWatcher == null)
             {
-                _processPerformanceWatcher = new ManagementEventWatcher(WMI_SCOPE, WMI_QUERY_PROCESS_PERF);
+                _processPerformanceWatcher = new ManagementEventWatcher(WMI_SCOPE, string.Format(WMI_QUERY_PROCESS_PERF, WMI_INTERVAL_PROCESS_PERF));
                 _processPerformanceWatcher.EventArrived += new EventArrivedEventHandler(OnProcessPerformanceWatcherEvent);
             }
 
             if (_processStateWatcher == null)
             {
-                _processStateWatcher = new ManagementEventWatcher(WMI_SCOPE, WMI_QUERY_PROCESS_STATE);
+                _processStateWatcher = new ManagementEventWatcher(WMI_SCOPE, string.Format(WMI_QUERY_PROCESS_STATE, WMI_INTERVAL_PROCESS_STATE));
                 _processStateWatcher.EventArrived += new EventArrivedEventHandler(OnProcessStateWatcherEvent);
             }
 

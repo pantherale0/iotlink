@@ -1,4 +1,4 @@
-﻿using IOTLinkAPI.Configs;
+using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
@@ -361,11 +361,6 @@ namespace IOTLinkService.Service.MQTT
         private void OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
             LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
-            if (!_client.IsConnected)
-            {
-                LoggerHelper.Warn("MQTTClient::OnConnectedHandler() - MQTT Connected handler received without being connected.");
-                return;
-            }
 
             // Send LWT Connected
             SendLWTConnect();
