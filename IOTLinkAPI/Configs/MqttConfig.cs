@@ -25,8 +25,6 @@
 
         public int KeepAlivePeriod { get; set; }
 
-        public int KeepAliveSendInterval { get; set; }
-
         public int AutoReconnectDelay { get; set; }
 
         public class CredentialConfig
@@ -171,7 +169,6 @@
                 GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all"),
                 AutoReconnectDelay = config.GetValue("autoReconnectDelay", 10),
                 KeepAlivePeriod = config.GetValue("keepAlivePeriod", 60),
-                KeepAliveSendInterval = config.GetValue("KeepAliveSendInterval", 5)
             };
 
             return mqtt;

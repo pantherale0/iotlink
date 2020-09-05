@@ -1,4 +1,4 @@
-using IOTLinkAPI.Configs;
+﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
@@ -132,10 +132,6 @@ namespace IOTLinkService.Service.MQTT
             // Keep-Alive Period
             if (_config.KeepAlivePeriod > 0)
                 mqttOptionBuilder = mqttOptionBuilder.WithKeepAlivePeriod(TimeSpan.FromSeconds(_config.KeepAlivePeriod));
-
-            // Keep-Alive Send Interval
-            if (_config.KeepAliveSendInterval > 0)
-                mqttOptionBuilder = mqttOptionBuilder.WithKeepAliveSendInterval(TimeSpan.FromSeconds(_config.KeepAliveSendInterval));
 
 
             var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder();
@@ -428,7 +424,7 @@ namespace IOTLinkService.Service.MQTT
         private void SubscribeTopic(string topic)
         {
             LoggerHelper.Trace("MQTTClient::SubscribeTopic() - Subscribing to {0}", topic);
-            _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build()).GetAwaiter().GetResult();
+            _client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build()).GetAwaiter().GetResult();
         }
 
         /// <summary>
