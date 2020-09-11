@@ -9,6 +9,7 @@
 # configs:
 #   enabled:          Enable/Disable.
 #   discoverable:     Enable/Disable HA Auto Discovery.
+#   stateOnly:        Enable HA Auto Discovery only for state (ON/OFF).
 #   displayName:      Display Name used for HA Auto Discovery.
 #   cacheable:        Enable/Disable caching monitor values.
 #   grouped:          Group similar processes information.
@@ -31,6 +32,7 @@ classnames:
 configs:
   enabled: true
   discoverable: true
+  stateOnly: false
   displayName: Rambox
   cacheable: true
   grouped: true

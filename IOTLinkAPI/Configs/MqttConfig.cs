@@ -27,6 +27,8 @@
 
         public int AutoReconnectDelay { get; set; }
 
+        public int MaxPendingMessages { get; set; }
+
         public class CredentialConfig
         {
             public string Username { get; set; }
@@ -169,6 +171,7 @@
                 GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all"),
                 AutoReconnectDelay = config.GetValue("autoReconnectDelay", 10),
                 KeepAlivePeriod = config.GetValue("keepAlivePeriod", 60),
+                MaxPendingMessages = config.GetValue("maxPendingMessages", 10),
             };
 
             return mqtt;

@@ -154,10 +154,13 @@ namespace IOTLinkAddon.Service
             }
 
             SetupProcessDiscoveryState(monitor);
-            SetupProcessDiscoveryMemory(monitor);
-            SetupProcessDiscoveryProcessor(monitor);
-            SetupProcessDiscoveryUptime(monitor);
-            SetupProcessDiscoveryFullscreen(monitor);
+            if (!monitor.Config.General.StateOnly)
+            {
+                SetupProcessDiscoveryMemory(monitor);
+                SetupProcessDiscoveryProcessor(monitor);
+                SetupProcessDiscoveryUptime(monitor);
+                SetupProcessDiscoveryFullscreen(monitor);
+            }
         }
 
         private void SetupProcessDiscoveryState(ProcessMonitor monitor)

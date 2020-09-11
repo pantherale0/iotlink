@@ -135,6 +135,8 @@ namespace IOTLinkService.Service.MQTT
 
 
             var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder();
+            managedMqttClientOptions = managedMqttClientOptions.WithMaxPendingMessages(_config.MaxPendingMessages);
+            managedMqttClientOptions = managedMqttClientOptions.WithPendingMessagesOverflowStrategy(MQTTnet.Server.MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage);
 
             if (_config.AutoReconnectDelay > 0)
                 managedMqttClientOptions = managedMqttClientOptions.WithAutoReconnectDelay(TimeSpan.FromSeconds(_config.AutoReconnectDelay));

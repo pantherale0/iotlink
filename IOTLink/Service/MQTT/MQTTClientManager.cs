@@ -2,6 +2,7 @@
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
@@ -12,6 +13,9 @@ namespace IOTLinkService.Service.MQTT
         private static MQTTClientManager _instance;
 
         private MQTTClient _mqttClient;
+
+        private DateTime lastConnectedEvent = new DateTime(0L);
+        private DateTime lastDisconnectEvent = new DateTime(0L);
 
         private readonly object connectionLock = new object();
         private readonly object verifyLock = new object();
@@ -159,6 +163,7 @@ namespace IOTLinkService.Service.MQTT
                     LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - MQTT Connection Broken. Reconnecting.");
 
                     Disconnect(true);
+                    Thread.Sleep(100);
                     Connect();
                 }
             }
@@ -168,6 +173,10 @@ namespace IOTLinkService.Service.MQTT
         {
             try
             {
+                if (DateTime.UtcNow.CompareTo(lastConnectedEvent) < 0)
+                    return;
+
+                lastConnectedEvent = DateTime.UtcNow;
                 OnMQTTConnected?.Invoke(sender, e);
             }
             catch (Exception ex)
@@ -180,6 +189,10 @@ namespace IOTLinkService.Service.MQTT
         {
             try
             {
+                if (DateTime.UtcNow.CompareTo(lastDisconnectEvent) < 0)
+                    return;
+
+                lastDisconnectEvent = DateTime.UtcNow;
                 OnMQTTDisconnected?.Invoke(sender, e);
             }
             catch (Exception ex)
