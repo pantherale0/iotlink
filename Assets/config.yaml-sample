@@ -56,7 +56,7 @@ mqtt:
   cleanSession: true
   autoReconnectDelay: 10
   keepAlivePeriod: 60
-  KeepAliveSendInterval: 5
+  maxPendingMessages: 10
 
 ########################################################################
 # Logging Configuration

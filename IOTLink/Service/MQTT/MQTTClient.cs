@@ -1,19 +1,17 @@
 ﻿using IOTLinkAPI.Configs;
 using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events.MQTT;
+using IOTLinkAPI.Platform.HomeAssistant;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Extensions.ManagedClient;
+using Newtonsoft.Json;
 using System;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
-using IOTLinkAPI.Platform.HomeAssistant;
-using System.Threading;
-using MQTTnet.Extensions.ManagedClient;
 
 namespace IOTLinkService.Service.MQTT
 {
@@ -135,12 +133,10 @@ namespace IOTLinkService.Service.MQTT
             if (_config.KeepAlivePeriod > 0)
                 mqttOptionBuilder = mqttOptionBuilder.WithKeepAlivePeriod(TimeSpan.FromSeconds(_config.KeepAlivePeriod));
 
-            // Keep-Alive Send Interval
-            if (_config.KeepAliveSendInterval > 0)
-                mqttOptionBuilder = mqttOptionBuilder.WithKeepAliveSendInterval(TimeSpan.FromSeconds(_config.KeepAliveSendInterval));
-
 
             var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder();
+            managedMqttClientOptions = managedMqttClientOptions.WithMaxPendingMessages(_config.MaxPendingMessages);
+            managedMqttClientOptions = managedMqttClientOptions.WithPendingMessagesOverflowStrategy(MQTTnet.Server.MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage);
 
             if (_config.AutoReconnectDelay > 0)
                 managedMqttClientOptions = managedMqttClientOptions.WithAutoReconnectDelay(TimeSpan.FromSeconds(_config.AutoReconnectDelay));
@@ -363,11 +359,6 @@ namespace IOTLinkService.Service.MQTT
         private void OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
             LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
-            if (!_client.IsConnected)
-            {
-                LoggerHelper.Warn("MQTTClient::OnConnectedHandler() - MQTT Connected handler received without being connected.");
-                return;
-            }
 
             // Send LWT Connected
             SendLWTConnect();
@@ -435,7 +426,7 @@ namespace IOTLinkService.Service.MQTT
         private void SubscribeTopic(string topic)
         {
             LoggerHelper.Trace("MQTTClient::SubscribeTopic() - Subscribing to {0}", topic);
-            _client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build()).GetAwaiter().GetResult();
+            _client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build()).GetAwaiter().GetResult();
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using IOTLinkAPI.Helpers;
+﻿using IOTLinkAPI.Common.Yaml;
+using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform;
 using IOTLinkAPI.Platform.Events;
 using System;
@@ -148,7 +149,19 @@ namespace IOTLinkAPI.Configs
             {
                 using (StringReader reader = new StringReader(configText))
                 {
-                    var deserializer = new DeserializerBuilder().Build();
+                    var builder = new DeserializerBuilder();
+
+                    var includeNodeDeserializer = new YamlIncludeNodeDeserializer(new YamlIncludeNodeDeserializerOptions
+                    {
+                        DirectoryName = Path.GetDirectoryName(path),
+                        Deserializer = builder.Build()
+                    });
+
+                    var deserializer = new DeserializerBuilder()
+                        .WithTagMapping(YamlIncludeNodeDeserializer.TAG, typeof(IncludeRef))
+                        .WithNodeDeserializer(includeNodeDeserializer, s => s.OnTop())
+                        .Build();
+
                     return deserializer.Deserialize<object>(reader);
                 }
             }

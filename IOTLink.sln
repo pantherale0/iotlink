@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
@@ -15,6 +15,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTLinkAPI", "IOTLinkAPI\IOTLinkAPI.csproj", "{CCB5FF85-B16D-4A6A-AA53-993F6B86FEA1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTLinkAgent", "IOTLinkAgent\IOTLinkAgent.csproj", "{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Addon_ProcessMonitor", "Addons\ProcessMonitor\Addon_ProcessMonitor.csproj", "{00D1F07E-EDD6-417F-AEBB-6B3863E10AD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +44,10 @@ Global
 		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF764D00-FD66-4C3B-B9E8-6D8D69FB5BC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00D1F07E-EDD6-417F-AEBB-6B3863E10AD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00D1F07E-EDD6-417F-AEBB-6B3863E10AD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00D1F07E-EDD6-417F-AEBB-6B3863E10AD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00D1F07E-EDD6-417F-AEBB-6B3863E10AD1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

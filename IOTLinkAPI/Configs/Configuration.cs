@@ -7,19 +7,30 @@ namespace IOTLinkAPI.Configs
 {
     public class Configuration
     {
+        public string Key { get; set; }
+
+        public bool IsRoot
+        {
+            get
+            {
+                return string.IsNullOrWhiteSpace(Key);
+            }
+        }
+
         private Dictionary<object, object> config;
 
-        public Configuration(Dictionary<object, object> config)
+        private Configuration(Dictionary<object, object> config, string key = null)
         {
+            Key = key;
             this.config = config;
         }
 
-        public object ReadConfigKey(string key, object defaultValue = null)
+        public object ReadConfigKey(string keyString, object defaultValue = null)
         {
-            if (string.IsNullOrWhiteSpace(key))
+            if (string.IsNullOrWhiteSpace(keyString))
                 return defaultValue;
 
-            string[] keys = key.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] keys = GetKeys(keyString);
             if (keys.Length == 0 || !config.ContainsKey(keys[0]))
                 return defaultValue;
 
@@ -41,94 +52,124 @@ namespace IOTLinkAPI.Configs
             return result;
         }
 
-        public Configuration GetValue(string key)
+        public Configuration GetValue(string keyString)
         {
-            Dictionary<object, object> cfg = (Dictionary<object, object>)ReadConfigKey(key);
-            if (cfg == null)
+            object result = ReadConfigKey(keyString);
+            if (result == null || (result is Dictionary<object, object>) == false)
                 return null;
 
-            return new Configuration(cfg);
+            return BuildConfiguration(keyString, result);
         }
 
-        public string GetValue(string key, string defaultValue = null)
+        public string GetValue(string keyString, string defaultValue = null)
         {
-            object result = ReadConfigKey(key, defaultValue);
+            object result = ReadConfigKey(keyString, defaultValue);
             if (result == null)
                 return defaultValue;
 
             return result.ToString();
         }
 
-        public bool GetValue(string key, bool defaultValue = false)
+        public bool GetValue(string keyString, bool defaultValue = false)
         {
-            object result = ReadConfigKey(key, defaultValue);
+            object result = ReadConfigKey(keyString, defaultValue);
             return MathHelper.ToBoolean(result, defaultValue);
         }
 
-        public int GetValue(string key, int defaultValue = 0)
+        public int GetValue(string keyString, int defaultValue = 0)
         {
-            object result = ReadConfigKey(key, defaultValue);
+            object result = ReadConfigKey(keyString, defaultValue);
             return MathHelper.ToInteger(result, defaultValue);
         }
 
-        public long GetValue(string key, long defaultValue = 0L)
+        public long GetValue(string keyString, long defaultValue = 0L)
         {
-            object result = ReadConfigKey(key, defaultValue);
+            object result = ReadConfigKey(keyString, defaultValue);
             return MathHelper.ToLong(result, defaultValue);
         }
 
-        public double GetValue(string key, double defaultValue = 0d)
+        public double GetValue(string keyString, double defaultValue = 0d)
         {
-            object result = ReadConfigKey(key, defaultValue);
+            object result = ReadConfigKey(keyString, defaultValue);
             return MathHelper.ToDouble(result, defaultValue);
         }
 
-        public float GetValue(string key, float defaultValue = 0f)
+        public float GetValue(string keyString, float defaultValue = 0f)
         {
-            object result = ReadConfigKey(key, defaultValue);
+            object result = ReadConfigKey(keyString, defaultValue);
             return MathHelper.ToFloat(result, defaultValue);
         }
 
-        public int GetListCount(string key)
+        public int GetListCount(string keyString)
         {
-            var listObj = ReadConfigKey(key, null);
-            if ((listObj is List<object>) == false)
+            var config = ReadConfigKey(keyString, null);
+            if ((config is List<object>) == false)
                 return 0;
 
-            return ((List<object>)listObj).Count;
+            return ((List<object>)config).Count;
         }
 
-        public List<object> GetList(string key)
+        public List<T> GetList<T>(string keyString)
         {
-            var listObj = ReadConfigKey(key, null);
-            if ((listObj is List<object>) == false)
-                return new List<object>();
+            var config = ReadConfigKey(keyString, null);
+            if ((config is List<object>) == false)
+                return new List<T>();
 
-            return ((List<object>)listObj);
+            List<object> list = (List<object>)config;
+            return list.Select(x => (T)x).ToList();
         }
 
-        public List<Configuration> GetConfigurationList(string key)
+        public List<Configuration> GetConfigurationList(string keyString)
         {
-            var listObj = ReadConfigKey(key, null);
-            if ((listObj is List<object>) == false)
-                return null;
+            var result = ReadConfigKey(keyString);
 
-            List<object> myList = (List<object>)listObj;
-            List<Configuration> result = new List<Configuration>();
-            foreach (var item in myList)
+            if ((result is Dictionary<object, object>))
+            {
+                Dictionary<object, object> config = (Dictionary<object, object>)result;
+                return ParseConfigurationToList(config);
+            }
+
+            if ((result is List<object>))
+            {
+                List<object> config = (List<object>)result;
+                return ParseConfigurationToList(keyString, config);
+            }
+
+            return new List<Configuration>();
+        }
+
+        private List<Configuration> ParseConfigurationToList(Dictionary<object, object> configs)
+        {
+            List<Configuration> results = new List<Configuration>();
+            foreach (var item in configs)
+            {
+                var config = BuildConfiguration(item.Key.ToString(), item.Value);
+                if (config == null)
+                    continue;
+
+                results.Add(config);
+            }
+
+            return results;
+        }
+
+        private List<Configuration> ParseConfigurationToList(string keyString, List<object> configs)
+        {
+            List<Configuration> results = new List<Configuration>();
+            foreach (var item in configs)
             {
                 if ((item is Dictionary<object, object>) == false)
                     continue;
 
-                result.Add(new Configuration((Dictionary<object, object>)item));
+                results.Add(BuildConfiguration(keyString, item));
             }
 
-            return result;
+            return results;
         }
 
-        public Configuration GetConfigurationListItem(string key, int index)
+        public Configuration GetConfigurationListItem(string keyString, int index)
         {
-            var listObj = ReadConfigKey(key, null);
+            var listObj = ReadConfigKey(keyString, null);
             if ((listObj is List<object>) == false)
                 return null;
 
@@ -140,7 +181,38 @@ namespace IOTLinkAPI.Configs
             if ((item is Dictionary<object, object>) == false)
                 return null;
 
-            return new Configuration((Dictionary<object, object>)item);
+            return BuildConfiguration(keyString, item);
+        }
+
+        public static Configuration BuildConfiguration(string keyString, object configObject)
+        {
+            if ((configObject is Dictionary<object, object>) == false)
+                return null;
+
+            Dictionary<object, object> config = (Dictionary<object, object>)configObject;
+            return BuildConfiguration(keyString, config);
+        }
+
+        public static Configuration BuildConfiguration(string keyString, Dictionary<object, object> config)
+        {
+            return new Configuration(config, GetKey(keyString));
+        }
+
+        private static string[] GetKeys(string keyString)
+        {
+            if (string.IsNullOrWhiteSpace(keyString))
+                return new string[0];
+
+            return keyString.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private static string GetKey(string keyString)
+        {
+            string[] keys = GetKeys(keyString);
+            if (keys.Length == 0)
+                return null;
+
+            return keys[keys.Length - 1];
         }
     }
 }

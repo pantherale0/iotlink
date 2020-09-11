@@ -39,8 +39,8 @@
     <Reference Include="AudioSwitcher.AudioApi.CoreAudio, Version=3.0.0.209, Culture=neutral, PublicKeyToken=fda5729e2db3a64f, processorArchitecture=MSIL">
       <HintPath>..\packages\AudioSwitcher.AudioApi.CoreAudio.3.0.0.1\lib\net40\AudioSwitcher.AudioApi.CoreAudio.dll</HintPath>
     </Reference>
-    <Reference Include="MQTTnet, Version=3.0.9.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
-      <HintPath>..\packages\MQTTnet.3.0.9\lib\net461\MQTTnet.dll</HintPath>
+    <Reference Include="MQTTnet, Version=3.0.12.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
+      <HintPath>..\packages\MQTTnet.3.0.12\lib\net461\MQTTnet.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -102,7 +102,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="YamlDotNet, Version=8.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
-      <HintPath>..\packages\YamlDotNet.8.1.1\lib\net45\YamlDotNet.dll</HintPath>
+      <HintPath>..\packages\YamlDotNet.8.1.2\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -113,6 +113,10 @@
     <Compile Include="Addons\IAddonServiceManager.cs" />
     <Compile Include="Addons\ServiceAddon.cs" />
     <Compile Include="Addons\IAddonManager.cs" />
+    <Compile Include="Common\CacheContainer.cs" />
+    <Compile Include="Common\Yaml\IncludeRef.cs" />
+    <Compile Include="Common\Yaml\YamlIncludeNodeDeserializer.cs" />
+    <Compile Include="Common\Yaml\YamlIncludeNodeDeserializerOptions.cs" />
     <Compile Include="Configs\AddonConfig.cs" />
     <Compile Include="Configs\ApplicationConfig.cs" />
     <Compile Include="Configs\Configuration.cs" />
@@ -130,6 +134,8 @@
     <Compile Include="Platform\Events\MQTT\MQTTHandlers.cs" />
     <Compile Include="Platform\Events\MQTT\MQTTMessage.cs" />
     <Compile Include="Platform\Events\MQTT\MQTTMessageEventEventArgs.cs" />
+    <Compile Include="Platform\Events\Process\ProcessEventArgs.cs" />
+    <Compile Include="Platform\Events\Process\ProcessHandlers.cs" />
     <Compile Include="Platform\Events\SessionChangeEventArgs.cs" />
     <Compile Include="Helpers\AssemblyHelper.cs" />
     <Compile Include="Helpers\ConfigHelper.cs" />
@@ -144,6 +150,8 @@
     <Compile Include="Platform\HomeAssistant\HomeAssistantComponent.cs" />
     <Compile Include="Platform\MemoryInfo.cs" />
     <Compile Include="Platform\NetworkInfo.cs" />
+    <Compile Include="Platform\ProcessInfo.cs" />
+    <Compile Include="Platform\ProcessInfoEntry.cs" />
     <Compile Include="Platform\RunInfo.cs" />
     <Compile Include="Platform\WebSocket\RequestTypeClient.cs" />
     <Compile Include="Platform\WebSocket\MessageType.cs" />
@@ -171,6 +179,7 @@
     <Compile Include="Platform\Windows\Native\Internal\WM_MESSAGE.cs" />
     <Compile Include="Platform\Windows\Native\UserEnv.cs" />
     <Compile Include="Platform\Windows\Native\WtsApi32.cs" />
+    <Compile Include="Platform\Windows\ProcessEventManager.cs" />
     <Compile Include="Platform\Windows\WindowsSessionInfo.cs" />
     <Compile Include="Platform\Windows\WindowsAPI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -178,6 +187,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

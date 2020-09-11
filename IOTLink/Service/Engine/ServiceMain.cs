@@ -11,7 +11,7 @@ namespace IOTLinkService.Service.Engine
     public class ServiceMain
     {
         private static ServiceMain _instance;
-        private static bool _addonsLoaded;
+        private bool _addonsLoaded;
 
         private DateTime _lastConfigChange;
 
