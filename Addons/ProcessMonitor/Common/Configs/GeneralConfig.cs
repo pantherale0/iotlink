@@ -10,7 +10,7 @@ namespace IOTLinkAddon.Common.Configs
         public string DisplayName { get; set; }
         public bool Cacheable { get; set; }
         public int Interval { get; set; }
-        public bool StateOnly { get; set; }
+        public bool AdvancedMode { get; set; }
 
         public static GeneralConfig FromConfiguration(Configuration configuration)
         {
@@ -22,7 +22,7 @@ namespace IOTLinkAddon.Common.Configs
                 DisplayName = configuration.GetValue("displayName", null),
                 Cacheable = configuration.GetValue("cacheable", false),
                 Interval = configuration.GetValue("interval", 0),
-                StateOnly = configuration.GetValue("stateOnly", false),
+                AdvancedMode = configuration.GetValue("advancedMode", false),
             };
         }
     }

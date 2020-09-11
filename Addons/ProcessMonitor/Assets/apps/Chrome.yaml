@@ -9,7 +9,7 @@
 # configs:
 #   enabled:          Enable/Disable.
 #   discoverable:     Enable/Disable HA Auto Discovery.
-#   stateOnly:        Enable HA Auto Discovery only for state (ON/OFF).
+#   advancedMode:     Enable HA Auto Discovery for advanced stats (MEM, CPU, etc).
 #   displayName:      Display Name used for HA Auto Discovery.
 #   cacheable:        Enable/Disable caching monitor values.
 #   grouped:          Group similar processes information.
@@ -32,7 +32,7 @@ classnames:
 configs:
   enabled: true
   discoverable: true
-  stateOnly: false
+  advancedMode: false
   displayName: Google Chrome
   cacheable: true
   grouped: true

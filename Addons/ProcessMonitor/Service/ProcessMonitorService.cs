@@ -154,7 +154,7 @@ namespace IOTLinkAddon.Service
             }
 
             SetupProcessDiscoveryState(monitor);
-            if (!monitor.Config.General.StateOnly)
+            if (monitor.Config.General.AdvancedMode)
             {
                 SetupProcessDiscoveryMemory(monitor);
                 SetupProcessDiscoveryProcessor(monitor);
