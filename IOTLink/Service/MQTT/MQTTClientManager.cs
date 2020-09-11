@@ -173,7 +173,7 @@ namespace IOTLinkService.Service.MQTT
         {
             try
             {
-                if (DateTime.UtcNow.CompareTo(lastConnectedEvent) < 0)
+                if (Math.Abs(DateTime.UtcNow.Subtract(lastConnectedEvent).Seconds) >= 10)
                     return;
 
                 lastConnectedEvent = DateTime.UtcNow;
@@ -189,7 +189,7 @@ namespace IOTLinkService.Service.MQTT
         {
             try
             {
-                if (DateTime.UtcNow.CompareTo(lastDisconnectEvent) < 0)
+                if (Math.Abs(DateTime.UtcNow.Subtract(lastDisconnectEvent).Seconds) >= 10)
                     return;
 
                 lastDisconnectEvent = DateTime.UtcNow;
