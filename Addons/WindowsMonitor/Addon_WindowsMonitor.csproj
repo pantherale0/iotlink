@@ -64,7 +64,6 @@
     <Compile Include="Service\Monitors\SystemMonitor.cs" />
     <Compile Include="Service\Monitors\UptimeMonitor.cs" />
     <Compile Include="Service\Monitors\NetworkMonitor.cs" />
-    <Compile Include="Service\Monitors\AudioMonitor.cs" />
     <Compile Include="Service\Monitors\StorageMonitor.cs" />
     <Compile Include="Service\Monitors\PowerMonitor.cs" />
     <Compile Include="Service\Monitors\MemoryMonitor.cs" />

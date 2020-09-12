@@ -33,12 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AudioSwitcher.AudioApi, Version=3.0.0.209, Culture=neutral, PublicKeyToken=fda5729e2db3a64f, processorArchitecture=MSIL">
-      <HintPath>..\packages\AudioSwitcher.AudioApi.3.0.0\lib\net40\AudioSwitcher.AudioApi.dll</HintPath>
-    </Reference>
-    <Reference Include="AudioSwitcher.AudioApi.CoreAudio, Version=3.0.0.209, Culture=neutral, PublicKeyToken=fda5729e2db3a64f, processorArchitecture=MSIL">
-      <HintPath>..\packages\AudioSwitcher.AudioApi.CoreAudio.3.0.0.1\lib\net40\AudioSwitcher.AudioApi.CoreAudio.dll</HintPath>
-    </Reference>
     <Reference Include="MQTTnet, Version=3.0.12.0, Culture=neutral, PublicKeyToken=b69712f52770c0a7, processorArchitecture=MSIL">
       <HintPath>..\packages\MQTTnet.3.0.12\lib\net461\MQTTnet.dll</HintPath>
     </Reference>
@@ -125,7 +119,6 @@
     <Compile Include="Configs\MqttConfig.cs" />
     <Compile Include="Helpers\MathHelper.cs" />
     <Compile Include="Helpers\UnitsHelper.cs" />
-    <Compile Include="Platform\AudioDeviceInfo.cs" />
     <Compile Include="Platform\ConfigType.cs" />
     <Compile Include="Platform\Events\AgentAddonRequestEventArgs.cs" />
     <Compile Include="Platform\Events\AgentAddonResponseEventArgs.cs" />
@@ -158,7 +151,6 @@
     <Compile Include="Platform\WebSocket\RequestTypeServer.cs" />
     <Compile Include="Platform\WebSocket\ResponseTypeClient.cs" />
     <Compile Include="Platform\WebSocket\ResponseTypeServer.cs" />
-    <Compile Include="Platform\Windows\AudioController.cs" />
     <Compile Include="Platform\Windows\Native\AdvApi32.cs" />
     <Compile Include="Platform\Windows\Native\Internal\LastInputInfo.cs" />
     <Compile Include="Platform\Windows\Native\Internal\MemoryStatusEx.cs" />

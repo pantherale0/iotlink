@@ -404,41 +404,6 @@ namespace IOTLinkAPI.Platform.Windows
             }
         }
 
-        public static List<AudioDeviceInfo> GetAudioDevices()
-        {
-            return AudioController.GetInstance().GetAudioDevices();
-        }
-
-        public static AudioDeviceInfo GetAudioDeviceInfo(Guid guid)
-        {
-            return AudioController.GetInstance().GetAudioDeviceInfo(guid);
-        }
-
-        public static bool SetAudioDefault(Guid guid)
-        {
-            return AudioController.GetInstance().SetAudioDefault(guid);
-        }
-
-        public static bool SetAudioDefaultComms(Guid guid)
-        {
-            return AudioController.GetInstance().SetAudioDefaultComms(guid);
-        }
-
-        public static bool SetAudioMute(Guid guid, bool mute)
-        {
-            return AudioController.GetInstance().SetAudioMute(guid, mute);
-        }
-
-        public static bool ToggleAudioMute(Guid guid)
-        {
-            return AudioController.GetInstance().ToggleAudioMute(guid);
-        }
-
-        public static void SetAudioVolume(Guid guid, double volume)
-        {
-            AudioController.GetInstance().SetAudioVolume(guid, volume);
-        }
-
         public static void TurnOffDisplays()
         {
             User32.PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, (IntPtr)SC_MONITORPOWER, (IntPtr)2);

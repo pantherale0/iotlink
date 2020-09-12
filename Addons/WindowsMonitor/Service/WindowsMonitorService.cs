@@ -41,7 +41,6 @@ namespace IOTLinkAddon.Service
             new CPUMonitor(),
             new MemoryMonitor(),
             new PowerMonitor(),
-            new AudioMonitor(),
             new NetworkMonitor(),
             new StorageMonitor(),
             new SystemMonitor(),
