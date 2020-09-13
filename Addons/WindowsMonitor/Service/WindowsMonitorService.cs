@@ -140,7 +140,9 @@ namespace IOTLinkAddon.Service
 
         private void OnMQTTConnected(object sender, EventArgs e)
         {
+            ClearCaches();
             SetupTimers();
+            SetupDiscovery();
             OnClearEvent(this, e);
         }
 
@@ -153,8 +155,7 @@ namespace IOTLinkAddon.Service
         {
             LoggerHelper.Verbose("WindowsMonitorService::OnClearEvent() - Event {0} Received. Clearing cache and resending information.", e.GetType().ToString());
 
-            _cache.Clear();
-            _discoveryItems.Clear();
+            ClearCaches();
             SendAllInformation();
         }
 
@@ -175,6 +176,7 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("WindowsMonitorService::OnSessionChange() - {0}: {1}", e.Reason.ToString(), e.Username);
 
             GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
+            GetManager().PublishMessage(this, "status", e.Reason.ToString());
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
@@ -187,6 +189,12 @@ namespace IOTLinkAddon.Service
                 _monitorCounter = 0;
 
             LoggerHelper.Debug("WindowsMonitorService::OnMonitorTimerElapsed() - Completed");
+        }
+
+        private void ClearCaches()
+        {
+            _cache.Clear();
+            _discoveryItems.Clear();
         }
 
         private void SendAllInformation()

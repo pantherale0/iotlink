@@ -81,6 +81,7 @@ namespace IOTLinkAddon.Service
 
         private void ClearMonitors()
         {
+            _cache.Clear();
             _monitors.Clear();
         }
 
@@ -308,8 +309,11 @@ namespace IOTLinkAddon.Service
 
         private void OnMQTTConnected(object sender, EventArgs e)
         {
-            RestartTimers();
-            OnClearEvent(this, e);
+            if (!IsAddonEnabled())
+                return;
+
+            SetupMonitors();
+            StartTimers();
         }
 
         private void OnMQTTDisconnected(object sender, EventArgs e)

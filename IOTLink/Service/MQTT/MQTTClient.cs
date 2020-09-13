@@ -25,6 +25,12 @@ namespace IOTLinkService.Service.MQTT
         private IMqttClientOptions _options;
         private IManagedMqttClientOptions _managedOptions;
 
+        private DateTime lastConnectRequest = new DateTime(0L);
+        private DateTime lastDisconnectRequest = new DateTime(0L);
+
+        private DateTime lastConnectedEvent = new DateTime(0L);
+        private DateTime lastDisconnectEvent = new DateTime(0L);
+
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
         public event MQTTMessageEventHandler OnMQTTMessageReceived;
@@ -155,10 +161,14 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         internal void Connect()
         {
+            if (lastConnectRequest.AddSeconds(5) >= DateTime.UtcNow)
+                return;
+
             LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0}.", GetBrokerInfo());
 
             LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", MQTTHelper.GetFullTopicName(_config.Prefix));
 
+            lastConnectRequest = DateTime.UtcNow;
             _client = new MqttFactory().CreateManagedMqttClient();
             _client.UseConnectedHandler(OnConnectedHandler);
             _client.UseDisconnectedHandler(OnDisconnectedHandler);
@@ -180,6 +190,10 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         internal void Disconnect(bool skipLastWill = false)
         {
+            if (lastDisconnectRequest.AddSeconds(5) >= DateTime.UtcNow)
+                return;
+
+            lastDisconnectRequest = DateTime.UtcNow;
             LoggerHelper.Info("MQTTClient::Disconnect() - Trying to disconnect from broker: {0}.", GetBrokerInfo());
             if (_client == null)
                 return;
@@ -250,6 +264,12 @@ namespace IOTLinkService.Service.MQTT
 
         internal void PublishDiscoveryMessage(string stateTopic, string preffixName, HassDiscoveryOptions discoveryOptions)
         {
+            if (_client == null || !_client.IsConnected)
+            {
+                LoggerHelper.Verbose("MQTTClient::PublishDiscoveryMessage() - MQTT Client not connected. Skipping.");
+                return;
+            }
+
             if (!_config.Discovery.Enabled)
             {
                 LoggerHelper.Verbose("MQTTClient::PublishDiscoveryMessage() - MQTT Discovery Disabled");
@@ -358,6 +378,10 @@ namespace IOTLinkService.Service.MQTT
         /// <returns></returns>
         private void OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
+            if (lastConnectedEvent.AddSeconds(10) >= DateTime.UtcNow)
+                return;
+
+            lastConnectedEvent = DateTime.UtcNow;
             LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
 
             // Send LWT Connected
@@ -381,6 +405,10 @@ namespace IOTLinkService.Service.MQTT
         /// <returns></returns>
         private void OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
+            if (lastDisconnectEvent.AddSeconds(10) >= DateTime.UtcNow)
+                return;
+
+            lastDisconnectEvent = DateTime.UtcNow;
             LoggerHelper.Verbose("MQTTClient::OnDisconnectedHandler() - MQTT Disconnected");
 
             // Fire event
