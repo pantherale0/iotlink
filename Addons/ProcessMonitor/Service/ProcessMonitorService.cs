@@ -100,7 +100,7 @@ namespace IOTLinkAddon.Service
             List<Configuration> monitorConfigurations = _config.GetConfigurationList("monitors");
             if (monitorConfigurations == null || monitorConfigurations.Count == 0)
             {
-                LoggerHelper.Debug("ProcessMonitorService::SetupMonitors() - Monitoring list is empty.");
+                LoggerHelper.Info("ProcessMonitorService::SetupMonitors() - Monitoring list is empty.");
                 return;
             }
 
@@ -238,7 +238,7 @@ namespace IOTLinkAddon.Service
             {
                 Id = id,
                 Name = name,
-                Icon = "mdi:timer",
+                Icon = "mdi:timer-outline",
                 ValueTemplate = "{{ value_json.Uptime }}",
                 Unit = inSeconds ? "s" : "",
                 Component = HomeAssistantComponent.Sensor

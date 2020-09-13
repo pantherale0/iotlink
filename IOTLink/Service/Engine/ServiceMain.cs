@@ -5,6 +5,7 @@ using IOTLinkService.Service.MQTT;
 using IOTLinkService.Service.WebSockets.Server;
 using System;
 using System.ServiceProcess;
+using System.Threading;
 
 namespace IOTLinkService.Service.Engine
 {
@@ -49,9 +50,9 @@ namespace IOTLinkService.Service.Engine
                 _processMonitorTimer.Start();
             }
 
-            SetupAddons();
             SetupMQTTHandlers();
             SetupWebSocket();
+            SetupAddons();
         }
 
         public void StopApplication()
@@ -87,13 +88,14 @@ namespace IOTLinkService.Service.Engine
         {
             MQTTClientManager client = MQTTClientManager.GetInstance();
 
+            client.Stop();
             client.CleanEvents();
             client.OnMQTTConnected += OnMQTTConnected;
             client.OnMQTTDisconnected += OnMQTTDisconnected;
             client.OnMQTTMessageReceived += OnMQTTMessageReceived;
             client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
-            client.Stop();
             client.Start();
+            Thread.Sleep(1000);
         }
 
         private void OnConfigChanged(object sender, ConfigReloadEventArgs e)

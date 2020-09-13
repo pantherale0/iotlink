@@ -43,7 +43,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Component = HomeAssistantComponent.Sensor,
                     Id = "BootTime",
                     Name = "System Boot Time",
-                    Icon = "mdi:timer"
+                    Icon = "mdi:timer-outline"
                 }
             });
 
@@ -60,7 +60,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Id = "Uptime",
                     Name = "System Uptime",
                     Unit = config.GetValue("inSeconds", false) ? "s" : null,
-                    Icon = "mdi:timer"
+                    Icon = "mdi:timer-outline"
                 }
             });
 
