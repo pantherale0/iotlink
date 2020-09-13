@@ -5,6 +5,7 @@
 #define APP_AGENT_NAME   "IOTLinkAgent.exe"
 #define APP_SERVICE_NAME "IOTLinkService.exe"
 #define APP_VERSION      "2.2.0"
+#define APP_BETA_VERSION ""
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
 #define APP_AUTHOR_URL  "https://www.alexandreleites.com.br"
@@ -28,7 +29,11 @@ DefaultGroupName={#APP_NAME}
 UsePreviousAppDir=yes
 ; Setup Settings
 OutputDir=Setup
+#if APP_BETA_VERSION == ""
 OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}
+#else
+OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}-{#APP_BETA_VERSION}
+#endif
 WizardStyle=modern
 AllowNoIcons=yes
 LicenseFile=LICENSE.md
