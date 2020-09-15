@@ -17,6 +17,12 @@ namespace IOTLinkService.Service.MQTT
 {
     internal class MQTTClient
     {
+        private static readonly int MINIMUM_DELAY_CONNECT_REQUEST = 5;
+        private static readonly int MINIMUM_DELAY_DISCONNECT_REQUEST = 2;
+
+        private static readonly int MINIMUM_DELAY_CONNECTED_EVENT = 10;
+        private static readonly int MINIMUM_DELAY_DISCONNECTED_EVENT = 10;
+
         private static MQTTClient _instance;
 
         private MqttConfig _config;
@@ -161,7 +167,7 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         internal void Connect()
         {
-            if (lastConnectRequest.AddSeconds(5) >= DateTime.UtcNow)
+            if (lastConnectRequest.AddSeconds(MINIMUM_DELAY_CONNECT_REQUEST) >= DateTime.UtcNow)
                 return;
 
             LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0}.", GetBrokerInfo());
@@ -190,17 +196,17 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         internal void Disconnect(bool skipLastWill = false)
         {
-            if (lastDisconnectRequest.AddSeconds(5) >= DateTime.UtcNow)
+            if (lastDisconnectRequest.AddSeconds(MINIMUM_DELAY_DISCONNECT_REQUEST) >= DateTime.UtcNow)
                 return;
 
             lastDisconnectRequest = DateTime.UtcNow;
-            LoggerHelper.Info("MQTTClient::Disconnect() - Trying to disconnect from broker: {0}.", GetBrokerInfo());
+            LoggerHelper.Info("MQTTClient::Disconnect({0}) - Trying to disconnect from broker: {1}.", skipLastWill, GetBrokerInfo());
             if (_client == null)
                 return;
 
             if (_client.IsConnected && !skipLastWill)
             {
-                LoggerHelper.Verbose("MQTTClient::Disconnect() - Sending LWT message before disconnecting.");
+                LoggerHelper.Verbose("MQTTClient::Disconnect({0}) - Sending LWT message before disconnecting.", skipLastWill);
                 SendLWTDisconnect();
             }
 
@@ -378,7 +384,7 @@ namespace IOTLinkService.Service.MQTT
         /// <returns></returns>
         private void OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
-            if (lastConnectedEvent.AddSeconds(10) >= DateTime.UtcNow)
+            if (lastConnectedEvent.AddSeconds(MINIMUM_DELAY_CONNECTED_EVENT) >= DateTime.UtcNow)
                 return;
 
             lastConnectedEvent = DateTime.UtcNow;
@@ -405,7 +411,7 @@ namespace IOTLinkService.Service.MQTT
         /// <returns></returns>
         private void OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
-            if (lastDisconnectEvent.AddSeconds(10) >= DateTime.UtcNow)
+            if (lastDisconnectEvent.AddSeconds(MINIMUM_DELAY_DISCONNECTED_EVENT) >= DateTime.UtcNow)
                 return;
 
             lastDisconnectEvent = DateTime.UtcNow;

@@ -9,6 +9,8 @@ namespace IOTLinkService.Service.MQTT
 {
     internal class MQTTClientManager : IDisposable
     {
+        private static readonly int MINIMUM_DELAY_VERIFY_CONNECTION = 5;
+
         private static MQTTClientManager _instance;
 
         private MQTTClient _mqttClient;
@@ -142,7 +144,7 @@ namespace IOTLinkService.Service.MQTT
         {
             lock (connectionLock)
             {
-                LoggerHelper.Verbose("MQTTClientManager::Disconnect()");
+                LoggerHelper.Verbose("MQTTClientManager::Disconnect({0})", skipLastWill);
                 if (_mqttClient == null)
                     return;
 
@@ -163,7 +165,7 @@ namespace IOTLinkService.Service.MQTT
                     return;
                 }
 
-                if (lastVerifyConnection.AddSeconds(5) >= DateTime.UtcNow)
+                if (lastVerifyConnection.AddSeconds(MINIMUM_DELAY_VERIFY_CONNECTION) >= DateTime.UtcNow)
                     return;
 
                 lastVerifyConnection = DateTime.UtcNow;

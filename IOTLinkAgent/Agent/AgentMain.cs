@@ -8,6 +8,8 @@ namespace IOTLinkAgent.Agent
 {
     internal class AgentMain
     {
+        private static readonly int MINIMUM_DELAY_CONFIG_CHANGE = 1;
+
         private static AgentMain _instance;
 
         private DateTime _lastConfigChange;
@@ -46,7 +48,7 @@ namespace IOTLinkAgent.Agent
 
         private void OnConfigChanged(object sender, ConfigReloadEventArgs e)
         {
-            if (_lastConfigChange == null || _lastConfigChange.AddSeconds(1) <= DateTime.Now)
+            if (_lastConfigChange == null || _lastConfigChange.AddSeconds(MINIMUM_DELAY_CONFIG_CHANGE) <= DateTime.Now)
             {
                 LoggerHelper.Info("Changes to configuration.yaml detected. Reloading.");
                 AgentAddonManager addonManager = AgentAddonManager.GetInstance();
