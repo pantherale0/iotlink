@@ -28,7 +28,7 @@ namespace IOTLinkAPI.Configs
 
         public void SetConfig(object config)
         {
-            Config = new Configuration((Dictionary<object, object>)config);
+            Config = Configuration.BuildConfiguration(null, config);
         }
     }
 }

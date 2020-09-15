@@ -4,10 +4,13 @@
 #define APP_DIR_NAME     "IOTLink"
 #define APP_AGENT_NAME   "IOTLinkAgent.exe"
 #define APP_SERVICE_NAME "IOTLinkService.exe"
-#define APP_VERSION      "2.1.1"
+#define APP_VERSION      "2.2.0"
+#define APP_BETA_VERSION ""
 
 #define APP_AUTHOR_NAME "Alexandre Leites"
-#define APP_AUTHOR_URL  "https://alexslx.com"
+#define APP_AUTHOR_URL  "https://www.alexandreleites.com.br"
+
+#include "donate.iss"
 
 [Setup]
 ; Basic Information
@@ -26,7 +29,11 @@ DefaultGroupName={#APP_NAME}
 UsePreviousAppDir=yes
 ; Setup Settings
 OutputDir=Setup
+#if APP_BETA_VERSION == ""
 OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}
+#else
+OutputBaseFilename={#APP_DIR_NAME}_Installer_v{#APP_VERSION}-{#APP_BETA_VERSION}
+#endif
 WizardStyle=modern
 AllowNoIcons=yes
 LicenseFile=LICENSE.md
@@ -59,13 +66,23 @@ Source: "Assets\images\icons\uninstall_service.ico";                           D
 ; Service Start/Stop
 Source: "Assets\images\icons\start_service.ico";                               DestDir: "{app}\Icons"; Flags: ignoreversion
 Source: "Assets\images\icons\stop_service.ico";                                DestDir: "{app}\Icons"; Flags: ignoreversion
+
 ; Addon - Commands
 Source: "Addons\Commands\addon.yaml";                                          DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
 Source: "Addons\Commands\bin\Release\Commands.dll";                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\Commands
+Source: "Addons\Commands\Assets\*";                                            DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\Commands";       Flags: ignoreversion recursesubdirs;   Permissions: everyone-full;  Tasks: Addons\Commands
+
 ; Addon - Windows Monitor
 Source: "Addons\WindowsMonitor\addon.yaml";                                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
-Source: "Addons\WindowsMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: confirmoverwrite;               Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
 Source: "Addons\WindowsMonitor\bin\Release\WindowsMonitor.dll";                DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+Source: "Addons\WindowsMonitor\Assets\*";                                      DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\WindowsMonitor"; Flags: ignoreversion recursesubdirs;   Permissions: everyone-full;  Tasks: Addons\WindowsMonitor
+
+; Addon - Process Monitor
+Source: "Addons\ProcessMonitor\addon.yaml";                                    DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
+Source: "Addons\ProcessMonitor\config.yaml";                                   DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: confirmoverwrite;               Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
+Source: "Addons\ProcessMonitor\bin\Release\ProcessMonitor.dll";                DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: ignoreversion;                  Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
+Source: "Addons\ProcessMonitor\Assets\*";                                      DestDir: "{commonappdata}\{#APP_DIR_NAME}\Addons\ProcessMonitor"; Flags: ignoreversion recursesubdirs;   Permissions: everyone-full;  Tasks: Addons\ProcessMonitor
 
 [Icons]
 ; Service Install/Uninstall
@@ -101,6 +118,7 @@ Type: filesandordirs; Name: "{app}"
 Name: "Addons";                 Description: "Install Addons"
 Name: "Addons\Commands";        Description: "Addon: Commands"
 Name: "Addons\WindowsMonitor";  Description: "Addon: Windows Monitor"
+Name: "Addons\ProcessMonitor";  Description: "Addon: Process Monitor"
 
 [Code]
 procedure SetElevationBit(Filename: string);

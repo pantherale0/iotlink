@@ -86,7 +86,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Name = "Battery Full Lifetime",
                     Unit = "minutes",
                     ValueTemplate = "{{ ( value | float / 60 ) | int }}",
-                    Icon = "mdi:timer"
+                    Icon = "mdi:timer-outline"
                 }
             });
 
@@ -104,7 +104,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Name = "Battery Remaining Time",
                     Unit = "minutes",
                     ValueTemplate = "{{ ( value | float / 60 ) | int }}",
-                    Icon = "mdi:timer"
+                    Icon = "mdi:timer-outline"
 
                 }
             });

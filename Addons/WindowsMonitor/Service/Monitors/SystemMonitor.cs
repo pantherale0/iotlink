@@ -76,7 +76,7 @@ namespace IOTLinkAddon.Service.Monitors
                     Id = "IdleTime",
                     Name = "System Idle Time",
                     Unit = config.GetValue("inSeconds", false) ? "s" : null,
-                    Icon = "mdi:timer"
+                    Icon = "mdi:timer-outline"
                 }
             });
 

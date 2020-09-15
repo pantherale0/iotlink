@@ -2,7 +2,6 @@
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
@@ -10,11 +9,16 @@ namespace IOTLinkService.Service.MQTT
 {
     internal class MQTTClientManager : IDisposable
     {
+        private static readonly int MINIMUM_DELAY_VERIFY_CONNECTION = 5;
+
         private static MQTTClientManager _instance;
 
         private MQTTClient _mqttClient;
 
+        private DateTime lastVerifyConnection = new DateTime(0L);
+
         private readonly object connectionLock = new object();
+        private readonly object verifyLock = new object();
 
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
@@ -140,7 +144,7 @@ namespace IOTLinkService.Service.MQTT
         {
             lock (connectionLock)
             {
-                LoggerHelper.Verbose("MQTTClientManager::Disconnect()");
+                LoggerHelper.Verbose("MQTTClientManager::Disconnect({0})", skipLastWill);
                 if (_mqttClient == null)
                     return;
 
@@ -152,12 +156,26 @@ namespace IOTLinkService.Service.MQTT
 
         private void VerifyConnection()
         {
-            if (_mqttClient == null || !_mqttClient.IsConnected())
+            lock (verifyLock)
             {
-                LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - MQTT Connection Broken. Reconnecting.");
+                if (_mqttClient == null)
+                {
+                    LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - MQTT Client NOT Connected. Connecting.");
+                    Connect();
+                    return;
+                }
 
-                Disconnect(true);
-                Connect();
+                if (lastVerifyConnection.AddSeconds(MINIMUM_DELAY_VERIFY_CONNECTION) >= DateTime.UtcNow)
+                    return;
+
+                lastVerifyConnection = DateTime.UtcNow;
+                if (!_mqttClient.IsConnected())
+                {
+                    LoggerHelper.Warn("MQTTClientManager::VerifyConnection() - MQTT Connection Broken. Reconnecting.");
+
+                    Disconnect(true);
+                    Connect();
+                }
             }
         }
 
@@ -181,7 +199,7 @@ namespace IOTLinkService.Service.MQTT
             }
             catch (Exception ex)
             {
-                LoggerHelper.Error("MQTTClientManager::OnMQTTConnectedHandler() - Error: {0}", ex.ToString());
+                LoggerHelper.Error("MQTTClientManager::OnMQTTDisconnectedHandler() - Error: {0}", ex.ToString());
             }
         }
 
@@ -193,7 +211,7 @@ namespace IOTLinkService.Service.MQTT
             }
             catch (Exception ex)
             {
-                LoggerHelper.Error("MQTTClientManager::OnMQTTConnectedHandler() - Error: {0}", ex.ToString());
+                LoggerHelper.Error("MQTTClientManager::OnMQTTMessageReceivedHandler() - Error: {0}", ex.ToString());
             }
         }
 
@@ -205,7 +223,7 @@ namespace IOTLinkService.Service.MQTT
             }
             catch (Exception ex)
             {
-                LoggerHelper.Error("MQTTClientManager::OnMQTTConnectedHandler() - Error: {0}", ex.ToString());
+                LoggerHelper.Error("MQTTClientManager::OnMQTTRefreshMessageReceivedHandler() - Error: {0}", ex.ToString());
             }
         }
     }

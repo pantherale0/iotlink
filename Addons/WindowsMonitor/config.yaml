@@ -50,7 +50,6 @@ formats:
 # HardDrive         : Hard Drives (Total Size, Free Space, Format, etc).
 # Power             : Power (Status, Battery Status, Remaning Time, etc).
 # NetworkInfo       : Network Information (IPv4, IPv6, Speed, Wired).
-# AudioInfo         : Audio Device Information (Volume, Muted, Default, etc).
 # SystemInfo        : System Info (Current user physically logged in).
 # IdleTime          : Idle Time (Current user physically logged in).
 # Uptime            : Uptime information (Boot time, Uptime).
@@ -76,10 +75,6 @@ monitors:
     cacheable: true
   NetworkInfo:
     enabled: true
-    interval: 10
-    cacheable: true
-  AudioInfo:
-    enabled: false
     interval: 10
     cacheable: true
   SystemInfo:

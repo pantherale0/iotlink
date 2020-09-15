@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Management;
 
 namespace IOTLinkService.Service.Engine
 {
@@ -38,16 +37,14 @@ namespace IOTLinkService.Service.Engine
             {
                 LoggerHelper.Trace("GetAgents() - Initialized");
 
-                string wmiQuery = string.Format("SELECT SessionId, ProcessID, CommandLine FROM Win32_Process WHERE Name='{0}.exe'", PathHelper.APP_AGENT_NAME);
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
-                ManagementObjectCollection objCollection = searcher.Get();
                 List<AgentInfo> agents = new List<AgentInfo>();
 
-                foreach (ManagementObject processInfo in objCollection)
+                Process[] processes = Process.GetProcessesByName(PathHelper.APP_AGENT_NAME);
+                foreach (Process process in processes)
                 {
-                    int sessionId = Convert.ToInt32(processInfo.Properties["SessionId"].Value);
-                    int processId = Convert.ToInt32(processInfo.Properties["ProcessID"].Value);
-                    string commandLine = (string)processInfo.Properties["CommandLine"].Value;
+                    int sessionId = Convert.ToInt32(process.SessionId);
+                    int processId = Convert.ToInt32(process.Id);
+                    string commandLine = process.StartInfo?.Arguments;
                     string username = PlatformHelper.GetUsername(sessionId);
 
                     agents.Add(new AgentInfo
@@ -57,8 +54,6 @@ namespace IOTLinkService.Service.Engine
                         CommandLine = commandLine,
                         Username = username
                     });
-
-                    LoggerHelper.Trace("GetAgents() - Agent Found. SessionId: {0} PID: {1} Username: {2} CommandLine: {3}", sessionId, processId, username, commandLine);
                 }
 
                 return agents;
@@ -99,7 +94,7 @@ namespace IOTLinkService.Service.Engine
                 foreach (AgentInfo agentInfo in agents)
                 {
                     LoggerHelper.Trace("StartAgent() - Agent Found. SessionId: {0} PID: {1} Username: {2} CommandLine: {3}", agentInfo.SessionId, agentInfo.ProcessId, agentInfo.Username, agentInfo.CommandLine);
-                    if (agentInfo.SessionId == sessionId && agentInfo.CommandLine.Contains("--agent"))
+                    if (agentInfo.SessionId == sessionId)
                     {
                         LoggerHelper.Trace("StartAgent() - Agent instance is already running for this user. Skipping.");
                         return;

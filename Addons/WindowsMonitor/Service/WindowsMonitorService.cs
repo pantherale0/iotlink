@@ -41,7 +41,6 @@ namespace IOTLinkAddon.Service
             new CPUMonitor(),
             new MemoryMonitor(),
             new PowerMonitor(),
-            new AudioMonitor(),
             new NetworkMonitor(),
             new StorageMonitor(),
             new SystemMonitor(),
@@ -61,10 +60,12 @@ namespace IOTLinkAddon.Service
             OnSessionChangeHandler += OnSessionChange;
             OnConfigReloadHandler += OnConfigReload;
             OnAgentResponseHandler += OnAgentResponse;
-            OnMQTTConnectedHandler += OnClearEvent;
+            OnMQTTConnectedHandler += OnMQTTConnected;
+            OnMQTTDisconnectedHandler += OnMQTTDisconnected;
             OnRefreshRequestedHandler += OnClearEvent;
 
             InitMonitors();
+            ClearCaches();
             SetupTimers();
             SetupDiscovery();
         }
@@ -138,12 +139,26 @@ namespace IOTLinkAddon.Service
             }
         }
 
+        private void OnMQTTConnected(object sender, EventArgs e)
+        {
+            ClearCaches();
+            SetupTimers();
+            SetupDiscovery();
+            SendAllInformation();
+        }
+
+        private void OnMQTTDisconnected(object sender, EventArgs e)
+        {
+            _monitorTimer.Stop();
+        }
+
         private void OnClearEvent(object sender, EventArgs e)
         {
             LoggerHelper.Verbose("WindowsMonitorService::OnClearEvent() - Event {0} Received. Clearing cache and resending information.", e.GetType().ToString());
 
-            _cache.Clear();
-            _discoveryItems.Clear();
+            ClearCaches();
+            SetupTimers();
+            SetupDiscovery();
             SendAllInformation();
         }
 
@@ -155,8 +170,10 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("WindowsMonitorService::OnConfigReload() - Reloading configuration");
 
             _config = ConfigurationManager.GetInstance().GetConfiguration(_configPath);
+            ClearCaches();
             SetupTimers();
             SetupDiscovery();
+            SendAllInformation();
         }
 
         private void OnSessionChange(object sender, SessionChangeEventArgs e)
@@ -164,6 +181,7 @@ namespace IOTLinkAddon.Service
             LoggerHelper.Verbose("WindowsMonitorService::OnSessionChange() - {0}: {1}", e.Reason.ToString(), e.Username);
 
             GetManager().PublishMessage(this, e.Reason.ToString(), e.Username);
+            GetManager().PublishMessage(this, "status", e.Reason.ToString());
         }
 
         private void OnMonitorTimerElapsed(object source, ElapsedEventArgs e)
@@ -176,6 +194,12 @@ namespace IOTLinkAddon.Service
                 _monitorCounter = 0;
 
             LoggerHelper.Debug("WindowsMonitorService::OnMonitorTimerElapsed() - Completed");
+        }
+
+        private void ClearCaches()
+        {
+            _cache.Clear();
+            _discoveryItems.Clear();
         }
 
         private void SendAllInformation()

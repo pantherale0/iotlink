@@ -25,9 +25,9 @@
 
         public int KeepAlivePeriod { get; set; }
 
-        public int KeepAliveSendInterval { get; set; }
-
         public int AutoReconnectDelay { get; set; }
+
+        public int MaxPendingMessages { get; set; }
 
         public class CredentialConfig
         {
@@ -37,9 +37,11 @@
 
             public static CredentialConfig FromConfiguration(Configuration config)
             {
-                CredentialConfig cfg = new CredentialConfig();
-                cfg.Username = config.GetValue("username", null);
-                cfg.Password = config.GetValue("password", null);
+                CredentialConfig cfg = new CredentialConfig
+                {
+                    Username = config.GetValue("username", null),
+                    Password = config.GetValue("password", null)
+                };
 
                 return cfg;
             }
@@ -57,11 +59,13 @@
 
             public static TCPConfig FromConfiguration(Configuration config)
             {
-                TCPConfig cfg = new TCPConfig();
-                cfg.Hostname = config.GetValue("hostname", "localhost");
-                cfg.Port = config.GetValue("port", 1883);
-                cfg.Secure = config.GetValue("secure", false);
-                cfg.Enabled = config.GetValue("enabled", true);
+                TCPConfig cfg = new TCPConfig
+                {
+                    Hostname = config.GetValue("hostname", "localhost"),
+                    Port = config.GetValue("port", 1883),
+                    Secure = config.GetValue("secure", false),
+                    Enabled = config.GetValue("enabled", true)
+                };
 
                 return cfg;
             }
@@ -77,10 +81,12 @@
 
             public static WebSocketConfig FromConfiguration(Configuration config)
             {
-                WebSocketConfig cfg = new WebSocketConfig();
-                cfg.URI = config.GetValue("uri", null);
-                cfg.Secure = config.GetValue("secure", false);
-                cfg.Enabled = config.GetValue("enabled", false);
+                WebSocketConfig cfg = new WebSocketConfig
+                {
+                    URI = config.GetValue("uri", null),
+                    Secure = config.GetValue("secure", false),
+                    Enabled = config.GetValue("enabled", false)
+                };
 
                 return cfg;
             }
@@ -94,14 +100,16 @@
 
             public bool Enabled { get; set; }
 
-            public static LWTConfig FromConfiguration(Configuration config)
+            public static new LWTConfig FromConfiguration(Configuration config)
             {
-                LWTConfig cfg = new LWTConfig();
-                cfg.ConnectMessage = config.GetValue("connectMsg", "ON");
-                cfg.DisconnectMessage = config.GetValue("disconnectMsg", "OFF");
-                cfg.QoS = config.GetValue("qos", 1);
-                cfg.Retain = config.GetValue("retain", false);
-                cfg.Enabled = config.GetValue("enabled", true);
+                LWTConfig cfg = new LWTConfig
+                {
+                    ConnectMessage = config.GetValue("connectMsg", "ON"),
+                    DisconnectMessage = config.GetValue("disconnectMsg", "OFF"),
+                    QoS = config.GetValue("qos", 1),
+                    Retain = config.GetValue("retain", false),
+                    Enabled = config.GetValue("enabled", true)
+                };
 
                 return cfg;
             }
@@ -115,9 +123,11 @@
 
             public static MsgConfig FromConfiguration(Configuration config)
             {
-                MsgConfig cfg = new MsgConfig();
-                cfg.QoS = config.GetValue("qos", 1);
-                cfg.Retain = config.GetValue("retain", false);
+                MsgConfig cfg = new MsgConfig
+                {
+                    QoS = config.GetValue("qos", 1),
+                    Retain = config.GetValue("retain", false)
+                };
 
                 return cfg;
             }
@@ -133,10 +143,12 @@
 
             public static DiscoveryConfig FromConfiguration(Configuration config)
             {
-                DiscoveryConfig cfg = new DiscoveryConfig();
-                cfg.TopicPrefix = config.GetValue("topicPrefix", "homeassistant");
-                cfg.DomainPrefix = config.GetValue("domainPrefix", false);
-                cfg.Enabled = config.GetValue("enabled", true);
+                DiscoveryConfig cfg = new DiscoveryConfig
+                {
+                    TopicPrefix = config.GetValue("topicPrefix", "homeassistant"),
+                    DomainPrefix = config.GetValue("domainPrefix", false),
+                    Enabled = config.GetValue("enabled", true)
+                };
 
                 return cfg;
             }
@@ -144,21 +156,23 @@
 
         public static MqttConfig FromConfiguration(Configuration config)
         {
-            MqttConfig mqtt = new MqttConfig();
-            mqtt.Credentials = CredentialConfig.FromConfiguration(config.GetValue("credentials"));
-            mqtt.TCP = TCPConfig.FromConfiguration(config.GetValue("tcp"));
-            mqtt.WebSocket = WebSocketConfig.FromConfiguration(config.GetValue("websocket"));
-            mqtt.Messages = MsgConfig.FromConfiguration(config.GetValue("messages"));
-            mqtt.LWT = LWTConfig.FromConfiguration(config.GetValue("lwt"));
-            mqtt.Discovery = DiscoveryConfig.FromConfiguration(config.GetValue("discovery"));
+            MqttConfig mqtt = new MqttConfig
+            {
+                Credentials = CredentialConfig.FromConfiguration(config.GetValue("credentials")),
+                TCP = TCPConfig.FromConfiguration(config.GetValue("tcp")),
+                WebSocket = WebSocketConfig.FromConfiguration(config.GetValue("websocket")),
+                Messages = MsgConfig.FromConfiguration(config.GetValue("messages")),
+                LWT = LWTConfig.FromConfiguration(config.GetValue("lwt")),
+                Discovery = DiscoveryConfig.FromConfiguration(config.GetValue("discovery")),
 
-            mqtt.ClientId = config.GetValue("clientId", null);
-            mqtt.CleanSession = config.GetValue("cleanSession", true);
-            mqtt.Prefix = config.GetValue("prefix", "IOTLink");
-            mqtt.GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all");
-            mqtt.AutoReconnectDelay = config.GetValue("autoReconnectDelay", 10);
-            mqtt.KeepAlivePeriod = config.GetValue("keepAlivePeriod", 60);
-            mqtt.KeepAliveSendInterval = config.GetValue("KeepAliveSendInterval", 5);
+                ClientId = config.GetValue("clientId", null),
+                CleanSession = config.GetValue("cleanSession", true),
+                Prefix = config.GetValue("prefix", "IOTLink"),
+                GlobalPrefix = config.GetValue("globalPrefix", "IOTLink/all"),
+                AutoReconnectDelay = config.GetValue("autoReconnectDelay", 10),
+                KeepAlivePeriod = config.GetValue("keepAlivePeriod", 60),
+                MaxPendingMessages = config.GetValue("maxPendingMessages", 10),
+            };
 
             return mqtt;
         }
