@@ -3,6 +3,7 @@ using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
 using System;
 using System.Threading.Tasks;
+using System.Timers;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
 namespace IOTLinkService.Service.MQTT
@@ -11,9 +12,14 @@ namespace IOTLinkService.Service.MQTT
     {
         private static readonly int MINIMUM_DELAY_VERIFY_CONNECTION = 5;
 
+        private static readonly int MONITOR_TIMER_INITAL_INTERVAL = 60 * 1000;
+        private static readonly int MONITOR_TIMER_NORMAL_INTERVAL = 10 * 1000;
+
         private static MQTTClientManager _instance;
 
         private MQTTClient _mqttClient;
+
+        private Timer _monitorTimer;
 
         private DateTime lastVerifyConnection = new DateTime(0L);
 
@@ -31,6 +37,17 @@ namespace IOTLinkService.Service.MQTT
                 _instance = new MQTTClientManager();
 
             return _instance;
+        }
+
+        private MQTTClientManager()
+        {
+            if (_monitorTimer == null)
+                _monitorTimer = new Timer();
+
+            _monitorTimer.Interval = MONITOR_TIMER_INITAL_INTERVAL;
+            _monitorTimer.Elapsed += OnMonitorTimeElapsed;
+            _monitorTimer.AutoReset = true;
+            _monitorTimer.Enabled = true;
         }
 
         public async void Start()
@@ -176,6 +193,26 @@ namespace IOTLinkService.Service.MQTT
                     Disconnect(true);
                     Connect();
                 }
+            }
+        }
+
+        private void OnMonitorTimeElapsed(object sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                LoggerHelper.Debug("MQTTClientManager::OnMonitorTimeElapsed() - Checking MQTT Connection.");
+
+                _monitorTimer.Enabled = false;
+                VerifyConnection();
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("MQTTClientManager::OnMonitorTimeElapsed() - Error: {0}", ex);
+            }
+            finally
+            {
+                _monitorTimer.Interval = MONITOR_TIMER_NORMAL_INTERVAL;
+                _monitorTimer.Enabled = true;
             }
         }
 
