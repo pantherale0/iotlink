@@ -37,6 +37,9 @@
 
             public static CredentialConfig FromConfiguration(Configuration config)
             {
+                if (config == null)
+                    return new CredentialConfig();
+
                 CredentialConfig cfg = new CredentialConfig
                 {
                     Username = config.GetValue("username", null),
@@ -57,14 +60,20 @@
 
             public bool Enabled { get; set; }
 
+            public TlsConfig TlsConfig { get; set; }
+
             public static TCPConfig FromConfiguration(Configuration config)
             {
+                if (config == null)
+                    return new TCPConfig();
+
                 TCPConfig cfg = new TCPConfig
                 {
                     Hostname = config.GetValue("hostname", "localhost"),
                     Port = config.GetValue("port", 1883),
                     Secure = config.GetValue("secure", false),
-                    Enabled = config.GetValue("enabled", true)
+                    Enabled = config.GetValue("enabled", true),
+                    TlsConfig = TlsConfig.FromConfiguration(config.GetValue("tlsConfig"))
                 };
 
                 return cfg;
@@ -79,13 +88,52 @@
 
             public bool Enabled { get; set; }
 
+            public TlsConfig TlsConfig { get; set; }
+
             public static WebSocketConfig FromConfiguration(Configuration config)
             {
+                if (config == null)
+                    return new WebSocketConfig();
+
                 WebSocketConfig cfg = new WebSocketConfig
                 {
                     URI = config.GetValue("uri", null),
                     Secure = config.GetValue("secure", false),
-                    Enabled = config.GetValue("enabled", false)
+                    Enabled = config.GetValue("enabled", false),
+                    TlsConfig = TlsConfig.FromConfiguration(config.GetValue("tlsConfig"))
+                };
+
+                return cfg;
+            }
+        }
+
+        public class TlsConfig
+        {
+            public bool AllowUntrustedCertificates { get; set; }
+
+            public bool IgnoreCertificateChainErrors { get; set; }
+
+            public bool IgnoreCertificateRevocationErrors { get; set; }
+
+            public string CACertificate { get; set; }
+
+            public string ClientCertificate { get; set; }
+
+            public string ClientCertificatePassword { get; set; }
+
+            public static TlsConfig FromConfiguration(Configuration config)
+            {
+                if (config == null)
+                    return new TlsConfig();
+
+                TlsConfig cfg = new TlsConfig
+                {
+                    AllowUntrustedCertificates = config.GetValue("allowUntrustedCertificates", false),
+                    IgnoreCertificateChainErrors = config.GetValue("ignoreCertificateChainErrors", false),
+                    IgnoreCertificateRevocationErrors = config.GetValue("ignoreCertificateRevocationErrors", false),
+                    CACertificate = config.GetValue("caCertificate", null),
+                    ClientCertificate = config.GetValue("clientCertificate", null),
+                    ClientCertificatePassword = config.GetValue("clientCertificatePassword", null),
                 };
 
                 return cfg;
@@ -102,6 +150,9 @@
 
             public static new LWTConfig FromConfiguration(Configuration config)
             {
+                if (config == null)
+                    return new LWTConfig();
+
                 LWTConfig cfg = new LWTConfig
                 {
                     ConnectMessage = config.GetValue("connectMsg", "ON"),
@@ -123,6 +174,9 @@
 
             public static MsgConfig FromConfiguration(Configuration config)
             {
+                if (config == null)
+                    return new MsgConfig();
+
                 MsgConfig cfg = new MsgConfig
                 {
                     QoS = config.GetValue("qos", 1),
@@ -143,6 +197,9 @@
 
             public static DiscoveryConfig FromConfiguration(Configuration config)
             {
+                if (config == null)
+                    return new DiscoveryConfig();
+
                 DiscoveryConfig cfg = new DiscoveryConfig
                 {
                     TopicPrefix = config.GetValue("topicPrefix", "homeassistant"),
@@ -156,6 +213,9 @@
 
         public static MqttConfig FromConfiguration(Configuration config)
         {
+            if (config == null)
+                return new MqttConfig();
+
             MqttConfig mqtt = new MqttConfig
             {
                 Credentials = CredentialConfig.FromConfiguration(config.GetValue("credentials")),
