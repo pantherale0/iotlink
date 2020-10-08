@@ -18,6 +18,13 @@ mqtt:
     hostname: 
     port: 1883
     secure: false
+    tlsConfig:
+        allowUntrustedCertificates: false
+        ignoreCertificateChainErrors: false
+        ignoreCertificateRevocationErrors: false
+        caCertificate:
+        clientCertificate:
+        clientCertificatePassword:
   ########################################################################
   # WebSocket Connection Settings
   ########################################################################
@@ -25,6 +32,13 @@ mqtt:
     enabled: false
     uri: 
     secure: false
+    tlsConfig:
+        allowUntrustedCertificates: false
+        ignoreCertificateChainErrors: false
+        ignoreCertificateRevocationErrors: false
+        caCertificate:
+        clientCertificate:
+        clientCertificatePassword:
   ########################################################################
   # Message Settings
   ########################################################################
