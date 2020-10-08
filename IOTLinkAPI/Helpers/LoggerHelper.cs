@@ -14,7 +14,14 @@ namespace IOTLinkAPI.Helpers
         private static LoggerHelper _instance;
         private StreamWriter _logWriter;
         private Timer _flushTimer;
-        private DateTime _lastMessage;
+
+        private DateTime _lastMessage = new DateTime(0L);
+        private DateTime _lastFlush = new DateTime(0L);
+
+        private readonly object writeLock = new object();
+
+        private static readonly int FLUSH_MAX_INTERVAL = 60;
+        private static readonly int FLUSH_MIN_INTERVAL = 1;
 
         public enum LogLevel
         {
@@ -48,32 +55,33 @@ namespace IOTLinkAPI.Helpers
 
         public void Flush()
         {
-            try
+            lock (writeLock)
             {
-                if (_logWriter != null)
-                    _logWriter.Flush();
-            }
-            catch (Exception)
-            {
-                //TODO: Cry
+                try
+                {
+                    if (_logWriter != null)
+                    {
+                        _logWriter.Flush();
+                        _lastFlush = DateTime.UtcNow;
+                    }
+                }
+                catch (Exception) { }
             }
         }
 
         private void WriteFile(string message = null)
         {
-            try
+            lock (writeLock)
             {
-                if (_logWriter != null)
+                try
                 {
-                    _logWriter.WriteLine(message);
-                    _flushTimer.Stop();
-                    _flushTimer.Start();
-                    _lastMessage = DateTime.Now;
+                    if (_logWriter != null)
+                    {
+                        _logWriter.WriteLine(message);
+                        _lastMessage = DateTime.Now;
+                    }
                 }
-            }
-            catch (Exception)
-            {
-                //TODO: Cry again
+                catch (Exception) { }
             }
         }
 
@@ -95,33 +103,35 @@ namespace IOTLinkAPI.Helpers
                 else
                     _logWriter = File.AppendText(path);
             }
-            catch (Exception)
-            {
-                // Cry
-            }
+            catch (Exception) { }
         }
 
         private void CloseLogFile()
         {
-            try
+            lock (writeLock)
             {
-                if (_logWriter != null)
+                try
                 {
-                    _flushTimer.Stop();
-                    _logWriter.Flush();
-                    _logWriter.Close();
-                    _logWriter = null;
+                    if (_logWriter != null)
+                    {
+                        _flushTimer.Stop();
+                        _logWriter.Flush();
+                        _logWriter.Close();
+                        _logWriter = null;
+                    }
                 }
-            }
-            catch (Exception)
-            {
-                //TODO: Cry
+                catch (Exception) { }
             }
         }
 
         private void OnFlushInterval(object sender, ElapsedEventArgs e)
         {
-            Flush();
+            if (_lastFlush.AddSeconds(FLUSH_MAX_INTERVAL) < DateTime.UtcNow || _lastMessage.AddSeconds(FLUSH_MIN_INTERVAL) < DateTime.Now)
+            {
+                _flushTimer.Stop();
+                Flush();
+                _flushTimer.Start();
+            }
         }
 
         private void WriteLog(LogLevel logLevel, string messageTag, string message, params object[] args)

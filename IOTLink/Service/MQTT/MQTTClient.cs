@@ -10,6 +10,8 @@ using MQTTnet.Client.Options;
 using MQTTnet.Extensions.ManagedClient;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using static IOTLinkAPI.Platform.Events.MQTT.MQTTHandlers;
 
@@ -17,12 +19,6 @@ namespace IOTLinkService.Service.MQTT
 {
     internal class MQTTClient
     {
-        private static readonly int MINIMUM_DELAY_CONNECT_REQUEST = 5;
-        private static readonly int MINIMUM_DELAY_DISCONNECT_REQUEST = 2;
-
-        private static readonly int MINIMUM_DELAY_CONNECTED_EVENT = 10;
-        private static readonly int MINIMUM_DELAY_DISCONNECTED_EVENT = 10;
-
         private static MQTTClient _instance;
 
         private MqttConfig _config;
@@ -31,11 +27,8 @@ namespace IOTLinkService.Service.MQTT
         private IMqttClientOptions _options;
         private IManagedMqttClientOptions _managedOptions;
 
-        private DateTime lastConnectRequest = new DateTime(0L);
-        private DateTime lastDisconnectRequest = new DateTime(0L);
-
-        private DateTime lastConnectedEvent = new DateTime(0L);
-        private DateTime lastDisconnectEvent = new DateTime(0L);
+        private readonly object connectionRequestLock = new object();
+        private readonly object connectionEventLock = new object();
 
         public event MQTTEventHandler OnMQTTConnected;
         public event MQTTEventHandler OnMQTTDisconnected;
@@ -100,8 +93,9 @@ namespace IOTLinkService.Service.MQTT
                 }
 
                 mqttOptionBuilder = mqttOptionBuilder.WithTcpServer(_config.TCP.Hostname, _config.TCP.Port);
+
                 if (_config.TCP.Secure)
-                    mqttOptionBuilder = mqttOptionBuilder.WithTls();
+                    mqttOptionBuilder = mqttOptionBuilder.WithTls(GetTlsOptions(_config.TCP.TlsConfig));
             }
 
             // WebSocket Connection
@@ -114,8 +108,9 @@ namespace IOTLinkService.Service.MQTT
                 }
 
                 mqttOptionBuilder = mqttOptionBuilder.WithWebSocketServer(_config.WebSocket.URI);
-                if (_config.TCP.Secure)
-                    mqttOptionBuilder = mqttOptionBuilder.WithTls();
+
+                if (_config.WebSocket.Secure)
+                    mqttOptionBuilder = mqttOptionBuilder.WithTls(GetTlsOptions(_config.TCP.TlsConfig));
             }
 
             // Client ID
@@ -167,20 +162,19 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         internal void Connect()
         {
-            if (lastConnectRequest.AddSeconds(MINIMUM_DELAY_CONNECT_REQUEST) >= DateTime.UtcNow)
-                return;
+            lock (connectionRequestLock)
+            {
+                LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0}.", GetBrokerInfo());
 
-            LoggerHelper.Info("MQTTClient::Connect() - Trying to connect to broker: {0}.", GetBrokerInfo());
+                _client = new MqttFactory().CreateManagedMqttClient();
+                _client.UseConnectedHandler(OnConnectedHandler);
+                _client.UseDisconnectedHandler(OnDisconnectedHandler);
+                _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
 
-            LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", MQTTHelper.GetFullTopicName(_config.Prefix));
+                _client.StartAsync(_managedOptions).GetAwaiter().GetResult();
 
-            lastConnectRequest = DateTime.UtcNow;
-            _client = new MqttFactory().CreateManagedMqttClient();
-            _client.UseConnectedHandler(OnConnectedHandler);
-            _client.UseDisconnectedHandler(OnDisconnectedHandler);
-            _client.UseApplicationMessageReceivedHandler(OnApplicationMessageReceivedHandler);
-
-            _client.StartAsync(_managedOptions).GetAwaiter().GetResult();
+                LoggerHelper.System("ALL YOUR MQTT TOPICS WILL START WITH {0}", MQTTHelper.GetFullTopicName(_config.Prefix));
+            }
         }
 
         internal void CleanEvents()
@@ -196,28 +190,27 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         internal void Disconnect(bool skipLastWill = false)
         {
-            if (lastDisconnectRequest.AddSeconds(MINIMUM_DELAY_DISCONNECT_REQUEST) >= DateTime.UtcNow)
-                return;
-
-            lastDisconnectRequest = DateTime.UtcNow;
-            LoggerHelper.Info("MQTTClient::Disconnect({0}) - Trying to disconnect from broker: {1}.", skipLastWill, GetBrokerInfo());
-            if (_client == null)
-                return;
-
-            if (_client.IsConnected && !skipLastWill)
+            lock (connectionRequestLock)
             {
-                LoggerHelper.Verbose("MQTTClient::Disconnect({0}) - Sending LWT message before disconnecting.", skipLastWill);
-                SendLWTDisconnect();
-            }
+                LoggerHelper.Info("MQTTClient::Disconnect({0}) - Trying to disconnect from broker: {1}.", skipLastWill, GetBrokerInfo());
+                if (_client == null)
+                    return;
 
-            try
-            {
-                _client.StopAsync().GetAwaiter().GetResult();
-                _client.Dispose();
-            }
-            finally
-            {
-                _client = null;
+                if (_client.IsConnected && !skipLastWill)
+                {
+                    LoggerHelper.Verbose("MQTTClient::Disconnect({0}) - Sending LWT message before disconnecting.", skipLastWill);
+                    SendLWTDisconnect();
+                }
+
+                try
+                {
+                    _client.StopAsync().GetAwaiter().GetResult();
+                    _client.Dispose();
+                }
+                finally
+                {
+                    _client = null;
+                }
             }
         }
 
@@ -237,6 +230,42 @@ namespace IOTLinkService.Service.MQTT
         internal bool IsLastWillEnabled()
         {
             return _config.LWT != null && _config.LWT.Enabled;
+        }
+
+        internal void SendLWTConnect()
+        {
+            if (!IsLastWillEnabled())
+            {
+                LoggerHelper.Verbose("MQTTClient::SendLWTConnect() - LWT is disabled.");
+                return;
+            }
+
+            if (!_client.IsConnected)
+            {
+                LoggerHelper.Verbose("MQTTClient::SendLWTConnect() - MQTT is disconnected. Skipping LWT.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
+            {
+                LoggerHelper.Verbose("MQTTClient::SendLWTConnect() - MQTT message is empty. Skipping LWT.");
+                return;
+            }
+
+            LoggerHelper.Verbose("MQTTClient::SendLWTConnect() - Sending LWT Connected");
+            _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage)).GetAwaiter().GetResult();
+        }
+
+        internal void SendLWTDisconnect()
+        {
+            if (_client == null || !_client.IsConnected)
+                return;
+
+            if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
+            {
+                LoggerHelper.Verbose("MQTTClient::SendLWTDisconnect() - Sending LWT Disconnected");
+                _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).GetAwaiter().GetResult();
+            }
         }
 
         /// <summary>
@@ -384,24 +413,22 @@ namespace IOTLinkService.Service.MQTT
         /// <returns></returns>
         private void OnConnectedHandler(MqttClientConnectedEventArgs arg)
         {
-            if (lastConnectedEvent.AddSeconds(MINIMUM_DELAY_CONNECTED_EVENT) >= DateTime.UtcNow)
-                return;
+            lock (connectionEventLock)
+            {
+                LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
 
-            lastConnectedEvent = DateTime.UtcNow;
-            LoggerHelper.Info("MQTTClient::OnConnectedHandler() - MQTT Connected");
+                // Fire Connected Event
+                MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
+                OnMQTTConnected?.Invoke(this, mqttEvent);
 
-            // Send LWT Connected
-            SendLWTConnect();
+                // Subscribe to ALL Messages
+                SubscribeTopic(MQTTHelper.GetFullTopicName(_config.Prefix, "#"));
 
-            // Fire Connected Event
-            MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Connect, arg);
-            OnMQTTConnected?.Invoke(this, mqttEvent);
+                if (!string.IsNullOrWhiteSpace(_config.GlobalPrefix))
+                    SubscribeTopic(MQTTHelper.GetGlobalTopicName(_config.GlobalPrefix, "#"));
 
-            // Subscribe to ALL Messages
-            SubscribeTopic(MQTTHelper.GetFullTopicName(_config.Prefix, "#"));
-
-            if (!string.IsNullOrWhiteSpace(_config.GlobalPrefix))
-                SubscribeTopic(MQTTHelper.GetGlobalTopicName(_config.GlobalPrefix, "#"));
+                SendLWTConnect();
+            }
         }
 
         /// <summary>
@@ -411,15 +438,13 @@ namespace IOTLinkService.Service.MQTT
         /// <returns></returns>
         private void OnDisconnectedHandler(MqttClientDisconnectedEventArgs arg)
         {
-            if (lastDisconnectEvent.AddSeconds(MINIMUM_DELAY_DISCONNECTED_EVENT) >= DateTime.UtcNow)
-                return;
+            lock (connectionEventLock)
+            {
+                LoggerHelper.Info("MQTTClient::OnDisconnectedHandler() - MQTT Disconnected");
 
-            lastDisconnectEvent = DateTime.UtcNow;
-            LoggerHelper.Verbose("MQTTClient::OnDisconnectedHandler() - MQTT Disconnected");
-
-            // Fire event
-            MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
-            OnMQTTDisconnected?.Invoke(this, mqttEvent);
+                MQTTEventEventArgs mqttEvent = new MQTTEventEventArgs(MQTTEventEventArgs.MQTTEventType.Disconnect, arg);
+                OnMQTTDisconnected?.Invoke(this, mqttEvent);
+            }
         }
 
         /// <summary>
@@ -449,8 +474,8 @@ namespace IOTLinkService.Service.MQTT
         /// </summary>
         private void SendRefresh()
         {
-            SendLWTConnect();
             OnMQTTRefreshMessageReceived?.Invoke(this, EventArgs.Empty);
+            SendLWTConnect();
         }
 
         /// <summary>
@@ -484,21 +509,6 @@ namespace IOTLinkService.Service.MQTT
             };
 
             return message;
-        }
-
-        private void SendLWTConnect()
-        {
-            if (IsLastWillEnabled() && _client.IsConnected && !string.IsNullOrWhiteSpace(_config.LWT.ConnectMessage))
-                _client.PublishAsync(GetLWTMessage(_config.LWT.ConnectMessage)).GetAwaiter().GetResult();
-        }
-
-        private void SendLWTDisconnect()
-        {
-            if (_client == null || !_client.IsConnected)
-                return;
-
-            if (IsLastWillEnabled() && !string.IsNullOrWhiteSpace(_config.LWT.DisconnectMessage))
-                _client.PublishAsync(GetLWTMessage(_config.LWT.DisconnectMessage)).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -578,6 +588,42 @@ namespace IOTLinkService.Service.MQTT
             }
 
             return "Unknown";
+        }
+
+        private MqttClientOptionsBuilderTlsParameters GetTlsOptions(MqttConfig.TlsConfig tlsConfig)
+        {
+            return new MqttClientOptionsBuilderTlsParameters()
+            {
+                UseTls = true,
+                AllowUntrustedCertificates = tlsConfig.AllowUntrustedCertificates,
+                IgnoreCertificateChainErrors = tlsConfig.IgnoreCertificateChainErrors,
+                IgnoreCertificateRevocationErrors = tlsConfig.IgnoreCertificateRevocationErrors,
+                Certificates = GetCertificateList(tlsConfig)
+            };
+        }
+
+        private List<X509Certificate> GetCertificateList(MqttConfig.TlsConfig tlsConfig)
+        {
+            List<X509Certificate> certList = new List<X509Certificate>();
+            if (!string.IsNullOrWhiteSpace(tlsConfig.CACertificate))
+            {
+                X509Certificate caCert = X509Certificate.CreateFromCertFile(tlsConfig.CACertificate);
+                certList.Add(caCert);
+            }
+
+            if (!string.IsNullOrWhiteSpace(tlsConfig.ClientCertificate))
+            {
+                X509Certificate clientCert;
+
+                if (string.IsNullOrWhiteSpace(tlsConfig.ClientCertificatePassword))
+                    clientCert = new X509Certificate2(tlsConfig.ClientCertificate);
+                else
+                    clientCert = new X509Certificate2(tlsConfig.ClientCertificate, tlsConfig.ClientCertificatePassword);
+
+                certList.Add(clientCert);
+            }
+
+            return certList;
         }
 
         /// <summary>
