@@ -1,4 +1,4 @@
-﻿using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkService.Service.MQTT;
@@ -50,9 +50,19 @@ namespace IOTLinkService.Service.Engine
                 _processMonitorTimer.Start();
             }
 
-            SetupMQTTHandlers();
+            RestartMQTTClient();
             SetupWebSocket();
             SetupAddons();
+        }
+
+        public void SuspendApplication()
+        {
+            StopApplication();
+        }
+
+        public void ResumeApplication()
+        {
+            StartApplication();
         }
 
         public void StopApplication()
@@ -63,8 +73,9 @@ namespace IOTLinkService.Service.Engine
                 _processMonitorTimer = null;
             }
 
-            MQTTClientManager.GetInstance().Stop();
             AgentManager.GetInstance().StopAgents();
+            StopMQTTClient();
+
             LoggerHelper.GetInstance().Flush();
         }
 
@@ -84,17 +95,48 @@ namespace IOTLinkService.Service.Engine
             webSocketManager.Init();
         }
 
+
         private void SetupMQTTHandlers()
+        {
+            MQTTClientManager client = MQTTClientManager.GetInstance();
+            client.OnMQTTConnected += OnMQTTConnected;
+            client.OnMQTTDisconnected += OnMQTTDisconnected;
+            client.OnMQTTMessageReceived += OnMQTTMessageReceived;
+            client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
+            
+        }
+
+        private void RemoveMQTTHandlers()
+        {
+            MQTTClientManager client = MQTTClientManager.GetInstance();
+            client.OnMQTTConnected -= OnMQTTConnected;
+            client.OnMQTTDisconnected -= OnMQTTDisconnected;
+            client.OnMQTTMessageReceived -= OnMQTTMessageReceived;
+            client.OnMQTTRefreshMessageReceived -= OnMQTTRefreshMessageReceived;
+        }
+
+        private void StopMQTTClient()
         {
             MQTTClientManager client = MQTTClientManager.GetInstance();
 
             client.Stop();
             client.CleanEvents();
-            client.OnMQTTConnected += OnMQTTConnected;
-            client.OnMQTTDisconnected += OnMQTTDisconnected;
-            client.OnMQTTMessageReceived += OnMQTTMessageReceived;
-            client.OnMQTTRefreshMessageReceived += OnMQTTRefreshMessageReceived;
+            RemoveMQTTHandlers();
+
+            Thread.Sleep(1000);
+        }
+
+
+        private void RestartMQTTClient()
+        {
+            MQTTClientManager client = MQTTClientManager.GetInstance();
+
+            client.Stop();
+            client.CleanEvents();
+            RemoveMQTTHandlers();
+            SetupMQTTHandlers();
             client.Start();
+            
             Thread.Sleep(1000);
         }
 
@@ -105,7 +147,7 @@ namespace IOTLinkService.Service.Engine
                 LoggerHelper.Info("ServiceMain::OnConfigChanged() - Changes to configuration.yaml detected. Reloading.");
                 ServiceAddonManager addonsManager = ServiceAddonManager.GetInstance();
 
-                SetupMQTTHandlers();
+                RestartMQTTClient();
                 SetupWebSocket();
                 addonsManager.Raise_OnConfigReloadHandler(this, e);
 

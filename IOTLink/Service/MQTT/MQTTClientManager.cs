@@ -1,4 +1,4 @@
-﻿using IOTLinkAPI.Helpers;
+using IOTLinkAPI.Helpers;
 using IOTLinkAPI.Platform.Events.MQTT;
 using IOTLinkAPI.Platform.HomeAssistant;
 using Microsoft.Win32;
@@ -188,6 +188,7 @@ namespace IOTLinkService.Service.MQTT
                 lastFiredEvent = EventType.INITIAL;
                 BindEvents();
                 _mqttClient.Connect();
+                _verifyTimer.Start();
             }
         }
 
@@ -198,6 +199,8 @@ namespace IOTLinkService.Service.MQTT
                 LoggerHelper.Verbose("MQTTClientManager::Disconnect({0})", skipLastWill);
                 if (_mqttClient == null)
                     return;
+
+                _verifyTimer.Stop();
 
                 _mqttClient.CleanEvents();
                 _mqttClient.Disconnect(skipLastWill);
