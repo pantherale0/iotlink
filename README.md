@@ -1,6 +1,12 @@
+# PROJECT IS DISCONTINUED
+### This project is discontinued and has some issues (memory leaks).
+### I do recommend use [HASS.Agent](https://github.com/LAB02-Research/HASS.Agent) instead.
+# 
+
 ![](https://gitlab.com/iotlink/iotlink/raw/develop/Assets/images/logos/logo_full.png)
 
 IOT Link is a full featured service for connecting devices with IOT enabled services using MQTT. 
+
 
 ### Features
 
